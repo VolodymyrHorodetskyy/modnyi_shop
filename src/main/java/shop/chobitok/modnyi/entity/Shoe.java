@@ -2,10 +2,12 @@ package shop.chobitok.modnyi.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import java.util.List;
 
 @Entity
-public class Shoe extends Audit{
+public class Shoe extends Audit {
 
     @Column
     private String name;
@@ -29,11 +31,27 @@ public class Shoe extends Audit{
     private String photoPath;
 
     @Column
-    private boolean available;
+    private boolean available = true;
 
     @Column
     private boolean deleted;
 
+    @ManyToMany
+    private List<Ordered> ordereds;
+
+
+    public Shoe() {
+    }
+
+    public Shoe(String name, String model, String description, Company company, Double cost, Double price, String photoPath) {
+        this.name = name;
+        this.model = model;
+        this.description = description;
+        this.company = company;
+        this.cost = cost;
+        this.price = price;
+        this.photoPath = photoPath;
+    }
 
     public String getName() {
         return name;
@@ -105,5 +123,13 @@ public class Shoe extends Audit{
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public List<Ordered> getOrdereds() {
+        return ordereds;
+    }
+
+    public void setOrdereds(List<Ordered> ordereds) {
+        this.ordereds = ordereds;
     }
 }

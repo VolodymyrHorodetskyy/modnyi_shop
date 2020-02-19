@@ -1,9 +1,6 @@
 package shop.chobitok.modnyi.controller;
 
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.service.ShoeService;
 
@@ -11,7 +8,7 @@ import java.util.List;
 
 @RestController
 @CrossOrigin
-@RequestMapping("/item")
+@RequestMapping("/shoe")
 public class ShoeController {
 
     private ShoeService shoeService;
@@ -21,8 +18,8 @@ public class ShoeController {
     }
 
     @GetMapping
-    public List<Shoe> getAll() {
-        return shoeService.getAll();
+    public List<Shoe> getAll(@RequestParam int page, @RequestParam int size, @RequestParam(required = false) String model) {
+        return shoeService.getAll(page, size, model);
     }
 
 }
