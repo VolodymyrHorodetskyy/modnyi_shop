@@ -22,7 +22,13 @@ public class Ordered extends Audit {
     private Status status;
 
     @Column
-    private String prePayment;
+    private Double prePayment;
+
+    @Column
+    private Double price;
+
+    @Column
+    private String address;
 
 
     public List<Shoe> getOrderedShoes() {
@@ -65,11 +71,27 @@ public class Ordered extends Audit {
         this.status = status;
     }
 
-    public String getPrePayment() {
+    public Double getPrePayment() {
         return prePayment;
     }
 
-    public void setPrePayment(String prePayment) {
+    public void setPrePayment(Double prePayment) {
         this.prePayment = prePayment;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

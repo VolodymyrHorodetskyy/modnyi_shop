@@ -3,7 +3,6 @@ package shop.chobitok.modnyi.entity;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import javax.persistence.OneToMany;
 import java.util.List;
 
 @Entity
@@ -16,14 +15,12 @@ public class Client extends Audit {
 
     @Column
     private String middleName;
-    @ElementCollection
-    private List<String> telephone;
+
+    @Column
+    private String phone;
 
     @Column
     private String comment;
-
-    @OneToMany
-    private List<Ordered> ordereds;
 
     public String getName() {
         return name;
@@ -49,12 +46,12 @@ public class Client extends Audit {
         this.middleName = middleName;
     }
 
-    public List<String> getTelephone() {
-        return telephone;
+    public String getPhone() {
+        return phone;
     }
 
-    public void setTelephone(List<String> telephone) {
-        this.telephone = telephone;
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public String getComment() {

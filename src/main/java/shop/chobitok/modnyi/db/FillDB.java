@@ -49,15 +49,13 @@ public class FillDB {
         client.setName("Наталія");
         client.setLastName("Чобіток");
         client.setMiddleName("Андріївна");
-        List<String> telephoneList = new ArrayList<>();
-        telephoneList.add("+380637638967");
-        client.setTelephone(telephoneList);
+        client.setPhone("+380637638967");
 
         Ordered ordered = new Ordered();
         ordered.setClient(client);
         List<Shoe> shoes = new ArrayList<>();
         shoes.add(shoe);
-        ordered.setPrePayment("100");
+        ordered.setPrePayment(100.0);
         ordered.setStatus(Status.CREATED);
         ordered.setTtn("20450207223718");
         ordered.setNotes("Якісь записи, будь які");
