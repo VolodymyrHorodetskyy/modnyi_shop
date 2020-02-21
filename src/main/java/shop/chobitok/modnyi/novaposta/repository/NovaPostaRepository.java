@@ -1,6 +1,12 @@
 package shop.chobitok.modnyi.novaposta.repository;
 
-import org.springframework.http.*;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
@@ -20,6 +26,7 @@ public class NovaPostaRepository {
     public TrackingEntity getTracking(GetTrackingRequest getTrackingRequest) {
         getTrackingRequest.setApiKey(key);
         RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getMessageConverters().add(0, createMappingJacksonHttpMessageConverter());
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity httpEntity = new HttpEntity(getTrackingRequest, headers);
@@ -33,6 +40,20 @@ public class NovaPostaRepository {
             }
         }
         return trackingEntity;
+    }
+
+
+    private MappingJackson2HttpMessageConverter createMappingJacksonHttpMessageConverter() {
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+        converter.setObjectMapper(createObjectMapper());
+        return converter;
+    }
+
+
+    private ObjectMapper createObjectMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
+        return objectMapper;
     }
 
 }

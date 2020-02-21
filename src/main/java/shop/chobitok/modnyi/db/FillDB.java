@@ -25,7 +25,7 @@ public class FillDB {
         this.orderService = orderService;
     }
 
-    @PostConstruct
+   // @PostConstruct
     public void init() {
         Company company = new Company();
         company.setName("LadyShoes");

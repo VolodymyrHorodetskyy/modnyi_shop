@@ -22,4 +22,9 @@ public class ShoeController {
         return shoeService.getAll(page, size, model);
     }
 
+    @GetMapping("/fromTildaCSV")
+    public List<Shoe> fromTildaCSV(@RequestParam String path) {
+        return shoeService.fromTildaCSV(path);
+    }
+
 }

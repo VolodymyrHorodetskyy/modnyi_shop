@@ -16,6 +16,9 @@ public class Shoe extends Audit {
     private String model;
 
     @Column
+    private String color;
+
+    @Column
     private String description;
 
     @ManyToOne
@@ -35,6 +38,9 @@ public class Shoe extends Audit {
 
     @Column
     private boolean deleted;
+
+    @Column
+    private boolean imported;
 
     @ManyToMany
     private List<Ordered> ordereds;
@@ -131,5 +137,21 @@ public class Shoe extends Audit {
 
     public void setOrdereds(List<Ordered> ordereds) {
         this.ordereds = ordereds;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+    public boolean isImported() {
+        return imported;
+    }
+
+    public void setImported(boolean imported) {
+        this.imported = imported;
     }
 }

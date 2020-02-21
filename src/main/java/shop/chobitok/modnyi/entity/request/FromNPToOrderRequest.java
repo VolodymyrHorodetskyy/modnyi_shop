@@ -1,13 +1,15 @@
 package shop.chobitok.modnyi.entity.request;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+@Valid
 public class FromNPToOrderRequest {
 
     @NotNull
     private String phone;
     @NotNull
-    private String TTN;
+    private String ttn;
 
     public String getPhone() {
         return phone;
@@ -17,11 +19,11 @@ public class FromNPToOrderRequest {
         this.phone = phone;
     }
 
-    public String getTTN() {
-        return TTN;
+    public String getTtn() {
+        return ttn;
     }
 
-    public void setTTN(String TTN) {
-        this.TTN = TTN;
+    public void setTtn(String ttn) {
+        this.ttn = ttn;
     }
 }

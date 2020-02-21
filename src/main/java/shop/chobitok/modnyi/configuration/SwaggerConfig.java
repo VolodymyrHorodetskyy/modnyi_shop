@@ -1,7 +1,10 @@
 package shop.chobitok.modnyi.configuration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestOperations;
+import org.springframework.web.client.RestTemplate;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
@@ -34,5 +37,7 @@ public class SwaggerConfig {
                 .version("1.0.0")
                 .build();
     }
+
+
 
 }

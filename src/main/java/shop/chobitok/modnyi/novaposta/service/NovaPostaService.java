@@ -27,15 +27,15 @@ public class NovaPostaService {
     }
 
     public Ordered createOrderFromNP(FromNPToOrderRequest fromNPToOrderRequest) {
-        return orderService.createOrder(npOrderMapper.toOrdered(postaRepository.getTracking(createTrackingRequest(fromNPToOrderRequest))));
+        return npOrderMapper.toOrdered(postaRepository.getTracking(createTrackingRequest(fromNPToOrderRequest)));
     }
-    
+
     private GetTrackingRequest createTrackingRequest(FromNPToOrderRequest fromNPToOrderRequest) {
         GetTrackingRequest getTrackingRequest = new GetTrackingRequest();
         MethodProperties methodProperties = new MethodProperties();
         List<Document> documentList = new ArrayList<>();
         Document document = new Document();
-        document.setDocumentNumber(fromNPToOrderRequest.getTTN());
+        document.setDocumentNumber(fromNPToOrderRequest.getTtn());
         document.setPhone(fromNPToOrderRequest.getPhone());
         documentList.add(document);
         methodProperties.setDocuments(documentList);
