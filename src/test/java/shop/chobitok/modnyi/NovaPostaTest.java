@@ -5,11 +5,14 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+import shop.chobitok.modnyi.novaposta.mapper.DtoMapper;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.request.Document;
 import shop.chobitok.modnyi.novaposta.request.GetTrackingRequest;
 import shop.chobitok.modnyi.novaposta.request.MethodProperties;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +22,9 @@ public class NovaPostaTest {
 
     @Autowired
     private NovaPostaRepository postaRepository;
+
+    @Autowired
+    private DtoMapper dtoMapper;
 
     @Test
     public void testGetTracking() {
@@ -34,6 +40,11 @@ public class NovaPostaTest {
         methodProperties.setDocuments(documentList);
         getTrackingRequest.setMethodProperties(methodProperties);
         postaRepository.getTracking(getTrackingRequest);
+    }
+
+    @Test
+    public void testListTracking() {
+        dtoMapper.dtoList(postaRepository.getTrackingEntityList(LocalDateTime.now(), LocalDateTime.now()));
     }
 
 }

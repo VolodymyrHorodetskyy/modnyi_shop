@@ -12,24 +12,38 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.novaposta.entity.Data;
+import shop.chobitok.modnyi.novaposta.entity.ListTrackingEntity;
+import shop.chobitok.modnyi.novaposta.request.GetDocumentListRequest;
+import shop.chobitok.modnyi.novaposta.request.MethodPropertiesForList;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.request.GetTrackingRequest;
 
+import javax.annotation.PostConstruct;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
 public class NovaPostaRepository {
 
     private String getTrackingURL = "https://api.novaposhta.ua/v2.0/json/getStatusDocuments";
+    private String getListTracking = "https://api.novaposhta.ua/v2.0/json/getDocumentList";
     private String key = "6c5e8776a25bc714a36eeac4f70b8b37";
+
+    private RestTemplate restTemplate;
+    private HttpHeaders httpHeaders;
+
+    @PostConstruct
+    public void init() {
+        restTemplate = new RestTemplate();
+        restTemplate.getMessageConverters().add(0, createMappingJacksonHttpMessageConverter());
+        httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+    }
 
     public TrackingEntity getTracking(GetTrackingRequest getTrackingRequest) {
         getTrackingRequest.setApiKey(key);
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getMessageConverters().add(0, createMappingJacksonHttpMessageConverter());
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity httpEntity = new HttpEntity(getTrackingRequest, headers);
+        HttpEntity httpEntity = new HttpEntity(getTrackingRequest, httpHeaders);
         ResponseEntity<TrackingEntity> responseEntity = restTemplate.postForEntity(getTrackingURL, httpEntity, TrackingEntity.class);
         TrackingEntity trackingEntity = responseEntity.getBody();
         List<Data> dataList = trackingEntity.getData();
@@ -42,6 +56,23 @@ public class NovaPostaRepository {
         return trackingEntity;
     }
 
+    public ListTrackingEntity getTrackingEntityList(LocalDateTime from, LocalDateTime to) {
+        GetDocumentListRequest getDocumentListRequest = new GetDocumentListRequest();
+        getDocumentListRequest.setApiKey(key);
+        MethodPropertiesForList methodPropertiesForList = new MethodPropertiesForList();
+        String fromString = formatDate(from);
+        String toString = formatDate(to);
+        methodPropertiesForList.setDateTimeFrom(fromString);
+        methodPropertiesForList.setDateTimeTo(toString);
+        getDocumentListRequest.setMethodProperties(methodPropertiesForList);
+        HttpEntity httpEntity = new HttpEntity(getDocumentListRequest, httpHeaders);
+        ResponseEntity<ListTrackingEntity> responseEntity = restTemplate.postForEntity(getListTracking, httpEntity, ListTrackingEntity.class);
+        return responseEntity.getBody();
+    }
+
+    private String formatDate(LocalDateTime date) {
+        return date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+    }
 
     private MappingJackson2HttpMessageConverter createMappingJacksonHttpMessageConverter() {
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();

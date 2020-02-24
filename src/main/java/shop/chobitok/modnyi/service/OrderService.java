@@ -1,18 +1,29 @@
 package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
+import shop.chobitok.modnyi.entity.Client;
 import shop.chobitok.modnyi.entity.Ordered;
+import shop.chobitok.modnyi.entity.Shoe;
+import shop.chobitok.modnyi.entity.request.CreateOrderRequest;
+import shop.chobitok.modnyi.exception.ConflictException;
+import shop.chobitok.modnyi.repository.ClientRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
+import shop.chobitok.modnyi.repository.ShoeRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class OrderService {
 
     private OrderRepository orderRepository;
+    private ShoeRepository shoeRepository;
+    private ClientRepository clientRepository;
 
-    public OrderService(OrderRepository orderRepository) {
+    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientRepository clientRepository) {
         this.orderRepository = orderRepository;
+        this.shoeRepository = shoeRepository;
+        this.clientRepository = clientRepository;
     }
 
     public List<Ordered> getAll(int page, int size, String TTN, String model) {
@@ -23,7 +34,38 @@ public class OrderService {
         return orderRepository.getOne(id);
     }
 
+    public Ordered createOrder(CreateOrderRequest createOrderRequest) {
+        Ordered ordered = new Ordered();
+        Shoe shoe = shoeRepository.getOne(createOrderRequest.getShoe());
+        if (shoe == null) {
+            throw new ConflictException("Взуття не може бути пусте");
+        }
+        //TODO : make possibility to edit user
+        List<Client> clients = clientRepository.findByPhone(createOrderRequest.getPhone());
+        Client client = null;
+        if (clients.size() > 0) {
+            client = clients.get(0);
+        } else {
+            client = new Client();
+            client.setPhone(createOrderRequest.getPhone());
+            client.setName(createOrderRequest.getName());
+            client.setLastName(createOrderRequest.getLastName());
+            client.setMiddleName(createOrderRequest.getMiddleName());
+            client = clientRepository.save(client);
+        }
+        List<Shoe> shoes = new ArrayList<>();
+        shoes.add(shoe);
+        ordered.setOrderedShoes(shoes);
+        ordered.setClient(client);
+        ordered.setTtn(createOrderRequest.getTtn());
+        return orderRepository.save(ordered);
+    }
+
     public Ordered createOrder(Ordered ordered) {
         return orderRepository.save(ordered);
+    }
+
+    public List<Ordered> createOrders(List<Ordered> orderedList) {
+        return orderRepository.saveAll(orderedList);
     }
 }

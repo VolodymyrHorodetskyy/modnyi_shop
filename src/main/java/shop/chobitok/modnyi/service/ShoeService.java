@@ -61,12 +61,7 @@ public class ShoeService {
                     shoe.setPhotoPath( str[str.length - 7].replaceAll("^\"|\"$", ""));
                     shoe.setImported(true);
                     shoe.setPrice(Double.parseDouble(str[str.length - 6]));
-                    System.out.println(str[2]);
                     shoes.add(shoe);
-
-                    System.out.println(str[str.length - 6]);
-                    System.out.println(str[str.length - 7]);
-                    //   System.out.println(str[9]);
                 }
             }
             return shoeRepository.saveAll(shoes);

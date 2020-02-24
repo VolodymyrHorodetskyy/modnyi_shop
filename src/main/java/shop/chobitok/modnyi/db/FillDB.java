@@ -1,12 +1,16 @@
 package shop.chobitok.modnyi.db;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ResourceUtils;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.repository.CompanyRepository;
 import shop.chobitok.modnyi.service.OrderService;
 import shop.chobitok.modnyi.service.ShoeService;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,9 +29,15 @@ public class FillDB {
         this.orderService = orderService;
     }
 
-   // @PostConstruct
+    @PostConstruct
     public void init() {
-        Company company = new Company();
+
+        try {
+            shoeService.fromTildaCSV(ResourceUtils.getFile("classpath:files/123").getPath());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        /*Company company = new Company();
         company.setName("LadyShoes");
         companyRepository.save(company);
 
@@ -59,7 +69,7 @@ public class FillDB {
         ordered.setStatus(Status.CREATED);
         ordered.setTtn("20450207223718");
         ordered.setNotes("Якісь записи, будь які");
-        addOrder(ordered);
+        addOrder(ordered);*/
     }
 
     private void addOrder(Ordered ordered) {
