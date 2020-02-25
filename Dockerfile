@@ -20,6 +20,6 @@ ENTRYPOINT ["/usr/local/bin/mvn-entrypoint.sh"]
 CMD ["mvn clean install -Dmaven.test.skip=true"]
 
 # copy WAR into image
-COPY modnyi-0.0.1-SNAPSHOT.jar /app.jar
+COPY target/modnyi-0.0.1-SNAPSHOT.jar /app.jar
 # run application with this command line
 CMD ["java", "-jar", "/app.jar"]
