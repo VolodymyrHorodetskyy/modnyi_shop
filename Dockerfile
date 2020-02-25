@@ -1,5 +1,6 @@
 # Alpine Linux with OpenJDK JRE
 FROM adoptopenjdk:11-jdk-openj9-bionic
+
 ARG MAVEN_VERSION=3.6.3
 ARG USER_HOME_DIR="/root"
 ARG SHA=c35a1803a6e70a126e80b2b3ae33eed961f83ed74d18fcd16909b2d44d7dada3203f1ffe726c17ef8dcca2dcaa9fca676987befeadc9b9f759967a8cb77181c0
@@ -14,6 +15,13 @@ RUN mkdir -p /usr/share/maven /usr/share/maven/ref \
 
 ENV MAVEN_HOME /usr/share/maven
 ENV MAVEN_CONFIG "$USER_HOME_DIR/.m2"
+
+COPY mvn-entrypoint.sh /usr/local/bin/mvn-entrypoint.sh
+COPY settings-docker.xml /usr/share/maven/ref/
+
+ENTRYPOINT ["/usr/local/bin/mvn-entrypoint.sh"]
+CMD ["mvn"]
+
 mvn clean install
 # copy WAR into image
 COPY modnyi-0.0.1-SNAPSHOT.jar /app.jar
