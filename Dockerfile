@@ -17,7 +17,7 @@ ENV MAVEN_HOME /usr/share/maven
 ENV MAVEN_CONFIG "$USER_HOME_DIR/.m2"
 
 ENTRYPOINT ["/usr/local/bin/mvn-entrypoint.sh"]
-CMD ["mvn package -Dmaven.test.skip=true"]
+CMD ["mvn clean install -Dmaven.test.skip=true"]
 
 # copy WAR into image
 COPY modnyi-0.0.1-SNAPSHOT.jar /app.jar
