@@ -20,9 +20,8 @@ COPY mvn-entrypoint.sh /usr/local/bin/mvn-entrypoint.sh
 COPY settings-docker.xml /usr/share/maven/ref/
 
 ENTRYPOINT ["/usr/local/bin/mvn-entrypoint.sh"]
-CMD ["mvn"]
+CMD ["mvn clean install"]
 
-mvn clean install
 # copy WAR into image
 COPY modnyi-0.0.1-SNAPSHOT.jar /app.jar
 # run application with this command line
