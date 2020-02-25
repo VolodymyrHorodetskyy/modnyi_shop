@@ -53,12 +53,12 @@ public class StatisticService {
             }
         }
         if (returned) {
-            orderedList = orderedList.stream().filter(ordered -> ordered.getStatus() == Status.DENIED && !ordered.getLastCreatedOnTheBasisDocumentType().equals(isReturnedIdentificator)).collect(Collectors.toList());
+            orderedList = orderedList.stream().filter(ordered -> ordered.getStatus() == Status.DENIED && !ordered.getLastCreatedOnTheBasisDocumentTypeNP().equals(isReturnedIdentificator)).collect(Collectors.toList());
         } else {
             orderedList = orderedList.stream().filter(ordered -> ordered.getStatus() == Status.DENIED).collect(Collectors.toList());
         }
         for (Ordered ordered : orderedList) {
-            System.out.println(ordered.getTtn() + " " + ordered.getLastCreatedOnTheBasisDocumentType());
+            System.out.println(ordered.getTtn() + " " + ordered.getLastCreatedOnTheBasisDocumentTypeNP());
         }
         return orderedList;
     }
@@ -67,7 +67,7 @@ public class StatisticService {
         List<Ordered> orderedList = novaPostaService.createOrderedFromTTNFile(new FromTTNFileRequest("C:\\shoe_proj\\All_ttn"));
         orderedList = orderedList.stream().filter(ordered -> ordered.getStatus() == Status.DELIVERED).collect(Collectors.toList());
         for (Ordered ordered : orderedList) {
-            System.out.println(ordered.getTtn() + " " + ordered.getDatePayedKeeping());
+            System.out.println(ordered.getTtn() + " " + ordered.getDatePayedKeepingNP());
         }
         return orderedList;
     }

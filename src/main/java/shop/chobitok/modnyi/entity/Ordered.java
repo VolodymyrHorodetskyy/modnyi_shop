@@ -44,16 +44,16 @@ public class Ordered extends Audit {
     private LocalDateTime lastTransactionDateTime;
 
     @Column
-    private Double returnSum;
+    private Double returnSumNP;
 
     @Column
     private String nameAndSurnameNP;
 
     @Column
-    private String lastCreatedOnTheBasisDocumentType;
+    private String lastCreatedOnTheBasisDocumentTypeNP;
 
     @Column
-    private LocalDateTime datePayedKeeping;
+    private LocalDateTime datePayedKeepingNP;
 
 
     public List<Shoe> getOrderedShoes() {
@@ -144,12 +144,12 @@ public class Ordered extends Audit {
         this.lastTransactionDateTime = lastTransactionDateTime;
     }
 
-    public Double getReturnSum() {
-        return returnSum;
+    public Double getReturnSumNP() {
+        return returnSumNP;
     }
 
-    public void setReturnSum(Double returnSum) {
-        this.returnSum = returnSum;
+    public void setReturnSumNP(Double returnSumNP) {
+        this.returnSumNP = returnSumNP;
     }
 
     public String getNameAndSurnameNP() {
@@ -160,19 +160,19 @@ public class Ordered extends Audit {
         this.nameAndSurnameNP = nameAndSurnameNP;
     }
 
-    public String getLastCreatedOnTheBasisDocumentType() {
-        return lastCreatedOnTheBasisDocumentType;
+    public String getLastCreatedOnTheBasisDocumentTypeNP() {
+        return lastCreatedOnTheBasisDocumentTypeNP;
     }
 
-    public void setLastCreatedOnTheBasisDocumentType(String lastCreatedOnTheBasisDocumentType) {
-        this.lastCreatedOnTheBasisDocumentType = lastCreatedOnTheBasisDocumentType;
+    public void setLastCreatedOnTheBasisDocumentTypeNP(String lastCreatedOnTheBasisDocumentTypeNP) {
+        this.lastCreatedOnTheBasisDocumentTypeNP = lastCreatedOnTheBasisDocumentTypeNP;
     }
 
-    public LocalDateTime getDatePayedKeeping() {
-        return datePayedKeeping;
+    public LocalDateTime getDatePayedKeepingNP() {
+        return datePayedKeepingNP;
     }
 
-    public void setDatePayedKeeping(LocalDateTime datePayedKeeping) {
-        this.datePayedKeeping = datePayedKeeping;
+    public void setDatePayedKeepingNP(LocalDateTime datePayedKeepingNP) {
+        this.datePayedKeepingNP = datePayedKeepingNP;
     }
 }

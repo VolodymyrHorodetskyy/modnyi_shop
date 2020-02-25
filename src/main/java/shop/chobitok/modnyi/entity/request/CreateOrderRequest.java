@@ -31,6 +31,7 @@ public class CreateOrderRequest {
 
     private String middleName;
 
+    private String notes;
 
     public String getTtn() {
         return ttn;
@@ -126,5 +127,13 @@ public class CreateOrderRequest {
 
     public void setMiddleName(String middleName) {
         this.middleName = middleName;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 }

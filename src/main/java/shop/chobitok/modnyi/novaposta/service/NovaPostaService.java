@@ -1,14 +1,11 @@
 package shop.chobitok.modnyi.novaposta.service;
 
-import org.hibernate.criterion.Order;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Ordered;
-import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.request.FromNPToOrderRequest;
 import shop.chobitok.modnyi.entity.request.FromTTNFileRequest;
 import shop.chobitok.modnyi.exception.ConflictException;
-import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.request.Document;
@@ -17,12 +14,8 @@ import shop.chobitok.modnyi.novaposta.request.MethodProperties;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.service.OrderService;
 
-import java.io.*;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class NovaPostaService {

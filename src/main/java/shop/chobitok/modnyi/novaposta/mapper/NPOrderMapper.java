@@ -40,12 +40,12 @@ public class NPOrderMapper {
                 ordered.setPostComment(data.getCargoDescriptionString());
                 ordered.setLastTransactionDateTime(ShoeUtil.toLocalDateTime(data.getLastTransactionDateTimeGM()));
                 ordered.setClient(parseClient(data));
-                ordered.setReturnSum(data.getRedeliverySum());
+                ordered.setReturnSumNP(data.getRedeliverySum());
                 ordered.setNameAndSurnameNP(data.getRecipientFullNameEW());
-                ordered.setLastCreatedOnTheBasisDocumentType(data.getLastCreatedOnTheBasisDocumentType());
-                ordered.setDatePayedKeeping(ShoeUtil.toLocalDateTime(data.getDatePayedKeeping()));
+                ordered.setLastCreatedOnTheBasisDocumentTypeNP(data.getLastCreatedOnTheBasisDocumentType());
+                ordered.setDatePayedKeepingNP(ShoeUtil.toLocalDateTime(data.getDatePayedKeeping()));
 
-                //   setShoeAndSizeFromDescriptionNP(ordered, data.getCargoDescriptionString());
+                setShoeAndSizeFromDescriptionNP(ordered, data.getCargoDescriptionString());
             }
         }
         return ordered;
@@ -72,30 +72,35 @@ public class NPOrderMapper {
 
     private void setShoeAndSizeFromDescriptionNP(Ordered ordered, String string) {
         List<Shoe> orderedShoes = null;
-        String model = string.substring(0, string.indexOf(' '));
-        List<Shoe> shoes = shoeService.getAll(0, 20, model);
-        String color = string.substring(string.indexOf(' ') + 1);
-        color = color.substring(0, color.indexOf(","));
-        String size = string.substring(string.indexOf(",") + 1);
-        size = size.trim();
-        size = size.substring(0, size.indexOf(' '));
         try {
-            ordered.setSize(Integer.parseInt(size));
-        } catch (NumberFormatException e) {
-            System.out.println(e);
-        }
-        List<Shoe> byModel = shoes.stream().filter(shoe -> shoe.getModel().contains(model)).collect(Collectors.toList());
-        if (byModel.size() > 0) {
-            orderedShoes = new ArrayList<>();
-            String finalColor = color;
-            List<Shoe> byColor = byModel.stream().filter(shoe -> shoe.getColor().contains(finalColor)).collect(Collectors.toList());
-            if (byColor.size() > 0) {
-                orderedShoes.add(byColor.get(0));
-            } else {
-                orderedShoes.add(byModel.get(0));
+            String model = string.substring(0, string.indexOf(' '));
+            String color = string.substring(string.indexOf(' ') + 1);
+            color = color.substring(0, color.indexOf(","));
+            List<Shoe> shoes = shoeService.getAll(0, 20, model);
+            List<Shoe> byModel = shoes.stream().filter(shoe -> shoe.getModel().contains(model)).collect(Collectors.toList());
+            if (byModel.size() > 0) {
+                orderedShoes = new ArrayList<>();
+                String finalColor = color;
+                List<Shoe> byColor = byModel.stream().filter(shoe -> shoe.getColor().contains(finalColor)).collect(Collectors.toList());
+                if (byColor.size() > 0) {
+                    orderedShoes.add(byColor.get(0));
+                } else {
+                    orderedShoes.add(byModel.get(0));
+                }
             }
+            ordered.setOrderedShoes(orderedShoes);
+        } catch (StringIndexOutOfBoundsException e) {
+     //       e.printStackTrace();
         }
-        ordered.setOrderedShoes(orderedShoes);
+        try {
+            String size = string.substring(string.indexOf(",") + 1);
+            size = size.trim();
+            size = size.substring(0, size.indexOf(' '));
+            ordered.setSize(Integer.parseInt(size));
+            ordered.setSize(Integer.parseInt(size));
+        } catch (StringIndexOutOfBoundsException | NumberFormatException e) {
+       //     e.printStackTrace();
+        }
     }
 
 }

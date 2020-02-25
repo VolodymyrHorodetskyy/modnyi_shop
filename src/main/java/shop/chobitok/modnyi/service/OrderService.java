@@ -36,8 +36,13 @@ public class OrderService {
 
     public Ordered createOrder(CreateOrderRequest createOrderRequest) {
         Ordered ordered = new Ordered();
-        Shoe shoe = shoeRepository.getOne(createOrderRequest.getShoe());
-        if (shoe == null) {
+        Shoe shoe = null;
+        if (createOrderRequest.getShoe() != null) {
+            shoe = shoeRepository.getOne(createOrderRequest.getShoe());
+            if (shoe == null) {
+                throw new ConflictException("Взуття не може бути пусте");
+            }
+        } else {
             throw new ConflictException("Взуття не може бути пусте");
         }
         //TODO : make possibility to edit user
@@ -58,6 +63,12 @@ public class OrderService {
         ordered.setOrderedShoes(shoes);
         ordered.setClient(client);
         ordered.setTtn(createOrderRequest.getTtn());
+        ordered.setStatus(createOrderRequest.getStatus());
+        ordered.setSize(createOrderRequest.getSize());
+        ordered.setAddress(createOrderRequest.getAddress());
+        ordered.setNotes(createOrderRequest.getNotes());
+        ordered.setPrePayment(createOrderRequest.getPrepayment());
+        ordered.setPrice(createOrderRequest.getPrice());
         return orderRepository.save(ordered);
     }
 
