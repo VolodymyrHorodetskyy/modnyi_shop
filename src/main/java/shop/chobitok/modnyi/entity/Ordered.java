@@ -55,6 +55,15 @@ public class Ordered extends Audit {
     @Column
     private LocalDateTime datePayedKeepingNP;
 
+    @Column
+    private String cityRefNP;
+
+    @Column
+    private String city;
+
+    @Column
+    private boolean available = true;
+
 
     public List<Shoe> getOrderedShoes() {
         return orderedShoes;

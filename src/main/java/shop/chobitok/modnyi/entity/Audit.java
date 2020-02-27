@@ -1,10 +1,12 @@
 package shop.chobitok.modnyi.entity;
 
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
@@ -16,7 +18,11 @@ public class Audit {
 
     @CreatedDate
     @Column
-    private LocalDateTime date;
+    private LocalDateTime createdDate;
+
+    @LastModifiedDate
+    @Column
+    private Date lastModifiedDate;
 
     public Long getId() {
         return id;
@@ -26,12 +32,19 @@ public class Audit {
         this.id = id;
     }
 
-    public LocalDateTime getDate() {
-        return date;
+    public LocalDateTime getCreatedDate() {
+        return createdDate;
     }
 
-    public void setDate(LocalDateTime date) {
-        this.date = date;
+    public void setCreatedDate(LocalDateTime createdDate) {
+        this.createdDate = createdDate;
     }
 
+    public Date getLastModifiedDate() {
+        return lastModifiedDate;
+    }
+
+    public void setLastModifiedDate(Date lastModifiedDate) {
+        this.lastModifiedDate = lastModifiedDate;
+    }
 }

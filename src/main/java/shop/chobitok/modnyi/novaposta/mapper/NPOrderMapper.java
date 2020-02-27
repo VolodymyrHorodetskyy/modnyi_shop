@@ -12,6 +12,7 @@ import shop.chobitok.modnyi.repository.ClientRepository;
 import shop.chobitok.modnyi.service.ShoeService;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,6 +22,8 @@ public class NPOrderMapper {
 
     private ShoeService shoeService;
     private ClientRepository clientRepository;
+    private List<Integer> sizes = Arrays.asList(36, 37, 38, 39, 40);
+    private String defaultColor = "шкіра";
 
     public NPOrderMapper(ShoeService shoeService, ClientRepository clientRepository) {
         this.shoeService = shoeService;
@@ -44,7 +47,6 @@ public class NPOrderMapper {
                 ordered.setNameAndSurnameNP(data.getRecipientFullNameEW());
                 ordered.setLastCreatedOnTheBasisDocumentTypeNP(data.getLastCreatedOnTheBasisDocumentType());
                 ordered.setDatePayedKeepingNP(ShoeUtil.toLocalDateTime(data.getDatePayedKeeping()));
-
                 setShoeAndSizeFromDescriptionNP(ordered, data.getCargoDescriptionString());
             }
         }
@@ -71,36 +73,43 @@ public class NPOrderMapper {
     }
 
     private void setShoeAndSizeFromDescriptionNP(Ordered ordered, String string) {
-        List<Shoe> orderedShoes = null;
-        try {
-            String model = string.substring(0, string.indexOf(' '));
-            String color = string.substring(string.indexOf(' ') + 1);
-            color = color.substring(0, color.indexOf(","));
-            List<Shoe> shoes = shoeService.getAll(0, 20, model);
-            List<Shoe> byModel = shoes.stream().filter(shoe -> shoe.getModel().contains(model)).collect(Collectors.toList());
-            if (byModel.size() > 0) {
-                orderedShoes = new ArrayList<>();
-                String finalColor = color;
-                List<Shoe> byColor = byModel.stream().filter(shoe -> shoe.getColor().contains(finalColor)).collect(Collectors.toList());
-                if (byColor.size() > 0) {
-                    orderedShoes.add(byColor.get(0));
-                } else {
-                    orderedShoes.add(byModel.get(0));
-                }
+        List<Shoe> shoes = shoeService.getAll(0, 30, "");
+        String model = null;
+        Shoe parsedShoe = null;
+        for (Shoe shoe : shoes) {
+            if (string.toLowerCase().contains(shoe.getModel().toLowerCase())) {
+                model = shoe.getModel();
             }
-            ordered.setOrderedShoes(orderedShoes);
-        } catch (StringIndexOutOfBoundsException e) {
-     //       e.printStackTrace();
         }
-        try {
-            String size = string.substring(string.indexOf(",") + 1);
-            size = size.trim();
-            size = size.substring(0, size.indexOf(' '));
-            ordered.setSize(Integer.parseInt(size));
-            ordered.setSize(Integer.parseInt(size));
-        } catch (StringIndexOutOfBoundsException | NumberFormatException e) {
-       //     e.printStackTrace();
+        if (!StringUtils.isEmpty(model)) {
+            String finalModel = model;
+            shoes = shoes.stream().filter(shoe -> shoe.getModel().contains(finalModel)).collect(Collectors.toList());
+            if (shoes.size() != 1) {
+                parsedShoe = shoes.stream().filter(shoe -> string.contains(shoe.getColor())).findFirst().orElse(null);
+                if (parsedShoe == null) {
+                    parsedShoe = shoes.stream().filter(shoe -> shoe.getColor().contains(defaultColor)).findFirst().orElse(null);
+                }
+            } else {
+                parsedShoe = shoes.get(0);
+            }
         }
+        Integer size = null;
+        for (Integer size1 : sizes) {
+            if (string.contains(size1.toString())) {
+                size = size1;
+            }
+        }
+        if (parsedShoe == null) {
+            System.out.println(string);
+        } else if (size == null) {
+            System.out.println("size " + string);
+        }
+        List<Shoe> shoeList = new ArrayList<>();
+        shoeList.add(parsedShoe);
+        ordered.setOrderedShoes(shoeList);
+        ordered.setSize(size);
     }
+
+
 
 }

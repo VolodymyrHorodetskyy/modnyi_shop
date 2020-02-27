@@ -5,6 +5,8 @@ import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.request.CreateOrderRequest;
 import shop.chobitok.modnyi.entity.request.FromNPToOrderRequest;
 import shop.chobitok.modnyi.entity.request.FromTTNFileRequest;
+import shop.chobitok.modnyi.entity.request.UpdateOrderRequest;
+import shop.chobitok.modnyi.entity.response.GetAllOrderedResponse;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.service.OrderService;
 
@@ -25,8 +27,8 @@ public class OrderController {
     }
 
     @GetMapping
-    public List<Ordered> getAll() {
-        return orderService.getAll(0, 0, "", "");
+    public GetAllOrderedResponse getAll(@RequestParam int page, @RequestParam int size, @RequestParam(required = false) String ttn, @RequestParam(required = false) String model) {
+        return orderService.getAll(page, size, ttn, model);
     }
 
     @PostMapping("/fromNP")
@@ -42,6 +44,11 @@ public class OrderController {
     @PostMapping
     public Ordered createOrdered(@RequestBody @Valid CreateOrderRequest createOrderRequest) {
         return orderService.createOrder(createOrderRequest);
+    }
+
+    @PatchMapping("/{id}")
+    public Ordered updateOrdered(@RequestBody @Valid UpdateOrderRequest updateOrderRequest, @PathVariable Long id) {
+        return orderService.updateOrder(id, updateOrderRequest);
     }
 
 

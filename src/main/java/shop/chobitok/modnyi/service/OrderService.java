@@ -1,14 +1,20 @@
 package shop.chobitok.modnyi.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.Client;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.entity.request.CreateOrderRequest;
+import shop.chobitok.modnyi.entity.request.UpdateOrderRequest;
+import shop.chobitok.modnyi.entity.response.GetAllOrderedResponse;
+import shop.chobitok.modnyi.entity.response.PaginationInfo;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.repository.ClientRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
+import shop.chobitok.modnyi.specification.OrderedSpecification;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,8 +32,14 @@ public class OrderService {
         this.clientRepository = clientRepository;
     }
 
-    public List<Ordered> getAll(int page, int size, String TTN, String model) {
-        return orderRepository.findAll();
+    public GetAllOrderedResponse getAll(int page, int size, String TTN, String model) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        GetAllOrderedResponse getAllOrderedResponse = new GetAllOrderedResponse();
+        Page orderedPage = orderRepository.findAll(new OrderedSpecification(model, TTN), pageRequest);
+        getAllOrderedResponse.setOrderedList(orderedPage.getContent());
+        PaginationInfo paginationInfo = new PaginationInfo(orderedPage.getPageable().getPageNumber(), orderedPage.getPageable().getPageSize(), orderedPage.getTotalPages(), orderedPage.getTotalElements());
+        getAllOrderedResponse.setPaginationInfo(paginationInfo);
+        return getAllOrderedResponse;
     }
 
     public Ordered getOne(Long id) {
@@ -69,6 +81,15 @@ public class OrderService {
         ordered.setNotes(createOrderRequest.getNotes());
         ordered.setPrePayment(createOrderRequest.getPrepayment());
         ordered.setPrice(createOrderRequest.getPrice());
+        return orderRepository.save(ordered);
+    }
+
+    public Ordered updateOrder(Long id, UpdateOrderRequest updateOrderRequest) {
+        Ordered ordered = orderRepository.getOne(id);
+        if (ordered == null) {
+            throw new ConflictException("Замовлення не знайдено");
+        }
+        ordered.setNotes(updateOrderRequest.getNotes());
         return orderRepository.save(ordered);
     }
 
