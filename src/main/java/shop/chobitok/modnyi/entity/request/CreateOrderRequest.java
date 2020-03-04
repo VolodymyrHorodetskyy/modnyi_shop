@@ -6,7 +6,6 @@ import javax.validation.constraints.NotEmpty;
 
 public class CreateOrderRequest {
 
-    @NotEmpty
     private String ttn;
     @NotEmpty
     private String phone;
@@ -14,7 +13,7 @@ public class CreateOrderRequest {
     private Status status;
 
     private Double price;
-    @NotEmpty
+
     private String address;
 
     private Integer size;
@@ -32,6 +31,10 @@ public class CreateOrderRequest {
     private String middleName;
 
     private String notes;
+
+    private String orderBy;
+
+    private boolean fromStorage;
 
     public String getTtn() {
         return ttn;
@@ -135,5 +138,21 @@ public class CreateOrderRequest {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public String getOrderBy() {
+        return orderBy;
+    }
+
+    public void setOrderBy(String orderBy) {
+        this.orderBy = orderBy;
+    }
+
+    public boolean isFromStorage() {
+        return fromStorage;
+    }
+
+    public void setFromStorage(boolean fromStorage) {
+        this.fromStorage = fromStorage;
     }
 }

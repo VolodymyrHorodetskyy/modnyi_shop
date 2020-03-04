@@ -2,7 +2,9 @@ package shop.chobitok.modnyi.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Client;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Shoe;
@@ -25,30 +27,45 @@ public class OrderService {
     private OrderRepository orderRepository;
     private ShoeRepository shoeRepository;
     private ClientRepository clientRepository;
+    private StorageService storageService;
 
-    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientRepository clientRepository) {
+    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientRepository clientRepository, StorageService storageService) {
         this.orderRepository = orderRepository;
         this.shoeRepository = shoeRepository;
         this.clientRepository = clientRepository;
+        this.storageService = storageService;
     }
 
-    public GetAllOrderedResponse getAll(int page, int size, String TTN, String model) {
-        PageRequest pageRequest = PageRequest.of(page, size);
+    public GetAllOrderedResponse getAll(int page, int size, String TTN, String phone, String model, boolean withoutTTN, String orderBy) {
+        PageRequest pageRequest = PageRequest.of(page, size, createSort(orderBy));
         GetAllOrderedResponse getAllOrderedResponse = new GetAllOrderedResponse();
-        Page orderedPage = orderRepository.findAll(new OrderedSpecification(model, TTN), pageRequest);
+        Page orderedPage = orderRepository.findAll(new OrderedSpecification(model, TTN, phone, withoutTTN), pageRequest);
         getAllOrderedResponse.setOrderedList(orderedPage.getContent());
         PaginationInfo paginationInfo = new PaginationInfo(orderedPage.getPageable().getPageNumber(), orderedPage.getPageable().getPageSize(), orderedPage.getTotalPages(), orderedPage.getTotalElements());
         getAllOrderedResponse.setPaginationInfo(paginationInfo);
         return getAllOrderedResponse;
     }
 
-    public Ordered getOne(Long id) {
-        return orderRepository.getOne(id);
+    private Sort createSort(String orderBy) {
+        Sort.Direction direction = Sort.Direction.DESC;
+        if ("dateEdited".equals(orderBy)) {
+            return Sort.by(direction, "lastModifiedDate");
+        } else {
+            return Sort.by(direction, "createdDate");
+        }
     }
+
 
     public Ordered createOrder(CreateOrderRequest createOrderRequest) {
         Ordered ordered = new Ordered();
-        Shoe shoe = null;
+        if (!StringUtils.isEmpty(createOrderRequest.getTtn())) {
+            if (getAll(0, 1, createOrderRequest.getTtn(), null, null, false, null).getOrderedList().size() > 0) {
+                throw new ConflictException("Замовлення з такою накладною вже існує");
+            }
+        } else {
+            ordered.setWithoutTTN(true);
+        }
+        Shoe shoe;
         if (createOrderRequest.getShoe() != null) {
             shoe = shoeRepository.getOne(createOrderRequest.getShoe());
             if (shoe == null) {
@@ -81,6 +98,10 @@ public class OrderService {
         ordered.setNotes(createOrderRequest.getNotes());
         ordered.setPrePayment(createOrderRequest.getPrepayment());
         ordered.setPrice(createOrderRequest.getPrice());
+        ordered.setFromStorage(createOrderRequest.isFromStorage());
+        if (createOrderRequest.isFromStorage()) {
+            storageService.setStorage(ordered);
+        }
         return orderRepository.save(ordered);
     }
 
@@ -89,8 +110,34 @@ public class OrderService {
         if (ordered == null) {
             throw new ConflictException("Замовлення не знайдено");
         }
+        ordered.setFullPayment(updateOrderRequest.isFull_payment());
         ordered.setNotes(updateOrderRequest.getNotes());
+        updateShoeAndSize(ordered, updateOrderRequest);
+        Client client = ordered.getClient();
+        if (client == null) {
+            client = new Client();
+            ordered.setClient(client);
+        }
+        client.setMiddleName(updateOrderRequest.getMiddleName());
+        client.setName(updateOrderRequest.getName());
+        client.setLastName(updateOrderRequest.getLastName());
+        client.setPhone(updateOrderRequest.getPhone());
+        clientRepository.save(client);
+        ordered.setPrePayment(updateOrderRequest.getPrepayment());
+        ordered.setPrice(updateOrderRequest.getPrice());
         return orderRepository.save(ordered);
+    }
+
+    private void updateShoeAndSize(Ordered ordered, UpdateOrderRequest updateOrderRequest) {
+        List<Shoe> shoes = ordered.getOrderedShoes();
+        if (shoes != null && shoes.size() > 0) {
+            shoes.remove(0);
+        } else if (shoes == null) {
+            shoes = new ArrayList<>();
+        }
+        shoes.add(shoeRepository.getOne(updateOrderRequest.getShoe()));
+        ordered.setOrderedShoes(shoes);
+        ordered.setSize(updateOrderRequest.getSize());
     }
 
     public Ordered createOrder(Ordered ordered) {
@@ -100,4 +147,5 @@ public class OrderService {
     public List<Ordered> createOrders(List<Ordered> orderedList) {
         return orderRepository.saveAll(orderedList);
     }
+
 }

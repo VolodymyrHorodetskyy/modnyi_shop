@@ -10,7 +10,7 @@ import java.util.List;
 @Entity
 public class Ordered extends Audit {
 
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Shoe> orderedShoes;
 
     @ManyToOne(cascade = CascadeType.ALL)
@@ -56,6 +56,9 @@ public class Ordered extends Audit {
     private LocalDateTime datePayedKeepingNP;
 
     @Column
+    private boolean fullPayment = false;
+
+    @Column
     private String cityRefNP;
 
     @Column
@@ -64,6 +67,14 @@ public class Ordered extends Audit {
     @Column
     private boolean available = true;
 
+    @Column
+    private boolean withoutTTN;
+
+    @Column
+    private boolean fromStorage;
+
+    @Column
+    private String fromTTN;
 
     public List<Shoe> getOrderedShoes() {
         return orderedShoes;
@@ -183,5 +194,61 @@ public class Ordered extends Audit {
 
     public void setDatePayedKeepingNP(LocalDateTime datePayedKeepingNP) {
         this.datePayedKeepingNP = datePayedKeepingNP;
+    }
+
+    public boolean isFullPayment() {
+        return fullPayment;
+    }
+
+    public void setFullPayment(boolean fullPayment) {
+        this.fullPayment = fullPayment;
+    }
+
+    public String getCityRefNP() {
+        return cityRefNP;
+    }
+
+    public void setCityRefNP(String cityRefNP) {
+        this.cityRefNP = cityRefNP;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    public void setAvailable(boolean available) {
+        this.available = available;
+    }
+
+    public boolean isWithoutTTN() {
+        return withoutTTN;
+    }
+
+    public void setWithoutTTN(boolean withoutTTN) {
+        this.withoutTTN = withoutTTN;
+    }
+
+    public boolean isFromStorage() {
+        return fromStorage;
+    }
+
+    public void setFromStorage(boolean fromStorage) {
+        this.fromStorage = fromStorage;
+    }
+
+    public String getFromTTN() {
+        return fromTTN;
+    }
+
+    public void setFromTTN(String fromTTN) {
+        this.fromTTN = fromTTN;
     }
 }

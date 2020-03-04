@@ -22,7 +22,7 @@ public class Audit {
 
     @LastModifiedDate
     @Column
-    private Date lastModifiedDate;
+    private LocalDateTime lastModifiedDate;
 
     public Long getId() {
         return id;
@@ -40,11 +40,11 @@ public class Audit {
         this.createdDate = createdDate;
     }
 
-    public Date getLastModifiedDate() {
+    public LocalDateTime getLastModifiedDate() {
         return lastModifiedDate;
     }
 
-    public void setLastModifiedDate(Date lastModifiedDate) {
+    public void setLastModifiedDate(LocalDateTime lastModifiedDate) {
         this.lastModifiedDate = lastModifiedDate;
     }
 }

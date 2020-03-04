@@ -1,4 +1,4 @@
-package shop.chobitok.modnyi.novaposta.service;
+package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.Ordered;
@@ -10,7 +10,9 @@ import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.request.Document;
 import shop.chobitok.modnyi.novaposta.request.GetTrackingRequest;
 import shop.chobitok.modnyi.novaposta.request.MethodProperties;
+import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
+import shop.chobitok.modnyi.repository.OrderRepository;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -24,11 +26,12 @@ public class StatisticService {
     private NovaPostaRepository postaRepository;
     private NovaPostaService novaPostaService;
     private String isReturnedIdentificator = "CargoReturn";
+    private OrderRepository orderRepository;
 
-
-    public StatisticService(NovaPostaRepository postaRepository, NovaPostaService novaPostaService) {
+    public StatisticService(NovaPostaRepository postaRepository, NovaPostaService novaPostaService, OrderRepository orderRepository) {
         this.postaRepository = postaRepository;
         this.novaPostaService = novaPostaService;
+        this.orderRepository = orderRepository;
     }
 
     public Object needToBePayed() {
@@ -63,14 +66,14 @@ public class StatisticService {
         TrackingEntity trackingEntity = postaRepository.getTracking(request);
         for (Data data : trackingEntity.getData()) {
             if (ShoeUtil.convertToStatus(Integer.parseInt(data.getStatusCode())) == Status.RECEIVED && !data.getStatusCode().equals("11") && !data.getStatusCode().equals("9")) {
-                System.out.println(data.getNumber()+" "+ data.getCargoDescriptionString());
+                System.out.println(data.getNumber() + " " + data.getCargoDescriptionString());
             }
         }
         System.out.println();
         System.out.println("Не оплачені татові");
         orderedList = orderedList.stream().filter(ordered -> ordered.getStatus() == Status.RECEIVED && !payedTTN.contains(ordered.getTtn())).collect(Collectors.toList());
         for (Ordered ordered : orderedList) {
-            System.out.println(ordered.getTtn() + "  " + ordered.getPostComment() + " " + ordered.getLastTransactionDateTime());
+            System.out.println(ordered.getTtn() + "  " + ordered.getPostComment());
         }
 
 
@@ -119,6 +122,31 @@ public class StatisticService {
         }
         System.out.println(received);
         System.out.println(denied);
+    }
+
+    public Double getEarnedMoney() {
+        Double income = 0d;
+        List<Ordered> orderedList = orderRepository.findAll();
+        for (Ordered ordered : orderedList) {
+            if (ordered.getStatus() == Status.RECEIVED) {
+                income += ordered.getOrderedShoes().get(0).getCost();
+            }
+        }
+        return income;
+    }
+
+    public List<String> formListForDeliveryFromFile(String path) {
+        List<String> strings = ShoeUtil.readTXTFile(path);
+        for (String ttn : strings) {
+            TrackingEntity trackingEntity = postaRepository.getTracking(postaRepository.formGetTrackingRequest(ttn));
+            Data data= trackingEntity.getData().get(0);
+            if (ShoeUtil.convertToStatus(Integer.parseInt(data.getStatusCode())) == Status.CREATED) {
+                System.out.println(data.getNumber());
+                System.out.println(data.getCargoDescriptionString());
+                System.out.println("");
+            }
+        }
+        return null;
     }
 
 

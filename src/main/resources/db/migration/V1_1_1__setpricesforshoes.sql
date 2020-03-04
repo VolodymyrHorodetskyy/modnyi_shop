@@ -1,0 +1,15 @@
+UPDATE `modnyi`.`shoe` SET `cost` = '720' WHERE (`id` = '1');
+UPDATE `modnyi`.`shoe` SET `cost` = '720' WHERE (`id` = '2');
+UPDATE `modnyi`.`shoe` SET `cost` = '720' WHERE (`id` = '3');
+UPDATE `modnyi`.`shoe` SET `cost` = '500' WHERE (`id` = '4');
+UPDATE `modnyi`.`shoe` SET `cost` = '500' WHERE (`id` = '5');
+UPDATE `modnyi`.`shoe` SET `cost` = '500' WHERE (`id` = '6');
+UPDATE `modnyi`.`shoe` SET `cost` = '720' WHERE (`id` = '7');
+UPDATE `modnyi`.`shoe` SET `cost` = '500' WHERE (`id` = '8');
+UPDATE `modnyi`.`shoe` SET `cost` = '500' WHERE (`id` = '9');
+UPDATE `modnyi`.`shoe` SET `cost` = '720' WHERE (`id` = '10');
+UPDATE `modnyi`.`shoe` SET `cost` = '500' WHERE (`id` = '11');
+UPDATE `modnyi`.`shoe` SET `cost` = '720' WHERE (`id` = '12');
+UPDATE `modnyi`.`shoe` SET `cost` = '720' WHERE (`id` = '13');
+UPDATE `modnyi`.`shoe` SET `cost` = '500' WHERE (`id` = '14');
+UPDATE `modnyi`.`shoe` SET `cost` = '720' WHERE (`id` = '15');

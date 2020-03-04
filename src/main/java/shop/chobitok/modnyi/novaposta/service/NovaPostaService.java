@@ -54,8 +54,8 @@ public class NovaPostaService {
         return orderedList;
     }
 
-    public List<Ordered> createFromTTNListAndSave(FromTTNFileRequest request){
-         return orderService.createOrders(createOrderedFromTTNFile(request));
+    public List<Ordered> createFromTTNListAndSave(FromTTNFileRequest request) {
+        return orderService.createOrders(createOrderedFromTTNFile(request));
     }
 
 

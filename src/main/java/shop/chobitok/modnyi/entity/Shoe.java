@@ -1,5 +1,7 @@
 package shop.chobitok.modnyi.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.ManyToMany;
@@ -7,9 +9,10 @@ import javax.persistence.ManyToOne;
 import java.util.List;
 
 @Entity
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Shoe extends Audit {
 
-    @Column
+    @Column(unique = true)
     private String name;
 
     @Column
@@ -41,9 +44,6 @@ public class Shoe extends Audit {
 
     @Column
     private boolean imported;
-
-    @ManyToMany
-    private List<Ordered> ordereds;
 
 
     public Shoe() {
@@ -131,14 +131,6 @@ public class Shoe extends Audit {
         this.deleted = deleted;
     }
 
-    public List<Ordered> getOrdereds() {
-        return ordereds;
-    }
-
-    public void setOrdereds(List<Ordered> ordereds) {
-        this.ordereds = ordereds;
-    }
-
     public String getColor() {
         return color;
     }
@@ -154,4 +146,7 @@ public class Shoe extends Audit {
     public void setImported(boolean imported) {
         this.imported = imported;
     }
+
+
+
 }

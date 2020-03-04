@@ -2,7 +2,7 @@ package shop.chobitok.modnyi.controller;
 
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.Ordered;
-import shop.chobitok.modnyi.novaposta.service.StatisticService;
+import shop.chobitok.modnyi.service.StatisticService;
 
 import java.util.List;
 
@@ -24,12 +24,23 @@ public class StatisticController {
 
     @GetMapping("/getAllDenied")
     public List<Ordered> getAllDenied(@RequestParam(required = false) boolean returned) {
-        return statisticService.getAllDenied( returned);
+        return statisticService.getAllDenied(returned);
     }
 
     @GetMapping("/getProblematic")
-    public List<Ordered> getProblematic(){
+    public List<Ordered> getProblematic() {
         return statisticService.getProblematic();
+    }
+
+
+    @GetMapping("/getEarnedMoney")
+    public Double getEarnedMoney() {
+        return statisticService.getEarnedMoney();
+    }
+
+    @GetMapping("/getAllCreatedFromFile")
+    public List<String> getAllCreated(@RequestParam String path) {
+        return statisticService.formListForDeliveryFromFile(path);
     }
 
 }

@@ -11,10 +11,11 @@ public class UpdateOrderRequest {
     private String address;
     private String phone;
     private Integer size;
-    private Integer shoe;
+    private Long shoe;
     private String notes;
-    private String price;
-    private String prepayment;
+    private Double price;
+    private Double prepayment;
+    private boolean full_payment;
 
     public String getName() {
         return name;
@@ -72,11 +73,11 @@ public class UpdateOrderRequest {
         this.size = size;
     }
 
-    public Integer getShoe() {
+    public Long getShoe() {
         return shoe;
     }
 
-    public void setShoe(Integer shoe) {
+    public void setShoe(Long shoe) {
         this.shoe = shoe;
     }
 
@@ -88,19 +89,27 @@ public class UpdateOrderRequest {
         this.notes = notes;
     }
 
-    public String getPrice() {
+    public Double getPrice() {
         return price;
     }
 
-    public void setPrice(String price) {
+    public void setPrice(Double price) {
         this.price = price;
     }
 
-    public String getPrepayment() {
+    public Double getPrepayment() {
         return prepayment;
     }
 
-    public void setPrepayment(String prepayment) {
+    public void setPrepayment(Double prepayment) {
         this.prepayment = prepayment;
+    }
+
+    public boolean isFull_payment() {
+        return full_payment;
+    }
+
+    public void setFull_payment(boolean full_payment) {
+        this.full_payment = full_payment;
     }
 }

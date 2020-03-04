@@ -2,12 +2,17 @@ package shop.chobitok.modnyi.novaposta.util;
 
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Status;
+import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
+import shop.chobitok.modnyi.novaposta.request.Document;
+import shop.chobitok.modnyi.novaposta.request.GetTrackingRequest;
+import shop.chobitok.modnyi.novaposta.request.MethodProperties;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,11 +55,14 @@ public class ShoeUtil {
 
     public static LocalDateTime toLocalDateTime(String s) {
         if (!StringUtils.isEmpty(s)) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
             return LocalDateTime.parse(s, formatter);
         }
         return null;
     }
+
+
+
 
 
 }

@@ -48,6 +48,7 @@ public class NPOrderMapper {
                 ordered.setLastCreatedOnTheBasisDocumentTypeNP(data.getLastCreatedOnTheBasisDocumentType());
                 ordered.setDatePayedKeepingNP(ShoeUtil.toLocalDateTime(data.getDatePayedKeeping()));
                 setShoeAndSizeFromDescriptionNP(ordered, data.getCargoDescriptionString());
+                setPriceAndPrepayment(ordered, data);
             }
         }
         return ordered;
@@ -100,9 +101,9 @@ public class NPOrderMapper {
             }
         }
         if (parsedShoe == null) {
-            System.out.println(string);
+            System.out.println(ordered.getTtn() + " " + string);
         } else if (size == null) {
-            System.out.println("size " + string);
+            System.out.println(ordered.getTtn() + " size " + string);
         }
         List<Shoe> shoeList = new ArrayList<>();
         shoeList.add(parsedShoe);
@@ -110,6 +111,22 @@ public class NPOrderMapper {
         ordered.setSize(size);
     }
 
+    private void setPriceAndPrepayment(Ordered ordered, Data data) {
+        if (ordered.getOrderedShoes() != null && ordered.getOrderedShoes().size() > 0) {
+            Shoe shoe = ordered.getOrderedShoes().get(0);
+            if (shoe != null) {
+                Double prepayment = shoe.getPrice() - data.getRedeliverySum();
+                ordered.setPrice(shoe.getPrice());
+                if (prepayment < 0) {
+                    prepayment = 0d;
+                } else if (prepayment == 99) {
+                    prepayment = 100d;
+                }
+                ordered.setPrePayment(prepayment);
+
+            }
+        }
+    }
 
 
 }

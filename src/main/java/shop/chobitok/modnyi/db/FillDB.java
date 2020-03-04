@@ -29,7 +29,7 @@ public class FillDB {
         this.orderService = orderService;
     }
 
-    @PostConstruct
+   // @PostConstruct
     public void init() {
 
         try {
