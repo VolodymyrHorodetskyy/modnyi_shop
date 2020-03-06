@@ -2,10 +2,12 @@ package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.Ordered;
+import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.request.FromTTNFileRequest;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
+import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.request.Document;
 import shop.chobitok.modnyi.novaposta.request.GetTrackingRequest;
@@ -27,58 +29,77 @@ public class StatisticService {
     private NovaPostaService novaPostaService;
     private String isReturnedIdentificator = "CargoReturn";
     private OrderRepository orderRepository;
+    private NPOrderMapper npOrderMapper;
 
-    public StatisticService(NovaPostaRepository postaRepository, NovaPostaService novaPostaService, OrderRepository orderRepository) {
+    public StatisticService(NovaPostaRepository postaRepository, NovaPostaService novaPostaService, OrderRepository orderRepository, NPOrderMapper npOrderMapper) {
         this.postaRepository = postaRepository;
         this.novaPostaService = novaPostaService;
         this.orderRepository = orderRepository;
+        this.npOrderMapper = npOrderMapper;
     }
 
-    public Object needToBePayed() {
-        List<String> payedTTN = ShoeUtil.readTXTFile("C:\\shoe_proj\\payed_ttn");
-        List<Ordered> orderedList = novaPostaService.createOrderedFromTTNFile(new FromTTNFileRequest("C:\\shoe_proj\\All_ttn"));
-        Set<String> duplicated = new HashSet<>();
-        for (Ordered ordered : orderedList) {
-            if (duplicated.add(ordered.getTtn()) == false) {
-                System.out.println("Duplicate : " + ordered.getTtn());
-            }
+    public String needToBePayed(String pathToAllTTNFile, String payedTTNFile) {
+        StringBuilder stringBuilder = new StringBuilder();
+        List<String> allTTNList = ShoeUtil.readTXTFile(pathToAllTTNFile);
+        Set<String> allTTNSet = new HashSet();
+        for (String s : allTTNList) {
+            allTTNSet.add(s.replaceAll("\\s+", ""));
         }
-        duplicated = new HashSet<>();
-        for (String s : payedTTN) {
-            if (duplicated.add(s) == false) {
-                System.out.println("Duplicate : " + s);
-            }
+        List<String> payedTTNList = ShoeUtil.readTXTFile(payedTTNFile);
+        Set<String> payedTTNSet = new HashSet();
+        for (String s : payedTTNList) {
+            payedTTNSet.add(s.replaceAll("\\s+", ""));
         }
 
-        System.out.println("отримані, але не виплачені");
-        List<String> strings = ShoeUtil.readTXTFile("C:\\shoe_proj\\All_ttn");
-        GetTrackingRequest request = new GetTrackingRequest();
-        MethodProperties methodProperties = new MethodProperties();
-        List<Document> documents = new ArrayList<>();
-        for (String s : strings) {
-            Document document = new Document();
-            document.setDocumentNumber(s);
-            document.setPhone("+380637638967");
-            documents.add(document);
-        }
-        methodProperties.setDocuments(documents);
-        request.setMethodProperties(methodProperties);
-        TrackingEntity trackingEntity = postaRepository.getTracking(request);
-        for (Data data : trackingEntity.getData()) {
-            if (ShoeUtil.convertToStatus(Integer.parseInt(data.getStatusCode())) == Status.RECEIVED && !data.getStatusCode().equals("11") && !data.getStatusCode().equals("9")) {
-                System.out.println(data.getNumber() + " " + data.getCargoDescriptionString());
+        List<Ordered> orderedList = new ArrayList<>();
+        Double sum = 0d;
+        for (String s : allTTNSet) {
+            if (!payedTTNSet.contains(s)) {
+                TrackingEntity trackingEntity = postaRepository.getTracking(postaRepository.formGetTrackingRequest(s));
+                Data data = trackingEntity.getData().get(0);
+                if (ShoeUtil.convertToStatus(data.getStatusCode()) == Status.RECEIVED) {
+                    stringBuilder.append(data.getNumber());
+                    stringBuilder.append("\n");
+                    Ordered ordered = npOrderMapper.toOrdered(trackingEntity);
+                    if (ordered.getOrderedShoes().size() > 0) {
+                        Shoe shoe = ordered.getOrderedShoes().get(0);
+                        sum += shoe.getCost();
+                    }
+                    orderedList.add(ordered);
+                }
             }
         }
-        System.out.println();
-        System.out.println("Не оплачені татові");
-        orderedList = orderedList.stream().filter(ordered -> ordered.getStatus() == Status.RECEIVED && !payedTTN.contains(ordered.getTtn())).collect(Collectors.toList());
-        for (Ordered ordered : orderedList) {
-            System.out.println(ordered.getTtn() + "  " + ordered.getPostComment());
-        }
-
-
-        return null;
+        stringBuilder.append("\n\n");
+        stringBuilder.append("Сума = " + sum);
+        return stringBuilder.toString();
     }
+
+
+    public String countAllReceivedAndDenied(String pathAllTTNFile) {
+        StringBuilder stringBuilder = new StringBuilder();
+        List<String> allTTNList = ShoeUtil.readTXTFile(pathAllTTNFile);
+        Set<String> allTTNSet = new HashSet();
+        for (String s : allTTNList) {
+            allTTNSet.add(s.replaceAll("\\s+", ""));
+        }
+        int received = 0;
+        int denied = 0;
+        for (String s : allTTNList) {
+            TrackingEntity trackingEntity = postaRepository.getTracking(postaRepository.formGetTrackingRequest(s));
+            Status status = ShoeUtil.convertToStatus(trackingEntity.getData().get(0).getStatusCode());
+            if (status == Status.RECEIVED) {
+                ++received;
+            } else if (status == Status.DENIED) {
+                ++denied;
+            }
+        }
+        stringBuilder.append("Отримані = " + received);
+        stringBuilder.append("\n");
+        stringBuilder.append("Відмова = " + denied);
+        return stringBuilder.toString();
+
+    }
+
 
     public List<Ordered> getAllDenied(boolean returned) {
         List<Ordered> orderedList = novaPostaService.createOrderedFromTTNFile(new FromTTNFileRequest("C:\\shoe_proj\\All_ttn"));
@@ -139,8 +160,8 @@ public class StatisticService {
         List<String> strings = ShoeUtil.readTXTFile(path);
         for (String ttn : strings) {
             TrackingEntity trackingEntity = postaRepository.getTracking(postaRepository.formGetTrackingRequest(ttn));
-            Data data= trackingEntity.getData().get(0);
-            if (ShoeUtil.convertToStatus(Integer.parseInt(data.getStatusCode())) == Status.CREATED) {
+            Data data = trackingEntity.getData().get(0);
+            if (ShoeUtil.convertToStatus(data.getStatusCode()) == Status.CREATED) {
                 System.out.println(data.getNumber());
                 System.out.println(data.getCargoDescriptionString());
                 System.out.println("");

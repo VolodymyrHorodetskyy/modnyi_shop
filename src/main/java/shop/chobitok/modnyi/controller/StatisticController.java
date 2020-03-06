@@ -17,9 +17,9 @@ public class StatisticController {
         this.statisticService = statisticService;
     }
 
-    @GetMapping
-    public Object get() {
-        return statisticService.needToBePayed();
+    @GetMapping("/needToPayed")
+    public Object get(@RequestParam String pathToAllTTNfile, @RequestParam String pathToPayedTTNFile) {
+        return statisticService.needToBePayed(pathToAllTTNfile, pathToPayedTTNFile);
     }
 
     @GetMapping("/getAllDenied")
@@ -41,6 +41,11 @@ public class StatisticController {
     @GetMapping("/getAllCreatedFromFile")
     public List<String> getAllCreated(@RequestParam String path) {
         return statisticService.formListForDeliveryFromFile(path);
+    }
+
+    @GetMapping("/getAllReceivedAndDeniedCount")
+    public String getReceivedAndDeniedCount(@RequestParam String path) {
+        return statisticService.countAllReceivedAndDenied(path);
     }
 
 }

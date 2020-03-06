@@ -14,9 +14,9 @@
 	<name>modnyi</name>
 	<description>Demo project for Spring Boot</description>
 
-<!--	<properties>
+	<properties>
 		<java.version>11</java.version>
-	</properties>-->
+	</properties>
 
 	<dependencies>
 		<dependency>
@@ -69,11 +69,11 @@
 			<artifactId>h2</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-<!--		<dependency>
+		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
 			<version>5.2.4</version>
-		</dependency>-->
+		</dependency>
 
 	</dependencies>
 

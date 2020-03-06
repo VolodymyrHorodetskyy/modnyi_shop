@@ -39,7 +39,7 @@ public class NPOrderMapper {
                 Data data = dataList.get(0);
                 ordered.setTtn(data.getNumber());
                 ordered.setAddress(data.getRecipientAddress());
-                ordered.setStatus(ShoeUtil.convertToStatus(Integer.parseInt(data.getStatusCode())));
+                ordered.setStatus(ShoeUtil.convertToStatus(data.getStatusCode()));
                 ordered.setPostComment(data.getCargoDescriptionString());
                 ordered.setLastTransactionDateTime(ShoeUtil.toLocalDateTime(data.getLastTransactionDateTimeGM()));
                 ordered.setClient(parseClient(data));
@@ -100,16 +100,20 @@ public class NPOrderMapper {
                 size = size1;
             }
         }
+        List<Shoe> shoeList = new ArrayList<>();
         if (parsedShoe == null) {
             System.out.println(ordered.getTtn() + " " + string);
-        } else if (size == null) {
-            System.out.println(ordered.getTtn() + " size " + string);
+        } else {
+            shoeList.add(parsedShoe);
         }
-        List<Shoe> shoeList = new ArrayList<>();
-        shoeList.add(parsedShoe);
+        if (size == null) {
+            System.out.println(ordered.getTtn() + " size " + string);
+        } else {
+            ordered.setSize(size);
+        }
         ordered.setOrderedShoes(shoeList);
-        ordered.setSize(size);
     }
+
 
     private void setPriceAndPrepayment(Ordered ordered, Data data) {
         if (ordered.getOrderedShoes() != null && ordered.getOrderedShoes().size() > 0) {

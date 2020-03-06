@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,13 +57,15 @@ public class ShoeUtil {
     public static LocalDateTime toLocalDateTime(String s) {
         if (!StringUtils.isEmpty(s)) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
-            return LocalDateTime.parse(s, formatter);
+            try {
+                return LocalDateTime.parse(s, formatter);
+            } catch (DateTimeParseException e) {
+                formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                return LocalDateTime.parse(s, formatter);
+            }
         }
         return null;
     }
-
-
-
 
 
 }

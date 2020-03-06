@@ -72,7 +72,7 @@ public class Data {
     private float FreeShipping;
     private String AdjustedDate;
     private String Status;
-    private String StatusCode;
+    private Integer StatusCode;
     private String RefEW;
     private String DatePayedKeeping;
     private String OnlineCreditStatusCode;
@@ -344,9 +344,7 @@ public class Data {
         return Status;
     }
 
-    public String getStatusCode() {
-        return StatusCode;
-    }
+
 
     public String getRefEW() {
         return RefEW;
@@ -627,8 +625,13 @@ public class Data {
         this.Status = Status;
     }
 
-    public void setStatusCode(String StatusCode) {
-        this.StatusCode = StatusCode;
+
+    public Integer getStatusCode() {
+        return StatusCode;
+    }
+
+    public void setStatusCode(Integer statusCode) {
+        StatusCode = statusCode;
     }
 
     public void setRefEW(String RefEW) {
