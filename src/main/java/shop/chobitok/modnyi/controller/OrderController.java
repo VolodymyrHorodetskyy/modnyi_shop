@@ -63,5 +63,10 @@ public class OrderController {
         return utilService.getStatuses();
     }
 
+    @GetMapping("/cargoReturn")
+    public boolean returnCargo(@RequestParam String ttn) {
+        return novaPostaService.returnCargo(ttn);
+    }
+
 
 }

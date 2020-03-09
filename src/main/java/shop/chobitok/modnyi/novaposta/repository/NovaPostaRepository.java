@@ -12,10 +12,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import shop.chobitok.modnyi.exception.ConflictException;
+import shop.chobitok.modnyi.novaposta.entity.CargoReturnResponse;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.ListTrackingEntity;
 import shop.chobitok.modnyi.novaposta.request.*;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
+import shop.chobitok.modnyi.novaposta.util.NPHelper;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
@@ -28,6 +30,7 @@ public class NovaPostaRepository {
 
     private String getTrackingURL = "https://api.novaposhta.ua/v2.0/json/getStatusDocuments";
     private String getListTracking = "https://api.novaposhta.ua/v2.0/json/getDocumentList";
+    private String cargoReturnURL = "https://api.novaposhta.ua/v2.0/json/save";
 
     private RestTemplate restTemplate;
     private HttpHeaders httpHeaders;
@@ -75,6 +78,13 @@ public class NovaPostaRepository {
         return responseEntity.getBody();
     }
 
+    public boolean returnCargo(ReturnCargoRequest returnCargoRequest) {
+        returnCargoRequest.setApiKey(apiKey);
+        HttpEntity httpEntity = new HttpEntity(returnCargoRequest, httpHeaders);
+        ResponseEntity<CargoReturnResponse> responseEntity = restTemplate.postForEntity(cargoReturnURL, httpEntity, CargoReturnResponse.class);
+        return responseEntity.getBody().isSuccess();
+    }
+
     private String formatDate(LocalDateTime date) {
         return date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
     }
@@ -90,32 +100,6 @@ public class NovaPostaRepository {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
         return objectMapper;
-    }
-
-    public GetTrackingRequest formGetTrackingRequest(String ttn, String phone, String key) {
-        GetTrackingRequest getTrackingRequest = new GetTrackingRequest();
-        if (!StringUtils.isEmpty(key)) {
-            getTrackingRequest.setApiKey(key);
-        } else {
-            getTrackingRequest.setApiKey(apiKey);
-        }
-        List<Document> documentList = new ArrayList<>();
-        Document document = new Document();
-        document.setDocumentNumber(ttn);
-        if (!StringUtils.isEmpty(phone)) {
-            document.setPhone(phone);
-        } else {
-            document.setPhone(phoneNumber);
-        }
-        documentList.add(document);
-        MethodProperties methodProperties = new MethodProperties();
-        methodProperties.setDocuments(documentList);
-        getTrackingRequest.setMethodProperties(methodProperties);
-        return getTrackingRequest;
-    }
-
-    public GetTrackingRequest formGetTrackingRequest(String ttn) {
-        return formGetTrackingRequest(ttn, null, null);
     }
 
 }

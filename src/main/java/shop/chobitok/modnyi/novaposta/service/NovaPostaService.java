@@ -11,6 +11,7 @@ import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.request.Document;
 import shop.chobitok.modnyi.novaposta.request.GetTrackingRequest;
 import shop.chobitok.modnyi.novaposta.request.MethodProperties;
+import shop.chobitok.modnyi.novaposta.util.NPHelper;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.service.OrderService;
 
@@ -23,11 +24,13 @@ public class NovaPostaService {
     private NovaPostaRepository postaRepository;
     private NPOrderMapper npOrderMapper;
     private OrderService orderService;
+    private NPHelper npHelper;
 
-    public NovaPostaService(NovaPostaRepository postaRepository, NPOrderMapper npOrderMapper, OrderService orderService) {
+    public NovaPostaService(NovaPostaRepository postaRepository, NPOrderMapper npOrderMapper, OrderService orderService, NPHelper npHelper) {
         this.postaRepository = postaRepository;
         this.npOrderMapper = npOrderMapper;
         this.orderService = orderService;
+        this.npHelper = npHelper;
     }
 
     public Ordered createOrderFromNP(FromNPToOrderRequest fromNPToOrderRequest) {
@@ -43,7 +46,6 @@ public class NovaPostaService {
     public List<Ordered> createOrderedFromTTNFile(FromTTNFileRequest request) {
         List<Ordered> orderedList = new ArrayList<>();
         List<String> strings = ShoeUtil.readTXTFile(request.getPath());
-
         for (String ttn : strings) {
             FromNPToOrderRequest fromNPToOrderRequest = new FromNPToOrderRequest();
             fromNPToOrderRequest.setPhone("+380637638967");
@@ -52,6 +54,10 @@ public class NovaPostaService {
             orderedList.add(ordered);
         }
         return orderedList;
+    }
+
+    public boolean returnCargo(String ttn) {
+        return postaRepository.returnCargo(npHelper.createReturnCargoRequest(ttn));
     }
 
     public List<Ordered> createFromTTNListAndSave(FromTTNFileRequest request) {
