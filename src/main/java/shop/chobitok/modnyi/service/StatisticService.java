@@ -121,21 +121,25 @@ public class StatisticService {
     }
 
     public String getAllDenied(String pathAllTTNFile, boolean returned) {
-        StringBuilder stringBuilder = new StringBuilder();
+        StringBuilder stringBuilderWithDesc = new StringBuilder();
+        StringBuilder stringBuilderWithoutDesc = new StringBuilder();
         List<String> allTTNList = ShoeUtil.readTXTFile(pathAllTTNFile);
         Set<String> allTTNSet = new HashSet();
         for (String s : allTTNList) {
             allTTNSet.add(s.replaceAll("\\s+", ""));
         }
+        stringBuilderWithDesc.append("З описом \n");
+        stringBuilderWithoutDesc.append("ТТН \n");
         for (String s : allTTNList) {
             TrackingEntity trackingEntity = postaRepository.getTracking(npHelper.formGetTrackingRequest(s));
             Data data = trackingEntity.getData().get(0);
             if (data.getStatusCode().equals(103)) {
-                stringBuilder.append(data.getNumber() + " " + data.getCargoDescriptionString() + "\n");
-
+                stringBuilderWithDesc.append(data.getNumber() + " " + data.getCargoDescriptionString() + "\n");
+                stringBuilderWithoutDesc.append(data.getNumber() + "\n");
             }
         }
-        return stringBuilder.toString();
+        stringBuilderWithDesc.append(stringBuilderWithoutDesc.toString());
+        return stringBuilderWithDesc.toString();
     }
 
 

@@ -60,6 +60,16 @@ public class NovaPostaService {
         return postaRepository.returnCargo(npHelper.createReturnCargoRequest(ttn));
     }
 
+    public boolean returnCargoFromFile(String path) {
+        List<String> ttnList = ShoeUtil.readTXTFile(path);
+        for (String s : ttnList) {
+            if (!returnCargo(s)) {
+                throw new ConflictException("Неможливо повернути відправлення :" + s);
+            }
+        }
+        return true;
+    }
+
     public List<Ordered> createFromTTNListAndSave(FromTTNFileRequest request) {
         return orderService.createOrders(createOrderedFromTTNFile(request));
     }

@@ -29,7 +29,7 @@ public class StatisticController {
         return statisticService.getAllDenied(pathAllTTNFile, returned);
     }
 
-    @GetMapping
+    @GetMapping("/needDelivery")
     public String needDelivery(@RequestParam String path){
         return statisticService.forDelivery(path);
     }
