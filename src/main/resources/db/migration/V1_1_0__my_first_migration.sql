@@ -1,9 +1,3 @@
--- MySQL dump 10.13  Distrib 8.0.18, for Win64 (x86_64)
---
--- Host: localhost    Database: modnyi
--- ------------------------------------------------------
--- Server version	8.0.18
-
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
@@ -19,9 +13,7 @@
 -- Table structure for table `client`
 --
 
-DROP TABLE IF EXISTS `client`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+
 CREATE TABLE `client` (
   `id` bigint(20) NOT NULL,
   `created_date` datetime DEFAULT NULL,
@@ -32,72 +24,24 @@ CREATE TABLE `client` (
   `name` varchar(255) DEFAULT NULL,
   `phone` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+);
 
---
--- Dumping data for table `client`
---
-
-LOCK TABLES `client` WRITE;
-/*!40000 ALTER TABLE `client` DISABLE KEYS */;
-/*!40000 ALTER TABLE `client` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `company`
---
-
-DROP TABLE IF EXISTS `company`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `company` (
   `id` bigint(20) NOT NULL,
   `created_date` datetime DEFAULT NULL,
   `last_modified_date` datetime DEFAULT NULL,
   `name` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `company`
---
-
-LOCK TABLES `company` WRITE;
-/*!40000 ALTER TABLE `company` DISABLE KEYS */;
-/*!40000 ALTER TABLE `company` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `hibernate_sequence`
---
+);
 
 DROP TABLE IF EXISTS `hibernate_sequence`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `hibernate_sequence` (
   `next_val` bigint(20) DEFAULT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+);
 
---
--- Dumping data for table `hibernate_sequence`
---
 
-LOCK TABLES `hibernate_sequence` WRITE;
-/*!40000 ALTER TABLE `hibernate_sequence` DISABLE KEYS */;
-INSERT INTO `hibernate_sequence` VALUES (200),(200),(200),(200);
-/*!40000 ALTER TABLE `hibernate_sequence` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `ordered`
---
-
-DROP TABLE IF EXISTS `ordered`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `ordered` (
   `id` bigint(20) NOT NULL,
   `created_date` datetime DEFAULT NULL,
@@ -121,49 +65,17 @@ CREATE TABLE `ordered` (
   `client_id` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FKcuj0y2f9k1jf28a3xu2e667tx` (`client_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+);
 
---
--- Dumping data for table `ordered`
---
 
-LOCK TABLES `ordered` WRITE;
-/*!40000 ALTER TABLE `ordered` DISABLE KEYS */;
-/*!40000 ALTER TABLE `ordered` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `ordered_ordered_shoes`
---
-
-DROP TABLE IF EXISTS `ordered_ordered_shoes`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `ordered_ordered_shoes` (
   `ordered_id` bigint(20) NOT NULL,
   `ordered_shoes_id` bigint(20) NOT NULL,
   KEY `FKf8vp0bmc38pfu8pserrs3lthn` (`ordered_shoes_id`),
   KEY `FK74tnhiaoayisofxtau7sindc1` (`ordered_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+);
 
---
--- Dumping data for table `ordered_ordered_shoes`
---
 
-LOCK TABLES `ordered_ordered_shoes` WRITE;
-/*!40000 ALTER TABLE `ordered_ordered_shoes` DISABLE KEYS */;
-/*!40000 ALTER TABLE `ordered_ordered_shoes` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `shoe`
---
-
-DROP TABLE IF EXISTS `shoe`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `shoe` (
   `id` bigint(20) NOT NULL,
   `created_date` datetime DEFAULT NULL,
@@ -181,12 +93,7 @@ CREATE TABLE `shoe` (
   `company_id` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FKt5ko7n35e8llqgljb3vqboxhi` (`company_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `shoe`
---
+);
 
 LOCK TABLES `shoe` WRITE;
 /*!40000 ALTER TABLE `shoe` DISABLE KEYS */;
