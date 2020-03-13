@@ -1,16 +1,14 @@
 package shop.chobitok.modnyi.novaposta.util;
 
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.request.Document;
 import shop.chobitok.modnyi.novaposta.request.GetTrackingRequest;
 import shop.chobitok.modnyi.novaposta.request.MethodProperties;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -44,6 +42,21 @@ public class ShoeUtil {
         List<String> stringList = new ArrayList<>();
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));
+            String st;
+            while ((st = br.readLine()) != null) {
+                stringList.add(st);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return stringList;
+    }
+
+    public static List<String> readTXTFile(MultipartFile file) {
+        List<String> stringList = new ArrayList<>();
+        try {
+            InputStream inputStream = file.getInputStream();
+            BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
             String st;
             while ((st = br.readLine()) != null) {
                 stringList.add(st);

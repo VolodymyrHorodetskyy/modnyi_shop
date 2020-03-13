@@ -1,6 +1,7 @@
 package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.entity.Status;
@@ -37,21 +38,40 @@ public class StatisticService {
     }
 
     public String forDelivery(String pathToFile) {
+        return countDelivery(readFileToTTNSet(pathToFile));
+    }
+
+    public String forDelivery(MultipartFile file) {
+        return countDelivery(readFileToTTNSet(file));
+    }
+
+    private String countDelivery(Set<String> ttnSet) {
         StringBuilder stringBuilder = new StringBuilder();
-        Set<String> ttnSet = readFileToTTNSet(pathToFile);
+        int count = 0;
         for (String s : ttnSet) {
             Data data = postaRepository.getTracking(npHelper.formGetTrackingRequest(s)).getData().get(0);
             if (ShoeUtil.convertToStatus(data.getStatusCode()) == Status.CREATED) {
+                ++count;
                 stringBuilder.append(data.getNumber() + "\n" + data.getCargoDescriptionString());
                 stringBuilder.append("\n\n");
             }
         }
+        stringBuilder.append("Кількість:" + count);
         return stringBuilder.toString();
     }
 
 
     private Set<String> readFileToTTNSet(String path) {
         List<String> allTTNList = ShoeUtil.readTXTFile(path);
+        Set<String> allTTNSet = new HashSet();
+        for (String s : allTTNList) {
+            allTTNSet.add(s.replaceAll("\\s+", ""));
+        }
+        return allTTNSet;
+    }
+
+    private Set<String> readFileToTTNSet(MultipartFile file) {
+        List<String> allTTNList = ShoeUtil.readTXTFile(file);
         Set<String> allTTNSet = new HashSet();
         for (String s : allTTNList) {
             allTTNSet.add(s.replaceAll("\\s+", ""));
