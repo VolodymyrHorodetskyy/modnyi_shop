@@ -3,10 +3,7 @@ package shop.chobitok.modnyi.controller;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.dto.StatusDto;
-import shop.chobitok.modnyi.entity.request.CreateOrderRequest;
-import shop.chobitok.modnyi.entity.request.FromNPToOrderRequest;
-import shop.chobitok.modnyi.entity.request.FromTTNFileRequest;
-import shop.chobitok.modnyi.entity.request.UpdateOrderRequest;
+import shop.chobitok.modnyi.entity.request.*;
 import shop.chobitok.modnyi.entity.response.GetAllOrderedResponse;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.service.OrderService;
@@ -45,7 +42,7 @@ public class OrderController {
 
     @PostMapping("/fromTTNFile")
     public List<Ordered> createListFromTTN(@RequestBody FromTTNFileRequest fromTTNFileRequest) {
-        return novaPostaService.createFromTTNListAndSave(fromTTNFileRequest);
+        return orderService.createFromTTNListAndSave(fromTTNFileRequest);
     }
 
     @PostMapping
@@ -72,6 +69,18 @@ public class OrderController {
     public boolean returnCargoFromFile(@RequestParam String path) {
         return novaPostaService.returnCargoFromFile(path);
     }
+
+    @PostMapping("/importOrdersByTTNsString")
+    public String importOrdersFromTTNList(@RequestBody ImportOrdersFromStringRequest request) {
+        return orderService.importOrdersByTTNString(request);
+    }
+
+/*
+    @PostMapping("/importOrdersByTTNList")
+    public String importOrdersFromTTNList(){
+
+    }
+*/
 
 
 }

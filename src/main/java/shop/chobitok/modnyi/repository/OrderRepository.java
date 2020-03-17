@@ -11,4 +11,6 @@ import shop.chobitok.modnyi.entity.Ordered;
 public interface OrderRepository extends JpaRepository<Ordered, Long> {
 
     Page<Ordered> findAll(Specification specification, Pageable pageable);
+
+    Ordered findOneByAvailableTrueAndTtn(String ttn);
 }

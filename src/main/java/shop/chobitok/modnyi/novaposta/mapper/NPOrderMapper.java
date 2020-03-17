@@ -1,11 +1,15 @@
 package shop.chobitok.modnyi.novaposta.mapper;
 
+import org.hibernate.criterion.Order;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Client;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Shoe;
+import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.novaposta.entity.Data;
+import shop.chobitok.modnyi.novaposta.entity.DataForList;
+import shop.chobitok.modnyi.novaposta.entity.ListTrackingEntity;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.ClientRepository;
@@ -54,10 +58,35 @@ public class NPOrderMapper {
         return ordered;
     }
 
+    public Ordered toOrdered(ListTrackingEntity entity, String ttn) {
+        List<DataForList> list = entity.getData();
+        Ordered ordered = null;
+        if (list.size() > 0) {
+            DataForList filteredData = list.stream().filter(dataForList -> dataForList.getIntDocNumber().equals(ttn)).findFirst().orElse(null);
+            if (filteredData != null) {
+                ordered = new Ordered();
+                ordered.setTtn(filteredData.getIntDocNumber());
+                ordered.setClient(parseClient(filteredData.getRecipientContactPerson(), filteredData.getRecipientsPhone()));
+                ordered.setAddress(filteredData.getRecipientAddress());
+                ordered.setStatus(Status.CREATED);
+                ordered.setPostComment(filteredData.getDescription());
+                ordered.setReturnSumNP(filteredData.getCost());
+                ordered.setNameAndSurnameNP(filteredData.getRecipientContactPerson());
+                //TODO: setLastCreatedOnTheBasisDocumentTypeNP ?
+                setShoeAndSizeFromDescriptionNP(ordered, filteredData.getRecipientAddressDescription());
+                setPriceAndPrepayment(ordered, filteredData.getCost());
+            }
+        }
+        return ordered;
+    }
+
 
     private Client parseClient(Data data) {
+        return parseClient(data.getRecipientFullName(), data.getPhoneRecipient());
+    }
+
+    private Client parseClient(String clientFullName, String phoneRecipient) {
         Client client = null;
-        String clientFullName = data.getRecipientFullNameEW();
         if (!StringUtils.isEmpty(clientFullName)) {
             client = new Client();
             String[] strings = clientFullName.split(" ");
@@ -68,7 +97,7 @@ public class NPOrderMapper {
                     client.setMiddleName(strings[2]);
                 }
             }
-            client.setPhone("+" + data.getPhoneRecipient());
+            client.setPhone("+" + phoneRecipient);
         }
         return client;
     }
@@ -116,10 +145,14 @@ public class NPOrderMapper {
 
 
     private void setPriceAndPrepayment(Ordered ordered, Data data) {
+        setPriceAndPrepayment(ordered, data.getRedeliverySum());
+    }
+
+    private void setPriceAndPrepayment(Ordered ordered, Double redeliverySum) {
         if (ordered.getOrderedShoes() != null && ordered.getOrderedShoes().size() > 0) {
             Shoe shoe = ordered.getOrderedShoes().get(0);
             if (shoe != null) {
-                Double prepayment = shoe.getPrice() - data.getRedeliverySum();
+                Double prepayment = shoe.getPrice() - redeliverySum;
                 ordered.setPrice(shoe.getPrice());
                 if (prepayment < 0) {
                     prepayment = 0d;
@@ -127,7 +160,6 @@ public class NPOrderMapper {
                     prepayment = 100d;
                 }
                 ordered.setPrePayment(prepayment);
-
             }
         }
     }

@@ -3,9 +3,14 @@ package shop.chobitok.modnyi.novaposta.service;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Ordered;
+import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.request.FromNPToOrderRequest;
 import shop.chobitok.modnyi.entity.request.FromTTNFileRequest;
 import shop.chobitok.modnyi.exception.ConflictException;
+import shop.chobitok.modnyi.novaposta.entity.Data;
+import shop.chobitok.modnyi.novaposta.entity.DataForList;
+import shop.chobitok.modnyi.novaposta.entity.ListTrackingEntity;
+import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.request.Document;
@@ -15,6 +20,7 @@ import shop.chobitok.modnyi.novaposta.util.NPHelper;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.service.OrderService;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,13 +29,11 @@ public class NovaPostaService {
 
     private NovaPostaRepository postaRepository;
     private NPOrderMapper npOrderMapper;
-    private OrderService orderService;
     private NPHelper npHelper;
 
-    public NovaPostaService(NovaPostaRepository postaRepository, NPOrderMapper npOrderMapper, OrderService orderService, NPHelper npHelper) {
+    public NovaPostaService(NovaPostaRepository postaRepository, NPOrderMapper npOrderMapper, NPHelper npHelper) {
         this.postaRepository = postaRepository;
         this.npOrderMapper = npOrderMapper;
-        this.orderService = orderService;
         this.npHelper = npHelper;
     }
 
@@ -40,7 +44,22 @@ public class NovaPostaService {
         if (StringUtils.isEmpty(fromNPToOrderRequest.getPhone())) {
             fromNPToOrderRequest.setPhone("+380637638967");
         }
-        return npOrderMapper.toOrdered(postaRepository.getTracking(createTrackingRequest(fromNPToOrderRequest)));
+        TrackingEntity trackingEntity = postaRepository.getTracking(createTrackingRequest(fromNPToOrderRequest));
+        if (trackingEntity.getData().size() > 0) {
+            Data data = trackingEntity.getData().get(0);
+            //if status created
+            if (ShoeUtil.convertToStatus(data.getStatusCode()) == Status.CREATED) {
+                ListTrackingEntity entity = postaRepository.getTrackingEntityList(LocalDateTime.now().minusDays(10), LocalDateTime.now());
+                List<DataForList> list = entity.getData();
+                if (list.size() > 0) {
+                    DataForList filteredData = list.stream().filter(dataForList -> dataForList.getIntDocNumber().equals(fromNPToOrderRequest.getTtn())).findFirst().orElse(null);
+                    return npOrderMapper.toOrdered(entity, fromNPToOrderRequest.getTtn());
+                }
+            } else {
+                return npOrderMapper.toOrdered(trackingEntity);
+            }
+        }
+        return null;
     }
 
     public List<Ordered> createOrderedFromTTNFile(FromTTNFileRequest request) {
@@ -68,10 +87,6 @@ public class NovaPostaService {
             }
         }
         return true;
-    }
-
-    public List<Ordered> createFromTTNListAndSave(FromTTNFileRequest request) {
-        return orderService.createOrders(createOrderedFromTTNFile(request));
     }
 
 

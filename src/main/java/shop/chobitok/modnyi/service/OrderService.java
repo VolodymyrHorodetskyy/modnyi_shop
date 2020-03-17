@@ -1,5 +1,7 @@
 package shop.chobitok.modnyi.service;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -8,11 +10,11 @@ import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Client;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Shoe;
-import shop.chobitok.modnyi.entity.request.CreateOrderRequest;
-import shop.chobitok.modnyi.entity.request.UpdateOrderRequest;
+import shop.chobitok.modnyi.entity.request.*;
 import shop.chobitok.modnyi.entity.response.GetAllOrderedResponse;
 import shop.chobitok.modnyi.entity.response.PaginationInfo;
 import shop.chobitok.modnyi.exception.ConflictException;
+import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.repository.ClientRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
@@ -28,12 +30,17 @@ public class OrderService {
     private ShoeRepository shoeRepository;
     private ClientRepository clientRepository;
     private StorageService storageService;
+    private NovaPostaService novaPostaService;
 
-    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientRepository clientRepository, StorageService storageService) {
+    @Value("${novaposta.phoneNumber}")
+    private String phone;
+
+    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientRepository clientRepository, StorageService storageService, NovaPostaService novaPostaService) {
         this.orderRepository = orderRepository;
         this.shoeRepository = shoeRepository;
         this.clientRepository = clientRepository;
         this.storageService = storageService;
+        this.novaPostaService = novaPostaService;
     }
 
     public GetAllOrderedResponse getAll(int page, int size, String TTN, String phone, String model, boolean withoutTTN, String orderBy) {
@@ -126,6 +133,30 @@ public class OrderService {
         ordered.setPrePayment(updateOrderRequest.getPrepayment());
         ordered.setPrice(updateOrderRequest.getPrice());
         return orderRepository.save(ordered);
+    }
+
+    public String importOrdersByTTNString(ImportOrdersFromStringRequest request) {
+        String[] splited = request.getTtns().split("\\s+");
+        StringBuilder report = new StringBuilder();
+        for (String ttn : splited) {
+            if (orderRepository.findOneByAvailableTrueAndTtn(ttn) == null) {
+                FromNPToOrderRequest fromNPToOrderRequest = new FromNPToOrderRequest();
+                fromNPToOrderRequest.setPhone(phone);
+                fromNPToOrderRequest.setTtn(ttn);
+                Ordered ordered = orderRepository.save(novaPostaService.createOrderFromNP(fromNPToOrderRequest));
+                if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
+                    report.append(ttn + "  ... взуття або розмір не визначено \n");
+                }
+                report.append(ttn + "  ... імпортовано \n");
+            } else {
+                report.append(ttn + "  ... вже вже існує в базі \n");
+            }
+        }
+        return report.toString();
+    }
+
+    public List<Ordered> createFromTTNListAndSave(FromTTNFileRequest request) {
+        return createOrders(novaPostaService.createOrderedFromTTNFile(request));
     }
 
     private void updateShoeAndSize(Ordered ordered, UpdateOrderRequest updateOrderRequest) {
