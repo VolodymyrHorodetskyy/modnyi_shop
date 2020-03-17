@@ -14,10 +14,8 @@ import shop.chobitok.modnyi.novaposta.util.NPHelper;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.OrderRepository;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class StatisticService {
@@ -37,15 +35,21 @@ public class StatisticService {
         this.npHelper = npHelper;
     }
 
-    public String forDelivery(String pathToFile) {
-        return countDelivery(readFileToTTNSet(pathToFile));
+    public String countNeedDelivery(String pathToFile) {
+        return countNeedDelivery(readFileToTTNSet(pathToFile));
     }
 
-    public String forDelivery(MultipartFile file) {
-        return countDelivery(readFileToTTNSet(file));
+    public String countNeedDelivery(MultipartFile file) {
+        return countNeedDelivery(readFileToTTNSet(file));
     }
 
-    private String countDelivery(Set<String> ttnSet) {
+    public String countNeedDeliveryFromDB() {
+        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusOrderByDateCreated(Status.CREATED);
+        List<String> ttns = orderedList.stream().map(ordered -> ordered.getTtn()).collect(Collectors.toList());
+        return countNeedDelivery(toTTNSet(ttns));
+    }
+
+    private String countNeedDelivery(Set<String> ttnSet) {
         StringBuilder stringBuilder = new StringBuilder();
         int count = 0;
         for (String s : ttnSet) {
@@ -71,8 +75,11 @@ public class StatisticService {
     }
 
     private Set<String> readFileToTTNSet(MultipartFile file) {
-        List<String> allTTNList = ShoeUtil.readTXTFile(file);
-        Set<String> allTTNSet = new HashSet();
+        return toTTNSet(ShoeUtil.readTXTFile(file));
+    }
+
+    private Set<String> toTTNSet(List<String> allTTNList) {
+        Set<String> allTTNSet = new LinkedHashSet<>();
         for (String s : allTTNList) {
             allTTNSet.add(s.replaceAll("\\s+", ""));
         }

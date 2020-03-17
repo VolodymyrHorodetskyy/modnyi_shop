@@ -1,7 +1,9 @@
 package shop.chobitok.modnyi.entity.request;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import shop.chobitok.modnyi.entity.Status;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UpdateOrderRequest {
 
     private String name;

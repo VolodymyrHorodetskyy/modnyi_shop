@@ -67,13 +67,14 @@ public class NPOrderMapper {
                 ordered = new Ordered();
                 ordered.setTtn(filteredData.getIntDocNumber());
                 ordered.setClient(parseClient(filteredData.getRecipientContactPerson(), filteredData.getRecipientsPhone()));
-                ordered.setAddress(filteredData.getRecipientAddress());
+                ordered.setAddress(filteredData.getRecipientAddressDescription());
                 ordered.setStatus(Status.CREATED);
                 ordered.setPostComment(filteredData.getDescription());
                 ordered.setReturnSumNP(filteredData.getCost());
                 ordered.setNameAndSurnameNP(filteredData.getRecipientContactPerson());
+                ordered.setDateCreated(ShoeUtil.toLocalDateTime(filteredData.getDateTime()));
                 //TODO: setLastCreatedOnTheBasisDocumentTypeNP ?
-                setShoeAndSizeFromDescriptionNP(ordered, filteredData.getRecipientAddressDescription());
+                setShoeAndSizeFromDescriptionNP(ordered, filteredData.getDescription());
                 setPriceAndPrepayment(ordered, filteredData.getCost());
             }
         }

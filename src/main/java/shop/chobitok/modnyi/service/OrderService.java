@@ -10,6 +10,7 @@ import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Client;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Shoe;
+import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.request.*;
 import shop.chobitok.modnyi.entity.response.GetAllOrderedResponse;
 import shop.chobitok.modnyi.entity.response.PaginationInfo;
@@ -21,6 +22,7 @@ import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -139,17 +141,22 @@ public class OrderService {
         String[] splited = request.getTtns().split("\\s+");
         StringBuilder report = new StringBuilder();
         for (String ttn : splited) {
-            if (orderRepository.findOneByAvailableTrueAndTtn(ttn) == null) {
-                FromNPToOrderRequest fromNPToOrderRequest = new FromNPToOrderRequest();
-                fromNPToOrderRequest.setPhone(phone);
-                fromNPToOrderRequest.setTtn(ttn);
-                Ordered ordered = orderRepository.save(novaPostaService.createOrderFromNP(fromNPToOrderRequest));
-                if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
-                    report.append(ttn + "  ... взуття або розмір не визначено \n");
+            if (!StringUtils.isEmpty(ttn)) {
+                if (orderRepository.findOneByAvailableTrueAndTtn(ttn) == null) {
+                    FromNPToOrderRequest fromNPToOrderRequest = new FromNPToOrderRequest();
+                    fromNPToOrderRequest.setPhone(phone);
+                    fromNPToOrderRequest.setTtn(ttn);
+                    Ordered ordered = orderRepository.save(novaPostaService.createOrderFromNP(fromNPToOrderRequest));
+                    if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
+                        report.append(ttn + "  ... взуття або розмір не визначено \n");
+                    } else {
+                        report.append(ttn + "  ... імпортовано \n");
+                    }
+                } else {
+                    report.append(ttn + "  ... вже вже існує в базі \n");
                 }
-                report.append(ttn + "  ... імпортовано \n");
             } else {
-                report.append(ttn + "  ... вже вже існує в базі \n");
+                report.append(ttn + "  ... неможливо знайти ттн");
             }
         }
         return report.toString();
@@ -157,6 +164,28 @@ public class OrderService {
 
     public List<Ordered> createFromTTNListAndSave(FromTTNFileRequest request) {
         return createOrders(novaPostaService.createOrderedFromTTNFile(request));
+    }
+
+    public String updateOrderStatuses() {
+        List<Status> statuses = Arrays.asList(Status.CREATED, Status.DELIVERED, Status.SENT);
+        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(statuses);
+        StringBuilder result = new StringBuilder();
+        for (Ordered ordered : orderedList) {
+            if (updateStatus(ordered)) {
+                result.append(ordered.getTtn() + " ... статус змінено на " + ordered.getStatus() + "\n");
+            }
+        }
+        return result.toString();
+    }
+
+    private boolean updateStatus(Ordered ordered) {
+        Status newStatus = novaPostaService.getNewStatus(ordered);
+        if (ordered.getStatus() != newStatus) {
+            ordered.setStatus(newStatus);
+            orderRepository.save(ordered);
+            return true;
+        }
+        return false;
     }
 
     private void updateShoeAndSize(Ordered ordered, UpdateOrderRequest updateOrderRequest) {

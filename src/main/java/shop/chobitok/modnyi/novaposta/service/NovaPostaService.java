@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.novaposta.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Ordered;
@@ -18,7 +19,6 @@ import shop.chobitok.modnyi.novaposta.request.GetTrackingRequest;
 import shop.chobitok.modnyi.novaposta.request.MethodProperties;
 import shop.chobitok.modnyi.novaposta.util.NPHelper;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
-import shop.chobitok.modnyi.service.OrderService;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -31,6 +31,9 @@ public class NovaPostaService {
     private NPOrderMapper npOrderMapper;
     private NPHelper npHelper;
 
+    @Value("${novaposta.phoneNumber}")
+    private String phone;
+
     public NovaPostaService(NovaPostaRepository postaRepository, NPOrderMapper npOrderMapper, NPHelper npHelper) {
         this.postaRepository = postaRepository;
         this.npOrderMapper = npOrderMapper;
@@ -42,7 +45,7 @@ public class NovaPostaService {
             throw new ConflictException("Заповніть ТТН");
         }
         if (StringUtils.isEmpty(fromNPToOrderRequest.getPhone())) {
-            fromNPToOrderRequest.setPhone("+380637638967");
+            fromNPToOrderRequest.setPhone(phone);
         }
         TrackingEntity trackingEntity = postaRepository.getTracking(createTrackingRequest(fromNPToOrderRequest));
         if (trackingEntity.getData().size() > 0) {
@@ -87,6 +90,10 @@ public class NovaPostaService {
             }
         }
         return true;
+    }
+
+    public Status getNewStatus(Ordered ordered) {
+        return createOrderFromNP(new FromNPToOrderRequest(null, ordered.getTtn())).getStatus();
     }
 
 

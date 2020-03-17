@@ -75,6 +75,11 @@ public class OrderController {
         return orderService.importOrdersByTTNString(request);
     }
 
+    @PatchMapping("/updateStatuses")
+    public String updateStatuses(){
+        return orderService.updateOrderStatuses();
+    }
+
 /*
     @PostMapping("/importOrdersByTTNList")
     public String importOrdersFromTTNList(){

@@ -11,6 +11,14 @@ public class FromNPToOrderRequest {
     @NotNull
     private String ttn;
 
+    public FromNPToOrderRequest(String phone, String ttn) {
+        this.phone = phone;
+        this.ttn = ttn;
+    }
+
+    public FromNPToOrderRequest() {
+    }
+
     public String getPhone() {
         return phone;
     }

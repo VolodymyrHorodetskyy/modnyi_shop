@@ -32,13 +32,18 @@ public class StatisticController {
 
     @GetMapping("/needDelivery")
     public String needDelivery(@RequestParam String path){
-        return statisticService.forDelivery(path);
+        return statisticService.countNeedDelivery(path);
+    }
+
+    @GetMapping("/needDeliveryFromDB")
+    public String needDelivery(){
+        return statisticService.countNeedDeliveryFromDB();
     }
 
     @PostMapping("/needDeliverymulti")
     public String needDelivery(@RequestParam MultipartFile file)
     {
-        return statisticService.forDelivery(file);
+        return statisticService.countNeedDelivery(file);
     }
 
 }

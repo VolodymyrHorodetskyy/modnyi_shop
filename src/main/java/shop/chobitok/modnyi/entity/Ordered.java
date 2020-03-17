@@ -76,6 +76,9 @@ public class Ordered extends Audit {
     @Column
     private String fromTTN;
 
+    @Column
+    private LocalDateTime dateCreated;
+
     public List<Shoe> getOrderedShoes() {
         return orderedShoes;
     }
@@ -250,5 +253,13 @@ public class Ordered extends Audit {
 
     public void setFromTTN(String fromTTN) {
         this.fromTTN = fromTTN;
+    }
+
+    public LocalDateTime getDateCreated() {
+        return dateCreated;
+    }
+
+    public void setDateCreated(LocalDateTime dateCreated) {
+        this.dateCreated = dateCreated;
     }
 }
