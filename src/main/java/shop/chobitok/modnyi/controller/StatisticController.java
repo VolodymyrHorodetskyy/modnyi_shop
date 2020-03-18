@@ -37,8 +37,8 @@ public class StatisticController {
     }*/
 
     @GetMapping("/needDeliveryFromDB")
-    public StringResponse needDelivery() {
-        return statisticService.countNeedDeliveryFromDB();
+    public StringResponse needDelivery(@RequestParam(required = false) boolean updateStatuses) {
+        return statisticService.countNeedDeliveryFromDB(updateStatuses);
     }
 
     @GetMapping("/getIssueOrdered")

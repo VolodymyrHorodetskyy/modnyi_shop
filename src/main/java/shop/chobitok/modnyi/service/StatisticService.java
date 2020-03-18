@@ -22,21 +22,21 @@ import java.util.stream.Collectors;
 public class StatisticService {
 
     private NovaPostaRepository postaRepository;
-    private NovaPostaService novaPostaService;
     private OrderRepository orderRepository;
     private NPOrderMapper npOrderMapper;
     private NPHelper npHelper;
+    private OrderService orderService;
 
-
-    public StatisticService(NovaPostaRepository postaRepository, NovaPostaService novaPostaService, OrderRepository orderRepository, NPOrderMapper npOrderMapper, NPHelper npHelper) {
+    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, NPOrderMapper npOrderMapper, NPHelper npHelper, OrderService orderService) {
         this.postaRepository = postaRepository;
-        this.novaPostaService = novaPostaService;
         this.orderRepository = orderRepository;
         this.npOrderMapper = npOrderMapper;
         this.npHelper = npHelper;
+        this.orderService = orderService;
     }
 
-//    public String countNeedDelivery(String pathToFile) {
+
+    //    public String countNeedDelivery(String pathToFile) {
 //        return countNeedDelivery(readFileToTTNSet(pathToFile));
 //    }
 //
@@ -44,7 +44,10 @@ public class StatisticService {
 //        return countNeedDelivery(readFileToTTNSet(file));
 //    }
 
-    public StringResponse countNeedDeliveryFromDB() {
+    public StringResponse countNeedDeliveryFromDB(boolean updateStatuses) {
+        if (updateStatuses) {
+            orderService.updateOrderStatuses();
+        }
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusOrderByDateCreated(Status.CREATED);
         List<String> ttns = orderedList.stream().map(ordered -> ordered.getTtn()).collect(Collectors.toList());
         return countNeedDelivery(toTTNSet(ttns));
@@ -75,6 +78,9 @@ public class StatisticService {
             if (ordered.getOrderedShoes() == null || ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
                 result.append(ordered.getTtn() + "  ... замовлення без взуття або розміру \n");
             }
+        }
+        if (result.length() == 0) {
+            result.append("Помилок немає");
         }
         return new StringResponse(result.toString());
     }

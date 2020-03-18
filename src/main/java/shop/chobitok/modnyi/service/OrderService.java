@@ -140,7 +140,7 @@ public class OrderService {
 
     public StringResponse importOrdersByTTNString(ImportOrdersFromStringRequest request) {
         String[] splited = request.getTtns().split("\\s+");
-        List<String> stringList = new ArrayList<>();
+        StringBuilder result = new StringBuilder();
         for (String ttn : splited) {
             if (!StringUtils.isEmpty(ttn) && isNumeric(ttn) && ttn.length() == 14) {
                 if (orderRepository.findOneByAvailableTrueAndTtn(ttn) == null) {
@@ -150,21 +150,21 @@ public class OrderService {
                     try {
                         Ordered ordered = orderRepository.save(novaPostaService.createOrderFromNP(fromNPToOrderRequest));
                         if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
-                            stringList.add(ttn + "  ... взуття або розмір не визначено \n");
+                            result.append(ttn + "  ... взуття або розмір не визначено \n");
                         } else {
-                            stringList.add(ttn + "  ... імпортовано \n");
+                            result.append(ttn + "  ... імпортовано \n");
                         }
                     }catch (ConflictException e){
-                        stringList.add(ttn +"  ... неможливо знайти ттн");
+                        result.append(ttn +"  ... неможливо знайти ттн \n");
                     }
                 } else {
-                    stringList.add(ttn + "  ... вже існує в базі \n");
+                    result.append(ttn + "  ... вже існує в базі \n");
                 }
             } else {
-                stringList.add(ttn + "  ... неможливо знайти ттн \n");
+                result.append(ttn + "  ... неможливо знайти ттн \n");
             }
         }
-        return new StringResponse(stringList);
+        return new StringResponse(result.toString());
     }
 
     public List<Ordered> createFromTTNListAndSave(FromTTNFileRequest request) {
