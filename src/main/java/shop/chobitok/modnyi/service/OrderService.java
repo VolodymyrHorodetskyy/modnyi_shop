@@ -14,6 +14,7 @@ import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.request.*;
 import shop.chobitok.modnyi.entity.response.GetAllOrderedResponse;
 import shop.chobitok.modnyi.entity.response.PaginationInfo;
+import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.repository.ClientRepository;
@@ -137,29 +138,33 @@ public class OrderService {
         return orderRepository.save(ordered);
     }
 
-    public String importOrdersByTTNString(ImportOrdersFromStringRequest request) {
+    public StringResponse importOrdersByTTNString(ImportOrdersFromStringRequest request) {
         String[] splited = request.getTtns().split("\\s+");
-        StringBuilder report = new StringBuilder();
+        List<String> stringList = new ArrayList<>();
         for (String ttn : splited) {
-            if (!StringUtils.isEmpty(ttn)) {
+            if (!StringUtils.isEmpty(ttn) && isNumeric(ttn) && ttn.length() == 14) {
                 if (orderRepository.findOneByAvailableTrueAndTtn(ttn) == null) {
                     FromNPToOrderRequest fromNPToOrderRequest = new FromNPToOrderRequest();
                     fromNPToOrderRequest.setPhone(phone);
                     fromNPToOrderRequest.setTtn(ttn);
-                    Ordered ordered = orderRepository.save(novaPostaService.createOrderFromNP(fromNPToOrderRequest));
-                    if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
-                        report.append(ttn + "  ... взуття або розмір не визначено \n");
-                    } else {
-                        report.append(ttn + "  ... імпортовано \n");
+                    try {
+                        Ordered ordered = orderRepository.save(novaPostaService.createOrderFromNP(fromNPToOrderRequest));
+                        if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
+                            stringList.add(ttn + "  ... взуття або розмір не визначено \n");
+                        } else {
+                            stringList.add(ttn + "  ... імпортовано \n");
+                        }
+                    }catch (ConflictException e){
+                        stringList.add(ttn +"  ... неможливо знайти ттн");
                     }
                 } else {
-                    report.append(ttn + "  ... вже вже існує в базі \n");
+                    stringList.add(ttn + "  ... вже вже існує в базі \n");
                 }
             } else {
-                report.append(ttn + "  ... неможливо знайти ттн");
+                stringList.add(ttn + "  ... неможливо знайти ттн \n");
             }
         }
-        return report.toString();
+        return new StringResponse(stringList);
     }
 
     public List<Ordered> createFromTTNListAndSave(FromTTNFileRequest request) {
@@ -206,6 +211,18 @@ public class OrderService {
 
     public List<Ordered> createOrders(List<Ordered> orderedList) {
         return orderRepository.saveAll(orderedList);
+    }
+
+    private boolean isNumeric(String strNum) {
+        if (strNum == null) {
+            return false;
+        }
+        try {
+            double d = Double.parseDouble(strNum);
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
+        return true;
     }
 
 }

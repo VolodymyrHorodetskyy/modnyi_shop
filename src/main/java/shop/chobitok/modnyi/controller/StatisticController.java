@@ -2,6 +2,7 @@ package shop.chobitok.modnyi.controller;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.service.StatisticService;
 
 @RestController
@@ -30,20 +31,20 @@ public class StatisticController {
         return statisticService.getAllDenied(pathAllTTNFile, returned);
     }
 
-    @GetMapping("/needDelivery")
+/*    @GetMapping("/needDelivery")
     public String needDelivery(@RequestParam String path){
         return statisticService.countNeedDelivery(path);
-    }
+    }*/
 
     @GetMapping("/needDeliveryFromDB")
-    public String needDelivery(){
+    public StringResponse needDelivery(){
         return statisticService.countNeedDeliveryFromDB();
     }
-
+/*
     @PostMapping("/needDeliverymulti")
     public String needDelivery(@RequestParam MultipartFile file)
     {
         return statisticService.countNeedDelivery(file);
-    }
+    }*/
 
 }

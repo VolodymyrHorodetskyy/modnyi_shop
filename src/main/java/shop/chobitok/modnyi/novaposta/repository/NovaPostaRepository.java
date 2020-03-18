@@ -58,7 +58,7 @@ public class NovaPostaRepository {
         if (dataList != null && dataList.size() > 0) {
             Data data = dataList.get(0);
             if (StringUtils.isEmpty(data.getRecipientAddress())) {
-                throw new ConflictException("Потрібно заповнити телефон");
+                throw new ConflictException("Не знайдено");
             }
         }
         return trackingEntity;

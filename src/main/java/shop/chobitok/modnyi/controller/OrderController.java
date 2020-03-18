@@ -5,6 +5,7 @@ import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.dto.StatusDto;
 import shop.chobitok.modnyi.entity.request.*;
 import shop.chobitok.modnyi.entity.response.GetAllOrderedResponse;
+import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.service.OrderService;
 import shop.chobitok.modnyi.service.UtilService;
@@ -71,7 +72,7 @@ public class OrderController {
     }
 
     @PostMapping("/importOrdersByTTNsString")
-    public String importOrdersFromTTNList(@RequestBody ImportOrdersFromStringRequest request) {
+    public StringResponse importOrdersFromTTNList(@RequestBody ImportOrdersFromStringRequest request) {
         return orderService.importOrdersByTTNString(request);
     }
 

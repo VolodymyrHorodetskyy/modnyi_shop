@@ -5,6 +5,7 @@ import org.springframework.web.multipart.MultipartFile;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.entity.Status;
+import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
@@ -35,33 +36,34 @@ public class StatisticService {
         this.npHelper = npHelper;
     }
 
-    public String countNeedDelivery(String pathToFile) {
-        return countNeedDelivery(readFileToTTNSet(pathToFile));
-    }
+//    public String countNeedDelivery(String pathToFile) {
+//        return countNeedDelivery(readFileToTTNSet(pathToFile));
+//    }
+//
+//    public String countNeedDelivery(MultipartFile file) {
+//        return countNeedDelivery(readFileToTTNSet(file));
+//    }
 
-    public String countNeedDelivery(MultipartFile file) {
-        return countNeedDelivery(readFileToTTNSet(file));
-    }
-
-    public String countNeedDeliveryFromDB() {
+    public StringResponse countNeedDeliveryFromDB() {
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusOrderByDateCreated(Status.CREATED);
         List<String> ttns = orderedList.stream().map(ordered -> ordered.getTtn()).collect(Collectors.toList());
         return countNeedDelivery(toTTNSet(ttns));
     }
 
-    private String countNeedDelivery(Set<String> ttnSet) {
-        StringBuilder stringBuilder = new StringBuilder();
+    private StringResponse countNeedDelivery(Set<String> ttnSet) {
+        List<String> stringList = new ArrayList<>();
+        StringBuilder result = new StringBuilder();
         int count = 0;
         for (String s : ttnSet) {
             Data data = postaRepository.getTracking(npHelper.formGetTrackingRequest(s)).getData().get(0);
             if (ShoeUtil.convertToStatus(data.getStatusCode()) == Status.CREATED) {
                 ++count;
-                stringBuilder.append(data.getNumber() + "\n" + data.getCargoDescriptionString());
-                stringBuilder.append("\n\n");
+                stringList.add(data.getNumber() + "\n" + data.getCargoDescriptionString());
+                result.append(data.getNumber() + "\n" + data.getCargoDescriptionString() + "\n\n");
             }
         }
-        stringBuilder.append("Кількість:" + count);
-        return stringBuilder.toString();
+        result.append("Кількість :" + count);
+        return new StringResponse(result.toString());
     }
 
 

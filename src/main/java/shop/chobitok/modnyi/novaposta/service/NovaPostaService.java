@@ -55,7 +55,6 @@ public class NovaPostaService {
                 ListTrackingEntity entity = postaRepository.getTrackingEntityList(LocalDateTime.now().minusDays(10), LocalDateTime.now());
                 List<DataForList> list = entity.getData();
                 if (list.size() > 0) {
-                    DataForList filteredData = list.stream().filter(dataForList -> dataForList.getIntDocNumber().equals(fromNPToOrderRequest.getTtn())).findFirst().orElse(null);
                     return npOrderMapper.toOrdered(entity, fromNPToOrderRequest.getTtn());
                 }
             } else {
