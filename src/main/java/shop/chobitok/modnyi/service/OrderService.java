@@ -158,7 +158,7 @@ public class OrderService {
                         stringList.add(ttn +"  ... неможливо знайти ттн");
                     }
                 } else {
-                    stringList.add(ttn + "  ... вже вже існує в базі \n");
+                    stringList.add(ttn + "  ... вже існує в базі \n");
                 }
             } else {
                 stringList.add(ttn + "  ... неможливо знайти ттн \n");

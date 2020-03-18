@@ -67,6 +67,18 @@ public class StatisticService {
     }
 
 
+    public StringResponse getIssueOrders() {
+        //TODO: optimisation
+        StringBuilder result = new StringBuilder();
+        List<Ordered> orderedList = orderRepository.findAll();
+        for (Ordered ordered : orderedList) {
+            if (ordered.getOrderedShoes() == null || ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
+                result.append(ordered.getTtn() + "  ... замовлення без взуття або розміру \n");
+            }
+        }
+        return new StringResponse(result.toString());
+    }
+
     private Set<String> readFileToTTNSet(String path) {
         List<String> allTTNList = ShoeUtil.readTXTFile(path);
         Set<String> allTTNSet = new HashSet();

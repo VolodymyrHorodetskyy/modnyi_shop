@@ -37,8 +37,13 @@ public class StatisticController {
     }*/
 
     @GetMapping("/needDeliveryFromDB")
-    public StringResponse needDelivery(){
+    public StringResponse needDelivery() {
         return statisticService.countNeedDeliveryFromDB();
+    }
+
+    @GetMapping("/getIssueOrdered")
+    public StringResponse getIssueOrders() {
+        return statisticService.getIssueOrders();
     }
 /*
     @PostMapping("/needDeliverymulti")
