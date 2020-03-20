@@ -16,7 +16,11 @@ import shop.chobitok.modnyi.entity.response.GetAllOrderedResponse;
 import shop.chobitok.modnyi.entity.response.PaginationInfo;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
+import shop.chobitok.modnyi.novaposta.entity.Data;
+import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
+import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
+import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.ClientRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
@@ -139,29 +143,25 @@ public class OrderService {
     }
 
     public StringResponse importOrdersByTTNString(ImportOrdersFromStringRequest request) {
-        String[] splited = request.getTtns().split("\\s+");
+        List<String> splited = splitTTNString(request.getTtns());
         StringBuilder result = new StringBuilder();
         for (String ttn : splited) {
-            if (!StringUtils.isEmpty(ttn) && isNumeric(ttn) && ttn.length() == 14) {
-                if (orderRepository.findOneByAvailableTrueAndTtn(ttn) == null) {
-                    FromNPToOrderRequest fromNPToOrderRequest = new FromNPToOrderRequest();
-                    fromNPToOrderRequest.setPhone(phone);
-                    fromNPToOrderRequest.setTtn(ttn);
-                    try {
-                        Ordered ordered = orderRepository.save(novaPostaService.createOrderFromNP(fromNPToOrderRequest));
-                        if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
-                            result.append(ttn + "  ... взуття або розмір не визначено \n");
-                        } else {
-                            result.append(ttn + "  ... імпортовано \n");
-                        }
-                    }catch (ConflictException e){
-                        result.append(ttn +"  ... неможливо знайти ттн \n");
+            if (orderRepository.findOneByAvailableTrueAndTtn(ttn) == null) {
+                FromNPToOrderRequest fromNPToOrderRequest = new FromNPToOrderRequest();
+                fromNPToOrderRequest.setPhone(phone);
+                fromNPToOrderRequest.setTtn(ttn);
+                try {
+                    Ordered ordered = orderRepository.save(novaPostaService.createOrderFromNP(fromNPToOrderRequest));
+                    if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
+                        result.append(ttn + "  ... взуття або розмір не визначено \n");
+                    } else {
+                        result.append(ttn + "  ... імпортовано \n");
                     }
-                } else {
-                    result.append(ttn + "  ... вже існує в базі \n");
+                } catch (ConflictException e) {
+                    result.append(ttn + "  ... неможливо знайти ттн \n");
                 }
             } else {
-                result.append(ttn + "  ... неможливо знайти ттн \n");
+                result.append(ttn + "  ... вже існує в базі \n");
             }
         }
         return new StringResponse(result.toString());
@@ -184,13 +184,35 @@ public class OrderService {
     }
 
     private boolean updateStatus(Ordered ordered) {
-        Status newStatus = novaPostaService.getNewStatus(ordered);
-        if (ordered.getStatus() != newStatus) {
-            ordered.setStatus(newStatus);
-            orderRepository.save(ordered);
-            return true;
+        TrackingEntity trackingEntity = novaPostaService.getTrackingEntity(null, ordered.getTtn());
+        if (trackingEntity != null && trackingEntity.getData().size() > 0) {
+            Data data = trackingEntity.getData().get(0);
+            Status newStatus = ShoeUtil.convertToStatus(data.getStatusCode());
+            if (ordered.getStatus() != newStatus) {
+                ordered.setStatus(newStatus);
+                ordered.setStatusNP(data.getStatusCode());
+                orderRepository.save(ordered);
+                return true;
+            }
         }
         return false;
+    }
+
+    public List<Ordered> getCanceled(boolean updateStatuses) {
+        if (updateStatuses) {
+            updateOrderStatuses();
+        }
+        List<Ordered> canceledOrdereds = orderRepository.findBystatusNP(103);
+        return canceledOrdereds;
+    }
+
+    public StringResponse returnAllCanceled(boolean updateStatuses) {
+        StringBuilder result = new StringBuilder();
+        List<Ordered> canceledOrdereds = getCanceled(updateStatuses);
+        for (Ordered ordered : canceledOrdereds) {
+            result.append(novaPostaService.returnCargo(ordered.getTtn()) + "\n");
+        }
+        return new StringResponse(result.toString());
     }
 
     private void updateShoeAndSize(Ordered ordered, UpdateOrderRequest updateOrderRequest) {
@@ -224,5 +246,19 @@ public class OrderService {
         }
         return true;
     }
+
+    private List<String> splitTTNString(String ttns) {
+        List<String> ttnsList = new ArrayList<>();
+        if (ttns != null) {
+            String[] ttnsArray = ttns.split("\\s+");
+            for (String ttn : ttnsArray) {
+                if (!StringUtils.isEmpty(ttn) && isNumeric(ttn) && ttn.length() == 14) {
+                    ttnsList.add(ttn);
+                }
+            }
+        }
+        return ttnsList;
+    }
+
 
 }

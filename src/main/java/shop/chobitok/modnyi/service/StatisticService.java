@@ -10,7 +10,6 @@ import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
-import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.novaposta.util.NPHelper;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.OrderRepository;
@@ -142,6 +141,28 @@ public class StatisticService {
         return stringBuilder.toString();
     }
 
+    public StringResponse needToPayed(boolean updateStatuses, MultipartFile payedTTNFile) {
+        StringBuilder result = new StringBuilder();
+        Double sum = 0d;
+        if (updateStatuses) {
+            orderService.updateOrderStatuses();
+        }
+        Set<String> payedTTNSSet = readFileToTTNSet(payedTTNFile);
+        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.RECEIVED))
+                .stream().filter(ordered -> !payedTTNSSet.contains(ordered.getTtn())).collect(Collectors.toList());
+
+        for (Ordered ordered : orderedList) {
+            if (ordered.getOrderedShoes().size() < 1) {
+                result.append(ordered.getTtn() + " НЕ ВИЗНАЧЕНО\n");
+            } else {
+                Shoe shoe = ordered.getOrderedShoes().get(0);
+                result.append(ordered.getTtn() + "\n");
+                sum += shoe.getCost();
+            }
+        }
+        result.append("\n Сума = " + sum);
+        return new StringResponse(result.toString());
+    }
 
     public String countAllReceivedAndDenied(String pathAllTTNFile) {
         StringBuilder stringBuilder = new StringBuilder();
@@ -166,6 +187,7 @@ public class StatisticService {
         stringBuilder.append("Відмова = " + denied);
         return stringBuilder.toString();
     }
+
 
     public String getAllDenied(String pathAllTTNFile, boolean returned) {
         StringBuilder stringBuilderWithDesc = new StringBuilder();

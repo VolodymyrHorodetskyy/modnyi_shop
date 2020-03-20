@@ -45,11 +45,10 @@ public class StatisticController {
     public StringResponse getIssueOrders() {
         return statisticService.getIssueOrders();
     }
-/*
-    @PostMapping("/needDeliverymulti")
-    public String needDelivery(@RequestParam MultipartFile file)
-    {
-        return statisticService.countNeedDelivery(file);
-    }*/
+
+    @PostMapping("/needToPayedFromFile")
+    public StringResponse needToPayed(@RequestParam(required = false) boolean updateStatuses, @RequestParam MultipartFile file) {
+        return statisticService.needToPayed(updateStatuses, file);
+    }
 
 }

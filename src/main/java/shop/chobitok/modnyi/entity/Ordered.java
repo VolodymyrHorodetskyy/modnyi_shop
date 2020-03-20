@@ -29,6 +29,9 @@ public class Ordered extends Audit {
     private Status status;
 
     @Column
+    private Integer statusNP;
+
+    @Column
     private Double prePayment;
 
     @Column
@@ -261,5 +264,13 @@ public class Ordered extends Audit {
 
     public void setDateCreated(LocalDateTime dateCreated) {
         this.dateCreated = dateCreated;
+    }
+
+    public Integer getStatusNP() {
+        return statusNP;
+    }
+
+    public void setStatusNP(Integer statusNP) {
+        this.statusNP = statusNP;
     }
 }

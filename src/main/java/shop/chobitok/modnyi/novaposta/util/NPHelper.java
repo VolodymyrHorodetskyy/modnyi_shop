@@ -43,10 +43,11 @@ public class NPHelper {
         return formGetTrackingRequest(ttn, null, null);
     }
 
-    public ReturnCargoRequest createReturnCargoRequest(String ttn) {
+    public ReturnCargoRequest createReturnCargoRequest(String ttn, String ref) {
         ReturnCargoRequest returnCargoRequest = new ReturnCargoRequest();
         MethodPropertiesForReturn methodPropertiesForReturn = new MethodPropertiesForReturn();
         methodPropertiesForReturn.setIntDocNumber(ttn);
+        methodPropertiesForReturn.setReturnAddressRef(ref);
         returnCargoRequest.setMethodProperties(methodPropertiesForReturn);
         return returnCargoRequest;
     }

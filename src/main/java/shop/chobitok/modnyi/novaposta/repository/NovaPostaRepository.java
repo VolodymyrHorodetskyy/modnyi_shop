@@ -12,25 +12,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import shop.chobitok.modnyi.exception.ConflictException;
-import shop.chobitok.modnyi.novaposta.entity.CargoReturnResponse;
-import shop.chobitok.modnyi.novaposta.entity.Data;
-import shop.chobitok.modnyi.novaposta.entity.ListTrackingEntity;
+import shop.chobitok.modnyi.novaposta.entity.*;
 import shop.chobitok.modnyi.novaposta.request.*;
-import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
-import shop.chobitok.modnyi.novaposta.util.NPHelper;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class NovaPostaRepository {
 
     private String getTrackingURL = "https://api.novaposhta.ua/v2.0/json/getStatusDocuments";
-    private String getListTracking = "https://api.novaposhta.ua/v2.0/json/getDocumentList";
+    private String getListTrackingURL = "https://api.novaposhta.ua/v2.0/json/getDocumentList";
     private String cargoReturnURL = "https://api.novaposhta.ua/v2.0/json/save";
+    private String checkPossibilityReturnCargoURL = "https://api.novaposhta.ua/v2.0/json/CheckPossibilityCreateReturn";
 
     private RestTemplate restTemplate;
     private HttpHeaders httpHeaders;
@@ -74,7 +70,16 @@ public class NovaPostaRepository {
         methodPropertiesForList.setDateTimeTo(toString);
         getDocumentListRequest.setMethodProperties(methodPropertiesForList);
         HttpEntity httpEntity = new HttpEntity(getDocumentListRequest, httpHeaders);
-        ResponseEntity<ListTrackingEntity> responseEntity = restTemplate.postForEntity(getListTracking, httpEntity, ListTrackingEntity.class);
+        ResponseEntity<ListTrackingEntity> responseEntity = restTemplate.postForEntity(getListTrackingURL, httpEntity, ListTrackingEntity.class);
+        return responseEntity.getBody();
+    }
+
+    public CheckPossibilityCreateReturnResponse checkPossibilitReturn(String ttn) {
+        CheckPossibilityReturnCargoRequest checkPossibilityReturnCargoRequest = new CheckPossibilityReturnCargoRequest();
+        checkPossibilityReturnCargoRequest.setApiKey(apiKey);
+        checkPossibilityReturnCargoRequest.setMethodProperties(new MethodPropertiesForCheckReturn(ttn));
+        HttpEntity httpEntity = new HttpEntity(checkPossibilityReturnCargoRequest, httpHeaders);
+        ResponseEntity<CheckPossibilityCreateReturnResponse> responseEntity = restTemplate.postForEntity(checkPossibilityReturnCargoURL, httpEntity, CheckPossibilityCreateReturnResponse.class);
         return responseEntity.getBody();
     }
 

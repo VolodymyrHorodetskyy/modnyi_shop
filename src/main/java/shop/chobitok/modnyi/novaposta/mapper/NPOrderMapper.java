@@ -44,6 +44,7 @@ public class NPOrderMapper {
                 ordered.setTtn(data.getNumber());
                 ordered.setAddress(data.getRecipientAddress());
                 ordered.setStatus(ShoeUtil.convertToStatus(data.getStatusCode()));
+                ordered.setStatusNP(data.getStatusCode());
                 ordered.setPostComment(data.getCargoDescriptionString());
                 ordered.setLastTransactionDateTime(ShoeUtil.toLocalDateTime(data.getLastTransactionDateTimeGM()));
                 ordered.setClient(parseClient(data));
@@ -69,6 +70,7 @@ public class NPOrderMapper {
                 ordered.setClient(parseClient(filteredData.getRecipientContactPerson(), filteredData.getRecipientsPhone()));
                 ordered.setAddress(filteredData.getRecipientAddressDescription());
                 ordered.setStatus(Status.CREATED);
+                ordered.setStatusNP(1);
                 ordered.setPostComment(filteredData.getDescription());
                 ordered.setReturnSumNP(filteredData.getCost());
                 ordered.setNameAndSurnameNP(filteredData.getRecipientContactPerson());

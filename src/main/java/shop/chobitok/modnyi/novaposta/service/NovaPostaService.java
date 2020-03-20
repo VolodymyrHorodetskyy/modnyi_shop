@@ -7,11 +7,9 @@ import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.request.FromNPToOrderRequest;
 import shop.chobitok.modnyi.entity.request.FromTTNFileRequest;
+import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
-import shop.chobitok.modnyi.novaposta.entity.Data;
-import shop.chobitok.modnyi.novaposta.entity.DataForList;
-import shop.chobitok.modnyi.novaposta.entity.ListTrackingEntity;
-import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
+import shop.chobitok.modnyi.novaposta.entity.*;
 import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.request.Document;
@@ -32,7 +30,7 @@ public class NovaPostaService {
     private NPHelper npHelper;
 
     @Value("${novaposta.phoneNumber}")
-    private String phone;
+    private String phoneFromProps;
 
     public NovaPostaService(NovaPostaRepository postaRepository, NPOrderMapper npOrderMapper, NPHelper npHelper) {
         this.postaRepository = postaRepository;
@@ -45,7 +43,7 @@ public class NovaPostaService {
             throw new ConflictException("Заповніть ТТН");
         }
         if (StringUtils.isEmpty(fromNPToOrderRequest.getPhone())) {
-            fromNPToOrderRequest.setPhone(phone);
+            fromNPToOrderRequest.setPhone(phoneFromProps);
         }
         TrackingEntity trackingEntity = postaRepository.getTracking(createTrackingRequest(fromNPToOrderRequest));
         if (trackingEntity.getData().size() > 0) {
@@ -77,24 +75,29 @@ public class NovaPostaService {
         return orderedList;
     }
 
-    public boolean returnCargo(String ttn) {
-        return postaRepository.returnCargo(npHelper.createReturnCargoRequest(ttn));
-    }
-
-    public boolean returnCargoFromFile(String path) {
-        List<String> ttnList = ShoeUtil.readTXTFile(path);
-        for (String s : ttnList) {
-            if (!returnCargo(s)) {
-                throw new ConflictException("Неможливо повернути відправлення :" + s);
+    public String returnCargo(String ttn) {
+        CheckPossibilityCreateReturnResponse checkPossibilityCreateReturnResponse = postaRepository.checkPossibilitReturn(ttn);
+        if (checkPossibilityCreateReturnResponse.isSuccess()) {
+            if (postaRepository.returnCargo(
+                    npHelper.createReturnCargoRequest(ttn, checkPossibilityCreateReturnResponse.getData().get(0).getRef()))) {
+                return ttn + "  ... заявку на повернення оформлено";
             }
+        } else {
+            return ttn + "  ...  " + checkPossibilityCreateReturnResponse.getErrors().get(0);
         }
-        return true;
+        return ttn + "  ... заявку на повернення неможливо оформити";
     }
 
-    public Status getNewStatus(Ordered ordered) {
-        return createOrderFromNP(new FromNPToOrderRequest(null, ordered.getTtn())).getStatus();
+    public TrackingEntity getTrackingEntity(String phone, String ttn) {
+        if (StringUtils.isEmpty(phone)) {
+            phone = phoneFromProps;
+        }
+        if (!StringUtils.isEmpty(ttn)) {
+            return postaRepository.getTracking(createTrackingRequest(new FromNPToOrderRequest(phone, ttn)));
+        } else {
+            return null;
+        }
     }
-
 
     private GetTrackingRequest createTrackingRequest(FromNPToOrderRequest fromNPToOrderRequest) {
         GetTrackingRequest getTrackingRequest = new GetTrackingRequest();

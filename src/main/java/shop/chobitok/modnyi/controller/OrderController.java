@@ -61,15 +61,6 @@ public class OrderController {
         return utilService.getStatuses();
     }
 
-    @GetMapping("/cargoReturn")
-    public boolean returnCargo(@RequestParam String ttn) {
-        return novaPostaService.returnCargo(ttn);
-    }
-
-    @GetMapping("/cargoReturnAllFromFile")
-    public boolean returnCargoFromFile(@RequestParam String path) {
-        return novaPostaService.returnCargoFromFile(path);
-    }
 
     @PostMapping("/importOrdersByTTNsString")
     public StringResponse importOrdersFromTTNList(@RequestBody ImportOrdersFromStringRequest request) {
@@ -77,8 +68,18 @@ public class OrderController {
     }
 
     @PatchMapping("/updateStatuses")
-    public String updateStatuses(){
+    public String updateStatuses() {
         return orderService.updateOrderStatuses();
+    }
+
+    @GetMapping("/getCanceled")
+    public List<Ordered> getCanceledOrders(@RequestParam(required = false) boolean updateStatuses) {
+        return orderService.getCanceled(updateStatuses);
+    }
+
+    @GetMapping("/returnCargo")
+    public StringResponse returnCargo(@RequestParam(required = false) boolean updateStatuses){
+        return orderService.returnAllCanceled(updateStatuses);
     }
 
 /*
