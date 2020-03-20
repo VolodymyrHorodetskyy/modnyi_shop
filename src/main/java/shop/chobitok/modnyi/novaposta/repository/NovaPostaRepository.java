@@ -50,13 +50,6 @@ public class NovaPostaRepository {
         HttpEntity httpEntity = new HttpEntity(getTrackingRequest, httpHeaders);
         ResponseEntity<TrackingEntity> responseEntity = restTemplate.postForEntity(getTrackingURL, httpEntity, TrackingEntity.class);
         TrackingEntity trackingEntity = responseEntity.getBody();
-        List<Data> dataList = trackingEntity.getData();
-        if (dataList != null && dataList.size() > 0) {
-            Data data = dataList.get(0);
-            if (StringUtils.isEmpty(data.getRecipientAddress())) {
-                throw new ConflictException("Не знайдено");
-            }
-        }
         return trackingEntity;
     }
 
