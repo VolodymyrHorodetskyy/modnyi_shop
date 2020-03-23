@@ -17,7 +17,7 @@ public interface OrderRepository extends JpaRepository<Ordered, Long> {
 
     Ordered findOneByAvailableTrueAndTtn(String ttn);
 
-    List<Ordered> findAllByAvailableTrueAndStatusOrderByDateCreated(Status status);
+    List<Ordered> findAllByAvailableTrueAndNotForDeliveryFileFalseAndStatusOrderByDateCreated(Status status);
 
     List<Ordered> findAllByAvailableTrueAndStatusIn(List<Status> statuses);
 

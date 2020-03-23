@@ -1,16 +1,12 @@
 package shop.chobitok.modnyi.service;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import shop.chobitok.modnyi.entity.Client;
-import shop.chobitok.modnyi.entity.Ordered;
-import shop.chobitok.modnyi.entity.Shoe;
-import shop.chobitok.modnyi.entity.Status;
+import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.request.*;
 import shop.chobitok.modnyi.entity.response.GetAllOrderedResponse;
 import shop.chobitok.modnyi.entity.response.PaginationInfo;
@@ -18,14 +14,15 @@ import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
-import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
+import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
 import shop.chobitok.modnyi.repository.ClientRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -38,16 +35,18 @@ public class OrderService {
     private ClientRepository clientRepository;
     private StorageService storageService;
     private NovaPostaService novaPostaService;
+    private CanceledOrderReasonRepository canceledOrderReasonRepository;
 
     @Value("${novaposta.phoneNumber}")
     private String phone;
 
-    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientRepository clientRepository, StorageService storageService, NovaPostaService novaPostaService) {
+    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientRepository clientRepository, StorageService storageService, NovaPostaService novaPostaService, CanceledOrderReasonRepository canceledOrderReasonRepository) {
         this.orderRepository = orderRepository;
         this.shoeRepository = shoeRepository;
         this.clientRepository = clientRepository;
         this.storageService = storageService;
         this.novaPostaService = novaPostaService;
+        this.canceledOrderReasonRepository = canceledOrderReasonRepository;
     }
 
     public GetAllOrderedResponse getAll(int page, int size, String TTN, String phone, String model, boolean withoutTTN, String orderBy) {
@@ -88,6 +87,39 @@ public class OrderService {
         } else {
             throw new ConflictException("Взуття не може бути пусте");
         }
+
+        List<Shoe> shoes = new ArrayList<>();
+        shoes.add(shoe);
+        ordered.setOrderedShoes(shoes);
+        ordered.setClient(createClient(createOrderRequest));
+        ordered.setTtn(createOrderRequest.getTtn());
+        ordered.setStatus(createOrderRequest.getStatus());
+        ordered.setSize(createOrderRequest.getSize());
+        ordered.setAddress(createOrderRequest.getAddress());
+        ordered.setNotes(createOrderRequest.getNotes());
+        ordered.setPrePayment(createOrderRequest.getPrepayment());
+        ordered.setPrice(createOrderRequest.getPrice());
+        ordered.setFromStorage(createOrderRequest.isFromStorage());
+        if (createOrderRequest.isFromStorage()) {
+            storageService.setStorage(ordered);
+        }
+        return orderRepository.save(ordered);
+    }
+
+    @Transactional
+    public Ordered cancelOrder(CancelOrderRequest cancelOrderRequest) {
+        Ordered ordered = orderRepository.getOne(cancelOrderRequest.getOrderId());
+        if (ordered == null) {
+            throw new ConflictException("Немає такого замовлення");
+        }
+        ordered.setStatus(Status.DENIED);
+        CanceledOrderReason canceledOrderReason = new CanceledOrderReason(ordered, cancelOrderRequest.getReason(), cancelOrderRequest.getComment());
+        canceledOrderReasonRepository.save(canceledOrderReason);
+        orderRepository.save(ordered);
+        return ordered;
+    }
+
+    private Client createClient(CreateOrderRequest createOrderRequest) {
         //TODO : make possibility to edit user
         List<Client> clients = clientRepository.findByPhone(createOrderRequest.getPhone());
         Client client = null;
@@ -101,22 +133,7 @@ public class OrderService {
             client.setMiddleName(createOrderRequest.getMiddleName());
             client = clientRepository.save(client);
         }
-        List<Shoe> shoes = new ArrayList<>();
-        shoes.add(shoe);
-        ordered.setOrderedShoes(shoes);
-        ordered.setClient(client);
-        ordered.setTtn(createOrderRequest.getTtn());
-        ordered.setStatus(createOrderRequest.getStatus());
-        ordered.setSize(createOrderRequest.getSize());
-        ordered.setAddress(createOrderRequest.getAddress());
-        ordered.setNotes(createOrderRequest.getNotes());
-        ordered.setPrePayment(createOrderRequest.getPrepayment());
-        ordered.setPrice(createOrderRequest.getPrice());
-        ordered.setFromStorage(createOrderRequest.isFromStorage());
-        if (createOrderRequest.isFromStorage()) {
-            storageService.setStorage(ordered);
-        }
-        return orderRepository.save(ordered);
+        return client;
     }
 
     public Ordered updateOrder(Long id, UpdateOrderRequest updateOrderRequest) {

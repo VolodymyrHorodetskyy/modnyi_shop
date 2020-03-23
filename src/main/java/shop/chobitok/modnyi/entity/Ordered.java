@@ -82,6 +82,17 @@ public class Ordered extends Audit {
     @Column
     private LocalDateTime dateCreated;
 
+    @Column
+    private boolean notForDeliveryFile;
+
+    public boolean isNotForDeliveryFile() {
+        return notForDeliveryFile;
+    }
+
+    public void setNotForDeliveryFile(boolean notForDeliveryFile) {
+        this.notForDeliveryFile = notForDeliveryFile;
+    }
+
     public List<Shoe> getOrderedShoes() {
         return orderedShoes;
     }

@@ -78,8 +78,13 @@ public class OrderController {
     }
 
     @GetMapping("/returnCargo")
-    public StringResponse returnCargo(@RequestParam(required = false) boolean updateStatuses){
+    public StringResponse returnCargo(@RequestParam(required = false) boolean updateStatuses) {
         return orderService.returnAllCanceled(updateStatuses);
+    }
+
+    @PatchMapping("/cancelOrder")
+    public Ordered cancelOrdered(@RequestBody CancelOrderRequest request) {
+        return orderService.cancelOrder(request);
     }
 
 /*

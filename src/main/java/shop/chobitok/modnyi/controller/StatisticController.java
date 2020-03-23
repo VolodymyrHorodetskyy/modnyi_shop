@@ -51,4 +51,9 @@ public class StatisticController {
         return statisticService.needToPayed(updateStatuses, file);
     }
 
+    @GetMapping("/returned")
+    public StringResponse returned(@RequestParam(required = false) boolean setNotForDelivery){
+        return statisticService.getReturned(setNotForDelivery);
+    }
+
 }

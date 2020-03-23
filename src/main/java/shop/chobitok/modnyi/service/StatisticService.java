@@ -1,6 +1,7 @@
 package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Shoe;
@@ -34,20 +35,11 @@ public class StatisticService {
         this.orderService = orderService;
     }
 
-
-    //    public String countNeedDelivery(String pathToFile) {
-//        return countNeedDelivery(readFileToTTNSet(pathToFile));
-//    }
-//
-//    public String countNeedDelivery(MultipartFile file) {
-//        return countNeedDelivery(readFileToTTNSet(file));
-//    }
-
     public StringResponse countNeedDeliveryFromDB(boolean updateStatuses) {
         if (updateStatuses) {
             orderService.updateOrderStatuses();
         }
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusOrderByDateCreated(Status.CREATED);
+        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndNotForDeliveryFileFalseAndStatusOrderByDateCreated(Status.CREATED);
         List<String> ttns = orderedList.stream().map(ordered -> ordered.getTtn()).collect(Collectors.toList());
         return countNeedDelivery(toTTNSet(ttns));
     }
@@ -81,6 +73,42 @@ public class StatisticService {
         if (result.length() == 0) {
             result.append("Помилок немає");
         }
+        return new StringResponse(result.toString());
+    }
+
+    public StringResponse getReturned(boolean excludeDeliveryFile) {
+        StringBuilder result = new StringBuilder();
+        StringBuilder coincidence = new StringBuilder();
+        List<Ordered> deniedList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.DENIED));
+        List<Ordered> createdList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.CREATED));
+        List<Long> usedInCoincidence = new ArrayList<>();
+        for (Ordered deniedOrder : deniedList) {
+            TrackingEntity trackingEntity = postaRepository.getTracking(npHelper.formGetTrackingRequest(deniedOrder.getTtn()));
+            Data data = trackingEntity.getData().get(0);
+            if (StringUtils.isEmpty(data.getLastCreatedOnTheBasisNumber())) {
+                //TODO: Make not returned
+            } else {
+                Data returned = postaRepository.getTracking(npHelper.formGetTrackingRequest(data.getLastCreatedOnTheBasisNumber())).getData().get(0);
+                if (ShoeUtil.convertToStatus(returned.getStatusCode()) != Status.RECEIVED) {
+                    result.append(returned.getNumber() + "\n" + data.getCargoDescriptionString() + " "
+                            + ShoeUtil.convertToStatus(returned.getStatusCode()) + "\n\n");
+
+                    for (Ordered created : createdList) {
+                        if (!usedInCoincidence.contains(deniedOrder.getId()) && deniedOrder.getOrderedShoes().get(0).getId().equals(created.getOrderedShoes().get(0).getId()) && deniedOrder.getSize().equals(created.getSize())) {
+                            coincidence.append(returned.getNumber() + "\n" + data.getCargoDescriptionString() + " " + ShoeUtil.convertToStatus(returned.getStatusCode()) + "\n\n");
+                            usedInCoincidence.add(deniedOrder.getId());
+                            if (excludeDeliveryFile) {
+                                created.setNotForDeliveryFile(true);
+                                orderRepository.save(created);
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+        result.append("Співпадіння \n\n");
+        result.append(coincidence.toString());
         return new StringResponse(result.toString());
     }
 
