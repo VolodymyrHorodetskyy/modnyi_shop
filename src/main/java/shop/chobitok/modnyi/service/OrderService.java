@@ -223,6 +223,15 @@ public class OrderService {
         return canceledOrdereds;
     }
 
+    public StringResponse getCanceledString(boolean updateStatuses) {
+        StringBuilder result = new StringBuilder();
+        List<Ordered> orderedList = getCanceled(updateStatuses);
+        for (Ordered ordered : orderedList) {
+            result.append(ordered.getTtn() + "\n" + ordered.getPostComment() + "\n\n");
+        }
+        return new StringResponse(result.toString());
+    }
+
     public StringResponse returnAllCanceled(boolean updateStatuses) {
         StringBuilder result = new StringBuilder();
         List<Ordered> canceledOrdereds = getCanceled(updateStatuses);

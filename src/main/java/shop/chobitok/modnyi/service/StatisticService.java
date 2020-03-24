@@ -95,7 +95,7 @@ public class StatisticService {
 
                     for (Ordered created : createdList) {
                         if (!usedInCoincidence.contains(deniedOrder.getId()) && deniedOrder.getOrderedShoes().get(0).getId().equals(created.getOrderedShoes().get(0).getId()) && deniedOrder.getSize().equals(created.getSize())) {
-                            coincidence.append(returned.getNumber() + "\n" + data.getCargoDescriptionString() + " " + ShoeUtil.convertToStatus(returned.getStatusCode()) + "\n\n");
+                            coincidence.append(created.getTtn() + "\n" + returned.getNumber() + "\n" + data.getCargoDescriptionString() + " " + ShoeUtil.convertToStatus(returned.getStatusCode()) + "\n\n");
                             usedInCoincidence.add(deniedOrder.getId());
                             if (excludeDeliveryFile) {
                                 created.setNotForDeliveryFile(true);
@@ -104,7 +104,6 @@ public class StatisticService {
                         }
                     }
                 }
-
             }
         }
         result.append("Співпадіння \n\n");
