@@ -26,7 +26,6 @@ public class NPOrderMapper {
     private ShoeService shoeService;
     private ClientRepository clientRepository;
     private List<Integer> sizes = Arrays.asList(36, 37, 38, 39, 40);
-    private String defaultColor = "шкіра";
 
     public NPOrderMapper(ShoeService shoeService, ClientRepository clientRepository) {
         this.shoeService = shoeService;
@@ -104,27 +103,37 @@ public class NPOrderMapper {
         return client;
     }
 
-    private void setShoeAndSizeFromDescriptionNP(Ordered ordered, String string) {
+    private Shoe parseShoe(String string) {
         List<Shoe> shoes = shoeService.getAll(0, 30, "");
         String model = null;
         Shoe parsedShoe = null;
+        List<String> modelsParsed = new ArrayList<>();
         for (Shoe shoe : shoes) {
             if (string.toLowerCase().contains(shoe.getModel().toLowerCase())) {
-                model = shoe.getModel();
+                modelsParsed.add(shoe.getModel());
             }
         }
-        if (!StringUtils.isEmpty(model)) {
-            String finalModel = model;
-            shoes = shoes.stream().filter(shoe -> shoe.getModel().contains(finalModel)).collect(Collectors.toList());
-            if (shoes.size() != 1) {
-                parsedShoe = shoes.stream().filter(shoe -> string.contains(shoe.getColor())).findFirst().orElse(null);
-                if (parsedShoe == null) {
-                    parsedShoe = shoes.stream().filter(shoe -> shoe.getColor().contains(defaultColor)).findFirst().orElse(null);
-                }
+        if (modelsParsed.size() == 0 || modelsParsed.size() > 1) {
+            return null;
+        } else {
+            model = modelsParsed.get(0);
+        }
+        String finalModel = model;
+        shoes = shoes.stream().filter(shoe -> shoe.getModel().contains(finalModel)).collect(Collectors.toList());
+        if (shoes.size() != 1) {
+            List<Shoe> shoeList = shoes.stream().filter(shoe -> string.contains(shoe.getColor())).collect(Collectors.toList());
+            if (shoeList.size() == 0 || shoeList.size() > 1) {
+                return null;
             } else {
                 parsedShoe = shoes.get(0);
             }
+        } else {
+            parsedShoe = shoes.get(0);
         }
+        return parsedShoe;
+    }
+
+    private void setShoeAndSizeFromDescriptionNP(Ordered ordered, String string) {
         Integer size = null;
         for (Integer size1 : sizes) {
             if (string.contains(size1.toString())) {
@@ -132,14 +141,8 @@ public class NPOrderMapper {
             }
         }
         List<Shoe> shoeList = new ArrayList<>();
-        if (parsedShoe == null) {
-            System.out.println(ordered.getTtn() + " " + string);
-        } else {
-            shoeList.add(parsedShoe);
-        }
-        if (size == null) {
-            System.out.println(ordered.getTtn() + " size " + string);
-        } else {
+        shoeList.add(parseShoe(string));
+        if (size != null) {
             ordered.setSize(size);
         }
         ordered.setOrderedShoes(shoeList);

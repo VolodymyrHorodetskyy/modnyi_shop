@@ -7,12 +7,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Ordered;
+import shop.chobitok.modnyi.entity.request.FromNPToOrderRequest;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.mapper.DtoMapper;
+import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.request.Document;
 import shop.chobitok.modnyi.novaposta.request.GetTrackingRequest;
 import shop.chobitok.modnyi.novaposta.request.MethodProperties;
+import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.OrderRepository;
 
@@ -34,6 +37,9 @@ public class NovaPostaTest {
 
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private NovaPostaService novaPostaService;
 
     @Test
     public void testGetTracking() {
@@ -80,6 +86,19 @@ public class NovaPostaTest {
                 ordered.getTtn();
             }*/
         }
+    }
+
+    @Test
+    public void findBadParsedShoes() {
+        List<Ordered> orderedList = orderRepository.findAll();
+        for (Ordered ordered : orderedList) {
+            Ordered createdOrdered = novaPostaService.createOrderFromNP(new FromNPToOrderRequest(ordered.getTtn()));
+            if (createdOrdered == null || createdOrdered.getOrderedShoes() == null || createdOrdered.getOrderedShoes().size() < 1 || createdOrdered.getSize() == null ||
+                    createdOrdered.getSize() == 0) {
+                System.out.println(ordered.getTtn() + " " + ordered.getPostComment() + "\n");
+            }
+        }
+
     }
 
 }
