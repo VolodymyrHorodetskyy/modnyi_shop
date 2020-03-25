@@ -66,7 +66,7 @@ public class FillDB {
         List<Shoe> shoes = new ArrayList<>();
         shoes.add(shoe);
         ordered.setPrePayment(100.0);
-        ordered.setStatus(Status.CREATED);
+        ordered.setStatus(Status.СТВОРЕНО);
         ordered.setTtn("20450207223718");
         ordered.setNotes("Якісь записи, будь які");
         addOrder(ordered);*/

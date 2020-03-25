@@ -112,8 +112,11 @@ public class OrderService {
         if (ordered == null) {
             throw new ConflictException("Немає такого замовлення");
         }
-        ordered.setStatus(Status.DENIED);
-        CanceledOrderReason canceledOrderReason = new CanceledOrderReason(ordered, cancelOrderRequest.getReason(), cancelOrderRequest.getComment());
+        ordered.setStatus(Status.ВІДМОВА);
+        CanceledOrderReason canceledOrderReason = canceledOrderReasonRepository.findFirstByOrderedId(cancelOrderRequest.getOrderId());
+        if (canceledOrderReason == null) {
+            canceledOrderReason = new CanceledOrderReason(ordered, cancelOrderRequest.getReason(), cancelOrderRequest.getComment());
+        }
         canceledOrderReasonRepository.save(canceledOrderReason);
         orderRepository.save(ordered);
         return ordered;
@@ -189,7 +192,7 @@ public class OrderService {
     }
 
     public String updateOrderStatuses() {
-        List<Status> statuses = Arrays.asList(Status.CREATED, Status.DELIVERED, Status.SENT);
+        List<Status> statuses = Arrays.asList(Status.СТВОРЕНО, Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО);
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(statuses);
         StringBuilder result = new StringBuilder();
         for (Ordered ordered : orderedList) {

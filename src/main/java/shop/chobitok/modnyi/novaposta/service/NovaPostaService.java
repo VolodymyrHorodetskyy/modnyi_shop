@@ -7,7 +7,6 @@ import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.request.FromNPToOrderRequest;
 import shop.chobitok.modnyi.entity.request.FromTTNFileRequest;
-import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.novaposta.entity.*;
 import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
@@ -49,7 +48,7 @@ public class NovaPostaService {
         if (trackingEntity.getData().size() > 0) {
             Data data = trackingEntity.getData().get(0);
             //if status created
-            if (ShoeUtil.convertToStatus(data.getStatusCode()) == Status.CREATED) {
+            if (ShoeUtil.convertToStatus(data.getStatusCode()) == Status.СТВОРЕНО) {
                 ListTrackingEntity entity = postaRepository.getTrackingEntityList(LocalDateTime.now().minusDays(10), LocalDateTime.now());
                 List<DataForList> list = entity.getData();
                 if (list.size() > 0) {

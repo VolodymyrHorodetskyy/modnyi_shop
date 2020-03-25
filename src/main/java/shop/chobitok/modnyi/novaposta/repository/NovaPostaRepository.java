@@ -10,12 +10,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.novaposta.entity.*;
 import shop.chobitok.modnyi.novaposta.request.*;
 
 import javax.annotation.PostConstruct;
+import java.net.SocketException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -48,7 +50,16 @@ public class NovaPostaRepository {
     public TrackingEntity getTracking(GetTrackingRequest getTrackingRequest) {
         getTrackingRequest.setApiKey(apiKey);
         HttpEntity httpEntity = new HttpEntity(getTrackingRequest, httpHeaders);
-        ResponseEntity<TrackingEntity> responseEntity = restTemplate.postForEntity(getTrackingURL, httpEntity, TrackingEntity.class);
+        ResponseEntity<TrackingEntity> responseEntity = null;
+        //TODO: refactoring
+        while (true) {
+            try {
+                responseEntity = restTemplate.postForEntity(getTrackingURL, httpEntity, TrackingEntity.class);
+                break;
+            } catch (ResourceAccessException e) {
+                System.out.println(getTrackingRequest.getMethodProperties().getDocuments().get(0).getDocumentNumber());
+            }
+        }
         TrackingEntity trackingEntity = responseEntity.getBody();
         return trackingEntity;
     }

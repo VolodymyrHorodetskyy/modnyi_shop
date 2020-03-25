@@ -1,6 +1,7 @@
 package shop.chobitok.modnyi.controller;
 
 import org.springframework.web.bind.annotation.*;
+import shop.chobitok.modnyi.entity.CancelReason;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.dto.StatusDto;
 import shop.chobitok.modnyi.entity.request.*;
@@ -11,6 +12,7 @@ import shop.chobitok.modnyi.service.OrderService;
 import shop.chobitok.modnyi.service.UtilService;
 
 import javax.validation.Valid;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -61,6 +63,10 @@ public class OrderController {
         return utilService.getStatuses();
     }
 
+    @GetMapping("/getReasons")
+    public String[] getReasons(){
+        return Arrays.stream(CancelReason.class.getEnumConstants()).map(Enum::name).toArray(String[]::new);
+    }
 
     @PostMapping("/importOrdersByTTNsString")
     public StringResponse importOrdersFromTTNList(@RequestBody ImportOrdersFromStringRequest request) {

@@ -22,17 +22,17 @@ public class UtilService {
     }
 
     private String getUkrStatus(Status status) {
-        if (status == Status.CREATED) {
+        if (status == Status.СТВОРЕНО) {
             return "Створено";
-        } else if (status == Status.SENT) {
+        } else if (status == Status.ВІДПРАВЛЕНО) {
             return "Відправлено";
-        } else if (status == Status.DELIVERED) {
+        } else if (status == Status.ДОСТАВЛЕНО) {
             return "Прибуло";
-        } else if (status == Status.RECEIVED) {
+        } else if (status == Status.ОТРИМАНО) {
             return "Отримано";
-        } else if (status == Status.DENIED) {
+        } else if (status == Status.ВІДМОВА) {
             return "Відмова";
-        } else if (status == Status.DELETED) {
+        } else if (status == Status.ВИДАЛЕНО) {
             return "Видалено";
         }
         return null;

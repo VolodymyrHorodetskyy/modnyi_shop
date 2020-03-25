@@ -3,14 +3,9 @@ package shop.chobitok.modnyi.novaposta.util;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import shop.chobitok.modnyi.entity.Status;
-import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
-import shop.chobitok.modnyi.novaposta.request.Document;
-import shop.chobitok.modnyi.novaposta.request.GetTrackingRequest;
-import shop.chobitok.modnyi.novaposta.request.MethodProperties;
 
 import java.io.*;
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -21,17 +16,17 @@ public class ShoeUtil {
     public static Status convertToStatus(Integer statusCode) {
         if (statusCode != null) {
             if (statusCode == 4 || statusCode == 41 || statusCode == 5 || statusCode == 6 || statusCode == 101) {
-                return Status.SENT;
+                return Status.ВІДПРАВЛЕНО;
             } else if (statusCode == 2) {
-                return Status.DELETED;
+                return Status.ВИДАЛЕНО;
             } else if (statusCode == 1) {
-                return Status.CREATED;
+                return Status.СТВОРЕНО;
             } else if (statusCode == 7 || statusCode == 8) {
-                return Status.DELIVERED;
+                return Status.ДОСТАВЛЕНО;
             } else if (statusCode == 102 || statusCode == 103 || statusCode == 108) {
-                return Status.DENIED;
+                return Status.ВІДМОВА;
             } else if (statusCode == 9 || statusCode == 10 || statusCode == 11) {
-                return Status.RECEIVED;
+                return Status.ОТРИМАНО;
             }
         }
         return null;

@@ -39,7 +39,7 @@ public class StatisticService {
         if (updateStatuses) {
             orderService.updateOrderStatuses();
         }
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndNotForDeliveryFileFalseAndStatusOrderByDateCreated(Status.CREATED);
+        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndNotForDeliveryFileFalseAndStatusOrderByDateCreated(Status.СТВОРЕНО);
         List<String> ttns = orderedList.stream().map(ordered -> ordered.getTtn()).collect(Collectors.toList());
         return countNeedDelivery(toTTNSet(ttns));
     }
@@ -50,7 +50,7 @@ public class StatisticService {
         int count = 0;
         for (String s : ttnSet) {
             Data data = postaRepository.getTracking(npHelper.formGetTrackingRequest(s)).getData().get(0);
-            if (ShoeUtil.convertToStatus(data.getStatusCode()) == Status.CREATED) {
+            if (ShoeUtil.convertToStatus(data.getStatusCode()) == Status.СТВОРЕНО) {
                 ++count;
                 stringList.add(data.getNumber() + "\n" + data.getCargoDescriptionString());
                 result.append(data.getNumber() + "\n" + data.getCargoDescriptionString() + "\n\n");
@@ -79,8 +79,8 @@ public class StatisticService {
     public StringResponse getReturned(boolean excludeDeliveryFile) {
         StringBuilder result = new StringBuilder();
         StringBuilder coincidence = new StringBuilder();
-        List<Ordered> deniedList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.DENIED));
-        List<Ordered> createdList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.CREATED));
+        List<Ordered> deniedList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.ВІДМОВА));
+        List<Ordered> createdList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.СТВОРЕНО));
         List<Long> usedInCoincidence = new ArrayList<>();
         for (Ordered deniedOrder : deniedList) {
             TrackingEntity trackingEntity = postaRepository.getTracking(npHelper.formGetTrackingRequest(deniedOrder.getTtn()));
@@ -89,7 +89,7 @@ public class StatisticService {
                 //TODO: Make not returned
             } else {
                 Data returned = postaRepository.getTracking(npHelper.formGetTrackingRequest(data.getLastCreatedOnTheBasisNumber())).getData().get(0);
-                if (ShoeUtil.convertToStatus(returned.getStatusCode()) != Status.RECEIVED) {
+                if (ShoeUtil.convertToStatus(returned.getStatusCode()) != Status.ОТРИМАНО) {
                     result.append(returned.getNumber() + "\n" + data.getCargoDescriptionString() + " "
                             + ShoeUtil.convertToStatus(returned.getStatusCode()) + "\n\n");
 
@@ -151,7 +151,7 @@ public class StatisticService {
             if (!payedTTNSet.contains(s)) {
                 TrackingEntity trackingEntity = postaRepository.getTracking(npHelper.formGetTrackingRequest(s));
                 Data data = trackingEntity.getData().get(0);
-                if (ShoeUtil.convertToStatus(data.getStatusCode()) == Status.RECEIVED) {
+                if (ShoeUtil.convertToStatus(data.getStatusCode()) == Status.ОТРИМАНО) {
                     stringBuilder.append(data.getNumber());
                     stringBuilder.append("\n");
                     Ordered ordered = npOrderMapper.toOrdered(trackingEntity);
@@ -175,7 +175,7 @@ public class StatisticService {
             orderService.updateOrderStatuses();
         }
         Set<String> payedTTNSSet = readFileToTTNSet(payedTTNFile);
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.RECEIVED))
+        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.ОТРИМАНО))
                 .stream().filter(ordered -> !payedTTNSSet.contains(ordered.getTtn())).collect(Collectors.toList());
 
         for (Ordered ordered : orderedList) {
@@ -203,9 +203,9 @@ public class StatisticService {
         for (String s : allTTNList) {
             TrackingEntity trackingEntity = postaRepository.getTracking(npHelper.formGetTrackingRequest(s));
             Status status = ShoeUtil.convertToStatus(trackingEntity.getData().get(0).getStatusCode());
-            if (status == Status.RECEIVED) {
+            if (status == Status.ОТРИМАНО) {
                 ++received;
-            } else if (status == Status.DENIED) {
+            } else if (status == Status.ВІДМОВА) {
                 ++denied;
             }
         }

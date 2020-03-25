@@ -1,6 +1,5 @@
 package shop.chobitok.modnyi.novaposta.mapper;
 
-import org.hibernate.criterion.Order;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Client;
@@ -69,7 +68,7 @@ public class NPOrderMapper {
                 ordered.setTtn(filteredData.getIntDocNumber());
                 ordered.setClient(parseClient(filteredData.getRecipientContactPerson(), filteredData.getRecipientsPhone()));
                 ordered.setAddress(filteredData.getRecipientAddressDescription());
-                ordered.setStatus(Status.CREATED);
+                ordered.setStatus(Status.СТВОРЕНО);
                 ordered.setStatusNP(1);
                 ordered.setPostComment(filteredData.getDescription());
                 ordered.setReturnSumNP(filteredData.getCost());

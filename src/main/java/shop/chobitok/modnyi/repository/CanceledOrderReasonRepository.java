@@ -6,4 +6,7 @@ import shop.chobitok.modnyi.entity.CanceledOrderReason;
 
 @Repository
 public interface CanceledOrderReasonRepository extends JpaRepository<CanceledOrderReason, Long> {
+
+    CanceledOrderReason findFirstByOrderedId(Long id);
+
 }
