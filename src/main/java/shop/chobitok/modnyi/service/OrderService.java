@@ -192,16 +192,35 @@ public class OrderService {
     }
 
     public String updateOrderStatuses() {
-        List<Status> statuses = Arrays.asList(Status.СТВОРЕНО, Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО);
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(statuses);
+        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.СТВОРЕНО, Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО));
         StringBuilder result = new StringBuilder();
         for (Ordered ordered : orderedList) {
             if (updateStatus(ordered)) {
                 result.append(ordered.getTtn() + " ... статус змінено на " + ordered.getStatus() + "\n");
             }
         }
+        updateAllCanceled();
         return result.toString();
     }
+
+    public void updateAllCanceled() {
+        List<Ordered> canceled = orderRepository.findBystatusNP(103);
+        for (Ordered ordered : canceled) {
+            updateCanceled(ordered);
+        }
+    }
+
+    private void updateCanceled(Ordered ordered){
+        TrackingEntity trackingEntity = novaPostaService.getTrackingEntity(null, ordered.getTtn());
+        if (trackingEntity != null && trackingEntity.getData().size() > 0) {
+            Data data = trackingEntity.getData().get(0);
+            if(!ordered.getStatusNP().equals(data.getStatusCode())){
+                ordered.setStatusNP(data.getStatusCode());
+                orderRepository.save(ordered);
+            }
+        }
+    }
+
 
     private boolean updateStatus(Ordered ordered) {
         TrackingEntity trackingEntity = novaPostaService.getTrackingEntity(null, ordered.getTtn());
