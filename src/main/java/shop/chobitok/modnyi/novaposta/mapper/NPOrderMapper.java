@@ -106,10 +106,10 @@ public class NPOrderMapper {
 
     private Shoe parseShoe(String string) {
         try {
-            List<Shoe> shoes = shoeService.getAll(0, 30, "");
+            List<Shoe> shoes = shoeService.getAll(0, 100, "");
             List<Shoe> matched = new ArrayList<>();
             for (Shoe shoe : shoes) {
-                if(StringUtils.isEmpty(shoe.getPatterns())){
+                if (StringUtils.isEmpty(shoe.getPatterns())) {
                     continue;
                 }
                 if (matched.size() > 1) {
@@ -117,7 +117,8 @@ public class NPOrderMapper {
                 }
                 List<String> patterns = new ObjectMapper().readValue(shoe.getPatterns(), List.class);
                 for (String pattern : patterns) {
-                    if (string.matches(pattern)) {
+                    pattern = pattern.replace("\\\\", "\\");
+                    if (string.toLowerCase().matches(pattern)) {
                         matched.add(shoe);
                         break;
                     }
