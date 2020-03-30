@@ -76,7 +76,14 @@ public class StatisticService {
         return new StringResponse(result.toString());
     }
 
-    public StringResponse getReturned(boolean excludeDeliveryFile) {
+    public StringResponse getReturned(boolean excludeFromDeliveryFile) {
+        if (excludeFromDeliveryFile) {
+            List<Ordered> orderedList = orderRepository.findByNotForDeliveryFileTrue();
+            for (Ordered order : orderedList) {
+                order.setNotForDeliveryFile(false);
+            }
+            orderRepository.saveAll(orderedList);
+        }
         StringBuilder result = new StringBuilder();
         StringBuilder coincidence = new StringBuilder();
         List<Ordered> deniedList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.ВІДМОВА));
@@ -97,7 +104,7 @@ public class StatisticService {
                         if (!usedInCoincidence.contains(deniedOrder.getId()) && deniedOrder.getOrderedShoes().get(0).getId().equals(created.getOrderedShoes().get(0).getId()) && deniedOrder.getSize().equals(created.getSize())) {
                             coincidence.append(created.getTtn() + "\n" + returned.getNumber() + "\n" + data.getCargoDescriptionString() + " " + ShoeUtil.convertToStatus(returned.getStatusCode()) + "\n\n");
                             usedInCoincidence.add(deniedOrder.getId());
-                            if (excludeDeliveryFile) {
+                            if (excludeFromDeliveryFile) {
                                 created.setNotForDeliveryFile(true);
                                 orderRepository.save(created);
                             }

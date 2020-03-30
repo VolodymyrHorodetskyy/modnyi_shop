@@ -45,6 +45,9 @@ public class Shoe extends Audit {
     @Column
     private boolean imported;
 
+    @Column
+    private String patterns;
+
 
     public Shoe() {
     }
@@ -147,6 +150,11 @@ public class Shoe extends Audit {
         this.imported = imported;
     }
 
+    public String getPatterns() {
+        return patterns;
+    }
 
-
+    public void setPatterns(String patterns) {
+        this.patterns = patterns;
+    }
 }

@@ -91,14 +91,22 @@ public class NovaPostaTest {
     @Test
     public void findBadParsedShoes() {
         List<Ordered> orderedList = orderRepository.findAll();
+        int lak = 0;
         for (Ordered ordered : orderedList) {
             Ordered createdOrdered = novaPostaService.createOrderFromNP(new FromNPToOrderRequest(ordered.getTtn()));
             if (createdOrdered == null || createdOrdered.getOrderedShoes() == null || createdOrdered.getOrderedShoes().size() < 1 || createdOrdered.getSize() == null ||
                     createdOrdered.getSize() == 0) {
                 System.out.println(ordered.getTtn() + " " + ordered.getPostComment() + "\n");
+            } else if (createdOrdered.getOrderedShoes().get(0).getId().equals(3)) {
+                ++lak;
             }
         }
+        System.out.println(lak);
+    }
 
+    @Test
+    public void regexTest(){
+        "дм лаковані".matches(".*дм\\s.*лак.*");
     }
 
 }

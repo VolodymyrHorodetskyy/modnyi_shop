@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.novaposta.mapper;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Client;
@@ -14,10 +15,10 @@ import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.ClientRepository;
 import shop.chobitok.modnyi.service.ShoeService;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -104,33 +105,34 @@ public class NPOrderMapper {
     }
 
     private Shoe parseShoe(String string) {
-        List<Shoe> shoes = shoeService.getAll(0, 30, "");
-        String model = null;
-        Shoe parsedShoe = null;
-        List<String> modelsParsed = new ArrayList<>();
-        for (Shoe shoe : shoes) {
-            if (string.toLowerCase().contains(shoe.getModel().toLowerCase())) {
-                modelsParsed.add(shoe.getModel());
+        try {
+            List<Shoe> shoes = shoeService.getAll(0, 30, "");
+            List<Shoe> matched = new ArrayList<>();
+            for (Shoe shoe : shoes) {
+                if(StringUtils.isEmpty(shoe.getPatterns())){
+                    continue;
+                }
+                if (matched.size() > 1) {
+                    return null;
+                }
+                List<String> patterns = new ObjectMapper().readValue(shoe.getPatterns(), List.class);
+                for (String pattern : patterns) {
+                    if (string.matches(pattern)) {
+                        matched.add(shoe);
+                        break;
+                    }
+                }
             }
-        }
-        if (modelsParsed.size() == 0 || modelsParsed.size() > 1) {
-            return null;
-        } else {
-            model = modelsParsed.get(0);
-        }
-        String finalModel = model;
-        shoes = shoes.stream().filter(shoe -> shoe.getModel().contains(finalModel)).collect(Collectors.toList());
-        if (shoes.size() != 1) {
-            List<Shoe> shoeList = shoes.stream().filter(shoe -> string.contains(shoe.getColor())).collect(Collectors.toList());
-            if (shoeList.size() == 0 || shoeList.size() > 1) {
-                return null;
+            if (matched.size() == 1) {
+                return matched.get(0);
             } else {
-                parsedShoe = shoes.get(0);
+                return null;
+
             }
-        } else {
-            parsedShoe = shoes.get(0);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        return parsedShoe;
+        return null;
     }
 
     private void setShoeAndSizeFromDescriptionNP(Ordered ordered, String string) {
@@ -141,7 +143,10 @@ public class NPOrderMapper {
             }
         }
         List<Shoe> shoeList = new ArrayList<>();
-        shoeList.add(parseShoe(string));
+        Shoe shoe = parseShoe(string);
+        if (shoe != null) {
+            shoeList.add(shoe);
+        }
         if (size != null) {
             ordered.setSize(size);
         }
