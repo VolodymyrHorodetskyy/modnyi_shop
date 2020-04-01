@@ -48,7 +48,7 @@ public class NovaPostaService {
         if (trackingEntity.getData().size() > 0) {
             Data data = trackingEntity.getData().get(0);
             //if status created
-            if (ShoeUtil.convertToStatus(data.getStatusCode()) == Status.СТВОРЕНО) {
+            if (data.getStatusCode().equals(3) || ShoeUtil.convertToStatus(data.getStatusCode()) == Status.СТВОРЕНО) {
                 ListTrackingEntity entity = postaRepository.getTrackingEntityList(LocalDateTime.now().minusDays(10), LocalDateTime.now());
                 List<DataForList> list = entity.getData();
                 if (list.size() > 0) {
