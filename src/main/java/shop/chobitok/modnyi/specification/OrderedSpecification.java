@@ -28,12 +28,13 @@ public class OrderedSpecification implements Specification<Ordered> {
         List<Predicate> predicateList = new ArrayList<>();
         Predicate availablePredicate = criteriaBuilder.isTrue(root.get("available"));
         predicateList.add(availablePredicate);
-        Join<Ordered, Client> clientJoin = root.join("client");
+
         if (!StringUtils.isEmpty(ttn)) {
             Predicate ttnPredicate = criteriaBuilder.like(root.get("ttn"), "%" + ttn + "%");
             predicateList.add(ttnPredicate);
         }
         if (!StringUtils.isEmpty(phone)) {
+            Join<Ordered, Client> clientJoin = root.join("client");
             Predicate phonePredicate = criteriaBuilder.like(clientJoin.get("phone"), "%" + phone + "%");
             predicateList.add(phonePredicate);
         }
