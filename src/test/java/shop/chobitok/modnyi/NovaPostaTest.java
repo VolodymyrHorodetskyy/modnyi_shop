@@ -18,6 +18,7 @@ import shop.chobitok.modnyi.novaposta.request.MethodProperties;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.OrderRepository;
+import shop.chobitok.modnyi.repository.ShoeRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -40,6 +41,9 @@ public class NovaPostaTest {
 
     @Autowired
     private NovaPostaService novaPostaService;
+
+    @Autowired
+    private ShoeRepository shoeRepository;
 
     @Test
     public void testGetTracking() {
@@ -97,8 +101,6 @@ public class NovaPostaTest {
             if (createdOrdered == null || createdOrdered.getOrderedShoes() == null || createdOrdered.getOrderedShoes().size() < 1 || createdOrdered.getSize() == null ||
                     createdOrdered.getSize() == 0) {
                 System.out.println(ordered.getTtn() + " " + ordered.getPostComment() + "\n");
-            } else if (createdOrdered.getOrderedShoes().get(0).getId().equals(3)) {
-                ++lak;
             }
         }
         System.out.println(lak);
@@ -107,6 +109,7 @@ public class NovaPostaTest {
     @Test
     public void regexTest(){
         "дм лаковані".matches(".*дм\\s.*лак.*");
+
     }
 
 }

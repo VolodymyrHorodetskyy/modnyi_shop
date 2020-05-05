@@ -85,6 +85,9 @@ public class Ordered extends Audit {
     @Column
     private boolean notForDeliveryFile;
 
+    @Column
+    private boolean returned;
+
     public boolean isNotForDeliveryFile() {
         return notForDeliveryFile;
     }
@@ -283,5 +286,13 @@ public class Ordered extends Audit {
 
     public void setStatusNP(Integer statusNP) {
         this.statusNP = statusNP;
+    }
+
+    public boolean isReturned() {
+        return returned;
+    }
+
+    public void setReturned(boolean returned) {
+        this.returned = returned;
     }
 }

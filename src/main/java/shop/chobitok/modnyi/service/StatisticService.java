@@ -76,6 +76,8 @@ public class StatisticService {
         return new StringResponse(result.toString());
     }
 
+
+    //TODO refactor, split
     public StringResponse getReturned(boolean excludeFromDeliveryFile) {
         if (excludeFromDeliveryFile) {
             List<Ordered> orderedList = orderRepository.findByNotForDeliveryFileTrue();
@@ -86,7 +88,7 @@ public class StatisticService {
         }
         StringBuilder result = new StringBuilder();
         StringBuilder coincidence = new StringBuilder();
-        List<Ordered> deniedList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.ВІДМОВА));
+        List<Ordered> deniedList = orderRepository.findAllByAvailableTrueAndReturnedFalseAndStatus(Status.ВІДМОВА);
         List<Ordered> createdList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.СТВОРЕНО));
         List<Long> usedInCoincidence = new ArrayList<>();
         for (Ordered deniedOrder : deniedList) {
@@ -99,7 +101,6 @@ public class StatisticService {
                 if (ShoeUtil.convertToStatus(returned.getStatusCode()) != Status.ОТРИМАНО) {
                     result.append(returned.getNumber() + "\n" + data.getCargoDescriptionString() + " "
                             + ShoeUtil.convertToStatus(returned.getStatusCode()) + "\n\n");
-
                     for (Ordered created : createdList) {
                         if (!usedInCoincidence.contains(deniedOrder.getId()) && deniedOrder.getOrderedShoes().get(0).getId().equals(created.getOrderedShoes().get(0).getId()) && deniedOrder.getSize().equals(created.getSize())) {
                             coincidence.append(created.getTtn() + "\n" + returned.getNumber() + "\n" + data.getCargoDescriptionString() + " " + ShoeUtil.convertToStatus(returned.getStatusCode()) + "\n\n");
@@ -110,6 +111,10 @@ public class StatisticService {
                             }
                         }
                     }
+                } else {
+                    //set denied order as returned
+                    deniedOrder.setReturned(true);
+                    orderRepository.save(deniedOrder);
                 }
             }
         }

@@ -35,11 +35,6 @@ public class StatisticController {
         return statisticService.getAllDenied(pathAllTTNFile, returned);
     }
 
-/*    @GetMapping("/needDelivery")
-    public String needDelivery(@RequestParam String path){
-        return statisticService.countNeedDelivery(path);
-    }*/
-
     @GetMapping("/needDeliveryFromDB")
     public StringResponse needDelivery(@RequestParam(required = false) boolean updateStatuses) {
         return statisticService.countNeedDeliveryFromDB(updateStatuses);
