@@ -6,7 +6,12 @@ import shop.chobitok.modnyi.entity.response.StringResponse;
 public class StringHelper {
 
     public static StringResponse fromEarningResponse(EarningsResponse earningsResponse) {
-        return null;
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("From " + earningsResponse.getFrom() + "  To " + earningsResponse.getTo() + "\n");
+        stringBuilder.append("Sum: " + earningsResponse.getSum() + "\nPredicted sum: " + earningsResponse.getPredictedSum());
+        stringBuilder.append("Orders\nAll: " + earningsResponse.getAll() + "\nReceived: " + earningsResponse.getReceived() + "\nDenied" + earningsResponse.getDenied());
+        stringBuilder.append("Received %: " + earningsResponse.getReceivedPercentage());
+        return new StringResponse(stringBuilder.toString());
     }
 
 }
