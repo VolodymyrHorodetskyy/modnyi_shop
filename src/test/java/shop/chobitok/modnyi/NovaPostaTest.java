@@ -19,6 +19,7 @@ import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
+import shop.chobitok.modnyi.service.FinanceService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -44,6 +45,9 @@ public class NovaPostaTest {
 
     @Autowired
     private ShoeRepository shoeRepository;
+
+    @Autowired
+    private FinanceService financeService;
 
     @Test
     public void testGetTracking() {
@@ -107,9 +111,13 @@ public class NovaPostaTest {
     }
 
     @Test
-    public void regexTest(){
+    public void regexTest() {
         "дм лаковані".matches(".*дм\\s.*лак.*");
+    }
 
+    @Test
+    public void getEarnings() {
+        financeService.getEarnings(LocalDateTime.now().minusDays(7), LocalDateTime.now());
     }
 
 }
