@@ -9,8 +9,8 @@ public class StringHelper {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("From " + earningsResponse.getFrom() + "  To " + earningsResponse.getTo() + "\n");
         stringBuilder.append("Sum: " + earningsResponse.getSum() + "\nPredicted sum: " + earningsResponse.getPredictedSum());
-        stringBuilder.append("Orders\nAll: " + earningsResponse.getAll() + "\nReceived: " + earningsResponse.getReceived() + "\nDenied" + earningsResponse.getDenied());
-        stringBuilder.append("Received %: " + earningsResponse.getReceivedPercentage());
+        stringBuilder.append("\nOrders\nAll: " + earningsResponse.getAll() + "\nReceived: " + earningsResponse.getReceived() + "\nDenied: " + earningsResponse.getDenied());
+        stringBuilder.append("\nReceived %: " + earningsResponse.getReceivedPercentage());
         return new StringResponse(stringBuilder.toString());
     }
 

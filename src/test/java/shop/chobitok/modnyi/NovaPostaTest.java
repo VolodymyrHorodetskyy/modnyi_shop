@@ -115,9 +115,6 @@ public class NovaPostaTest {
         "дм лаковані".matches(".*дм\\s.*лак.*");
     }
 
-    @Test
-    public void getEarnings() {
-        financeService.getEarnings(LocalDateTime.now().minusDays(7), LocalDateTime.now());
-    }
+
 
 }

@@ -1,14 +1,17 @@
 package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.response.EarningsResponse;
 import shop.chobitok.modnyi.repository.OrderRepository;
+import shop.chobitok.modnyi.specification.OrderedSpecification;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -20,10 +23,10 @@ public class FinanceService {
         this.orderRepository = orderRepository;
     }
 
-    public EarningsResponse getEarnings(LocalDateTime dateTime1, LocalDateTime dateTime2) {
-        dateTime1 = dateTime1.with(LocalTime.of(0, 0));
-        dateTime2 = dateTime2.with(LocalTime.of(0, 0));
-        List<Ordered> orderedList = orderRepository.findByDateCreatedGreaterThanEqualAndDateCreatedLessThanEqual(dateTime1, dateTime2);
+    public EarningsResponse getEarnings(String dateTime1, String dateTime2) {
+        LocalDateTime fromDate = formDateFrom(dateTime1);
+        LocalDateTime toDate = formDateTo(dateTime2);
+        List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate));
         Double sum = 0d;
         Double predictedSum = 0d;
         int received = 0;
@@ -48,7 +51,31 @@ public class FinanceService {
         } catch (ArithmeticException e) {
             e.printStackTrace();
         }
-        return new EarningsResponse(dateTime1, dateTime2, sum, predictedSum, received, denied, orderedList.size(), receivedPercentage);
+        return new EarningsResponse(fromDate, toDate, sum, predictedSum, received, denied, orderedList.size(), receivedPercentage);
+    }
+
+    private LocalDateTime formDate(String date) {
+        if (StringUtils.isEmpty(date)) {
+            return null;
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        return LocalDateTime.parse(date, formatter);
+    }
+
+    private LocalDateTime formDateFrom(String dateTimeFrom) {
+        LocalDateTime localDateTime = formDate(dateTimeFrom);
+        if (localDateTime == null) {
+            localDateTime = LocalDateTime.now().minusDays(7);
+        }
+        return localDateTime.with(LocalTime.of(0, 0));
+    }
+
+    private LocalDateTime formDateTo(String dateTimeTo) {
+        LocalDateTime localDateTime = formDate(dateTimeTo);
+        if (localDateTime != null) {
+            localDateTime = localDateTime.with(LocalTime.of(23, 59));
+        }
+        return localDateTime;
     }
 
 }

@@ -86,7 +86,7 @@ public class Ordered extends Audit {
     private boolean notForDeliveryFile;
 
     @Column
-    private boolean returned;
+    private Boolean returned = false;
 
     public boolean isNotForDeliveryFile() {
         return notForDeliveryFile;
@@ -288,11 +288,12 @@ public class Ordered extends Audit {
         this.statusNP = statusNP;
     }
 
-    public boolean isReturned() {
+
+    public Boolean getReturned() {
         return returned;
     }
 
-    public void setReturned(boolean returned) {
+    public void setReturned(Boolean returned) {
         this.returned = returned;
     }
 }

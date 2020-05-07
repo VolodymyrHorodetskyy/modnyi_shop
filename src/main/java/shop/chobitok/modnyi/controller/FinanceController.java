@@ -1,6 +1,5 @@
 package shop.chobitok.modnyi.controller;
 
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.response.EarningsResponse;
 import shop.chobitok.modnyi.entity.response.StringResponse;
@@ -22,15 +21,13 @@ public class FinanceController {
     }
 
     @GetMapping("/getEarning")
-    public EarningsResponse getEarningsResponse(@RequestParam String from, @RequestParam String to) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-        return financeService.getEarnings(LocalDateTime.parse(from, formatter), LocalDateTime.parse(to, formatter));
+    public EarningsResponse getEarningsResponse(@RequestParam(required = false) String from, @RequestParam(required = false) String to) {
+        return financeService.getEarnings(from, to);
     }
 
     @GetMapping("/getEarningString")
-    public StringResponse getEarningsResponseString(@RequestParam String from, @RequestParam String to) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-        return StringHelper.fromEarningResponse(financeService.getEarnings(LocalDateTime.parse(from, formatter), LocalDateTime.parse(to, formatter)));
+    public StringResponse getEarningsResponseString(@RequestParam(required = false) String from, @RequestParam(required = false) String to) {
+        return StringHelper.fromEarningResponse(financeService.getEarnings(from, to));
     }
 
 

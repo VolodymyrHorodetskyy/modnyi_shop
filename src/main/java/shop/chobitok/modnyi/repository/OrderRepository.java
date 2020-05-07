@@ -16,6 +16,8 @@ public interface OrderRepository extends JpaRepository<Ordered, Long> {
 
     Page<Ordered> findAll(Specification specification, Pageable pageable);
 
+    List<Ordered> findAll(Specification specification);
+
     Ordered findOneByAvailableTrueAndTtn(String ttn);
 
     List<Ordered> findAllByAvailableTrueAndNotForDeliveryFileFalseAndStatusOrderByDateCreated(Status status);

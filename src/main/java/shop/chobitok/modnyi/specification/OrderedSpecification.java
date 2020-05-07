@@ -6,6 +6,7 @@ import shop.chobitok.modnyi.entity.Client;
 import shop.chobitok.modnyi.entity.Ordered;
 
 import javax.persistence.criteria.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,12 +16,19 @@ public class OrderedSpecification implements Specification<Ordered> {
     private String ttn;
     private String phone;
     private boolean withoutTTN;
+    private LocalDateTime from;
+    private LocalDateTime to;
 
     public OrderedSpecification(String model, String ttn, String phone, boolean withoutTTN) {
         this.model = model;
         this.ttn = ttn;
         this.phone = phone;
         this.withoutTTN = withoutTTN;
+    }
+
+    public OrderedSpecification(LocalDateTime from, LocalDateTime to) {
+        this.from = from;
+        this.to = to;
     }
 
     @Override
@@ -42,7 +50,14 @@ public class OrderedSpecification implements Specification<Ordered> {
             Predicate withoutTTN = criteriaBuilder.isTrue(root.get("withoutTTN"));
             predicateList.add(withoutTTN);
         }
-
+        if (from != null) {
+            Predicate predicateFrom = criteriaBuilder.greaterThanOrEqualTo(root.get("dateCreated"), from);
+            predicateList.add(predicateFrom);
+        }
+        if(to != null){
+            Predicate predicateTo = criteriaBuilder.lessThanOrEqualTo(root.get("dateCreated"), to);
+            predicateList.add(predicateTo);
+        }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }
 
