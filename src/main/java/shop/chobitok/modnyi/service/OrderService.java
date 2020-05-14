@@ -116,6 +116,9 @@ public class OrderService {
         CanceledOrderReason canceledOrderReason = canceledOrderReasonRepository.findFirstByOrderedId(cancelOrderRequest.getOrderId());
         if (canceledOrderReason == null) {
             canceledOrderReason = new CanceledOrderReason(ordered, cancelOrderRequest.getReason(), cancelOrderRequest.getComment());
+        } else {
+            canceledOrderReason.setComment(cancelOrderRequest.getComment());
+            canceledOrderReason.setReason(cancelOrderRequest.getReason());
         }
         canceledOrderReasonRepository.save(canceledOrderReason);
         orderRepository.save(ordered);
@@ -210,11 +213,11 @@ public class OrderService {
         }
     }
 
-    private void updateCanceled(Ordered ordered){
+    private void updateCanceled(Ordered ordered) {
         TrackingEntity trackingEntity = novaPostaService.getTrackingEntity(null, ordered.getTtn());
         if (trackingEntity != null && trackingEntity.getData().size() > 0) {
             Data data = trackingEntity.getData().get(0);
-            if(!ordered.getStatusNP().equals(data.getStatusCode())){
+            if (!ordered.getStatusNP().equals(data.getStatusCode())) {
                 ordered.setStatusNP(data.getStatusCode());
                 orderRepository.save(ordered);
             }
@@ -261,6 +264,10 @@ public class OrderService {
             result.append(novaPostaService.returnCargo(ordered.getTtn()) + "\n");
         }
         return new StringResponse(result.toString());
+    }
+
+    public CanceledOrderReason getCanceledOrderReason(Long orderedId) {
+        return canceledOrderReasonRepository.findFirstByOrderedId(orderedId);
     }
 
     private void updateShoeAndSize(Ordered ordered, UpdateOrderRequest updateOrderRequest) {

@@ -72,9 +72,10 @@ public class FinanceService {
 
     private LocalDateTime formDateTo(String dateTimeTo) {
         LocalDateTime localDateTime = formDate(dateTimeTo);
-        if (localDateTime != null) {
-            localDateTime = localDateTime.with(LocalTime.of(23, 59));
+        if (localDateTime == null) {
+            localDateTime = LocalDateTime.now();
         }
+        localDateTime = localDateTime.with(LocalTime.of(23, 59));
         return localDateTime;
     }
 

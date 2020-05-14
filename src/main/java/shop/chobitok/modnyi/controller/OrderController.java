@@ -2,6 +2,7 @@ package shop.chobitok.modnyi.controller;
 
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.CancelReason;
+import shop.chobitok.modnyi.entity.CanceledOrderReason;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.dto.StatusDto;
 import shop.chobitok.modnyi.entity.request.*;
@@ -64,7 +65,7 @@ public class OrderController {
     }
 
     @GetMapping("/getReasons")
-    public String[] getReasons(){
+    public String[] getReasons() {
         return Arrays.stream(CancelReason.class.getEnumConstants()).map(Enum::name).toArray(String[]::new);
     }
 
@@ -93,12 +94,8 @@ public class OrderController {
         return orderService.cancelOrder(request);
     }
 
-/*
-    @PostMapping("/importOrdersByTTNList")
-    public String importOrdersFromTTNList(){
-
+    @GetMapping("/getCanceledOrder")
+    public CanceledOrderReason getCancelOrder(@RequestParam Long id) {
+        return orderService.getCanceledOrderReason(id);
     }
-*/
-
-
 }
