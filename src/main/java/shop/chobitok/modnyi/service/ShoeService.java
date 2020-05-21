@@ -1,11 +1,14 @@
 package shop.chobitok.modnyi.service;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import shop.chobitok.modnyi.entity.Company;
+import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Shoe;
+import shop.chobitok.modnyi.entity.request.AddOrRemovePatternRequest;
+import shop.chobitok.modnyi.entity.request.CreateShoeRequest;
+import shop.chobitok.modnyi.entity.request.UpdateShoeRequest;
+import shop.chobitok.modnyi.exception.ConflictException;
+import shop.chobitok.modnyi.mapper.ShoeMapper;
 import shop.chobitok.modnyi.repository.CompanyRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.specification.ShoeSpecification;
@@ -23,22 +26,63 @@ public class ShoeService {
     private ShoeRepository shoeRepository;
 
     private CompanyRepository companyRepository;
+    private ShoeMapper shoeMapper;
 
-
-    public ShoeService(ShoeRepository shoeRepository, CompanyRepository companyRepository) {
+    public ShoeService(ShoeRepository shoeRepository, CompanyRepository companyRepository, ShoeMapper shoeMapper) {
         this.shoeRepository = shoeRepository;
         this.companyRepository = companyRepository;
+        this.shoeMapper = shoeMapper;
     }
 
     public List<Shoe> getAll(int page, int size, String model) {
         return shoeRepository.findAll(new ShoeSpecification(model), PageRequest.of(page, size)).getContent();
     }
 
-    public Shoe addShoe(Shoe shoe) {
-        Company company = companyRepository.findAll().get(0);
-        shoe.setCompany(company);
+    public Shoe createShoe(CreateShoeRequest createShoeRequest) {
+        return shoeRepository.save(shoeMapper.convertFromCreateShoeRequest(createShoeRequest));
+    }
+
+    public Shoe updateShoe(UpdateShoeRequest updateShoeRequest) {
+        Shoe shoe = shoeRepository.findById(updateShoeRequest.getShoeId()).orElse(null);
+        if (shoe == null) {
+            throw new ConflictException("Shoe not found");
+        }
+        return shoeRepository.save(shoeMapper.convertFromCreateShoeRequest(updateShoeRequest, shoe));
+    }
+
+    public boolean removeShoe(Long id) {
+        shoeRepository.deleteById(id);
+        return true;
+    }
+
+    public Shoe addPattern(AddOrRemovePatternRequest request) {
+        Shoe shoe = shoeRepository.findById(request.getShoeId()).orElse(null);
+        if (shoe == null) {
+            throw new ConflictException("Shoe not found");
+        }
+        shoe.getPatterns().add(request.getPattern());
         return shoeRepository.save(shoe);
     }
+
+    public boolean removePattern(AddOrRemovePatternRequest request) {
+        Shoe shoe = shoeRepository.findById(request.getShoeId()).orElse(null);
+        if (shoe == null) {
+            throw new ConflictException("Shoe not found");
+        }
+        shoe.getPatterns().remove(request.getPattern());
+        shoeRepository.save(shoe);
+        return true;
+    }
+
+    private List<String> checkListOnEmptyStrings(List<String> strings) {
+        for (int i = 0; i < strings.size(); ++i) {
+            if (StringUtils.isEmpty(strings.get(i))) {
+                strings.remove(i);
+            }
+        }
+        return strings;
+    }
+
 
     public List<Shoe> fromTildaCSV(String path) {
         BufferedReader br = null;
@@ -58,7 +102,7 @@ public class ShoeService {
                     String color = modelAndColor.substring(modelAndColor.indexOf(' ') + 1);
                     shoe.setModel(model);
                     shoe.setColor(color);
-                    shoe.setPhotoPath( str[str.length - 7].replaceAll("^\"|\"$", ""));
+                    shoe.setPhotoPath(str[str.length - 7].replaceAll("^\"|\"$", ""));
                     shoe.setImported(true);
                     shoe.setPrice(Double.parseDouble(str[str.length - 6]));
                     shoes.add(shoe);

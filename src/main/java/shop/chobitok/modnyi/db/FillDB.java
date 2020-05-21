@@ -51,7 +51,7 @@ public class FillDB {
             shoe.setPrice(1500.0);
             shoe.setDescription("Лаковане взуття");
             shoe.setPhotoPath("192l/1.jpg");
-            shoe = shoeService.addShoe(shoe);
+            shoe = shoeService.createShoe(shoe);
         }else{
             shoe = shoeService.getAll(0, 10, model).get(0);
         }

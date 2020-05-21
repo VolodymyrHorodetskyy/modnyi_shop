@@ -1,6 +1,5 @@
 package shop.chobitok.modnyi.novaposta.mapper;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Client;
@@ -15,7 +14,6 @@ import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.ClientRepository;
 import shop.chobitok.modnyi.service.ShoeService;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -104,36 +102,34 @@ public class NPOrderMapper {
         return client;
     }
 
-    private Shoe parseShoe(String string) {
-        try {
-            List<Shoe> shoes = shoeService.getAll(0, 100, "");
-            List<Shoe> matched = new ArrayList<>();
-            for (Shoe shoe : shoes) {
-                if (StringUtils.isEmpty(shoe.getPatterns())) {
-                    continue;
-                }
-                if (matched.size() > 1) {
+    public Shoe parseShoe(String string) {
+        List<Shoe> shoes = shoeService.getAll(0, 100, "");
+        List<Shoe> matched = new ArrayList<>();
+        for (Shoe shoe : shoes) {
+            if (StringUtils.isEmpty(shoe.getPatterns())) {
+                continue;
+            }
+            if (matched.size() > 1) {
+                return null;
+            }
+
+            for (String pattern : shoe.getPatterns()) {
+                if (shoe.getPatterns() == null) {
                     return null;
                 }
-                List<String> patterns = new ObjectMapper().readValue(shoe.getPatterns(), List.class);
-                for (String pattern : patterns) {
-                    pattern = pattern.replace("\\\\", "\\");
-                    if (string.toLowerCase().matches(pattern)) {
-                        matched.add(shoe);
-                        break;
-                    }
+                pattern = pattern.replace("\\\\", "\\");
+                if (string.toLowerCase().matches(pattern)) {
+                    matched.add(shoe);
+                    break;
                 }
-            }
-            if (matched.size() == 1) {
-                return matched.get(0);
-            } else {
-                return null;
 
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
-        return null;
+        if (matched.size() == 1) {
+            return matched.get(0);
+        } else {
+            return null;
+        }
     }
 
     private void setShoeAndSizeFromDescriptionNP(Ordered ordered, String string) {

@@ -2,10 +2,7 @@ package shop.chobitok.modnyi.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.util.List;
 
 @Entity
@@ -45,8 +42,8 @@ public class Shoe extends Audit {
     @Column
     private boolean imported;
 
-    @Column
-    private String patterns;
+    @ElementCollection(fetch = FetchType.EAGER)
+    private List<String> patterns;
 
 
     public Shoe() {
@@ -150,11 +147,11 @@ public class Shoe extends Audit {
         this.imported = imported;
     }
 
-    public String getPatterns() {
+    public List<String> getPatterns() {
         return patterns;
     }
 
-    public void setPatterns(String patterns) {
+    public void setPatterns(List<String> patterns) {
         this.patterns = patterns;
     }
 }
