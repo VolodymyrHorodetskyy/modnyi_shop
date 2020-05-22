@@ -27,6 +27,8 @@ public class ShoeUtil {
                 return Status.ВІДМОВА;
             } else if (statusCode == 9 || statusCode == 10 || statusCode == 11) {
                 return Status.ОТРИМАНО;
+            } else if (statusCode == 104) {
+                return Status.ЗМІНА_АДРЕСУ;
             }
         }
         return null;
