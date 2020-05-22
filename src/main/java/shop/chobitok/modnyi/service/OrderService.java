@@ -99,7 +99,6 @@ public class OrderService {
         ordered.setNotes(createOrderRequest.getNotes());
         ordered.setPrePayment(createOrderRequest.getPrepayment());
         ordered.setPrice(createOrderRequest.getPrice());
-        ordered.setFromStorage(createOrderRequest.isFromStorage());
         if (createOrderRequest.isFromStorage()) {
             storageService.setStorage(ordered);
         }

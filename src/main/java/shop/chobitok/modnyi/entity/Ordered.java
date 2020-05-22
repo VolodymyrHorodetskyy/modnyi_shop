@@ -74,12 +74,6 @@ public class Ordered extends Audit {
     private boolean withoutTTN;
 
     @Column
-    private boolean fromStorage;
-
-    @Column
-    private String fromTTN;
-
-    @Column
     private LocalDateTime dateCreated;
 
     @Column
@@ -87,6 +81,9 @@ public class Ordered extends Audit {
 
     @Column
     private Boolean returned = false;
+
+    @Column
+    private String returnTtn;
 
     public boolean isNotForDeliveryFile() {
         return notForDeliveryFile;
@@ -256,22 +253,6 @@ public class Ordered extends Audit {
         this.withoutTTN = withoutTTN;
     }
 
-    public boolean isFromStorage() {
-        return fromStorage;
-    }
-
-    public void setFromStorage(boolean fromStorage) {
-        this.fromStorage = fromStorage;
-    }
-
-    public String getFromTTN() {
-        return fromTTN;
-    }
-
-    public void setFromTTN(String fromTTN) {
-        this.fromTTN = fromTTN;
-    }
-
     public LocalDateTime getDateCreated() {
         return dateCreated;
     }
@@ -288,12 +269,19 @@ public class Ordered extends Audit {
         this.statusNP = statusNP;
     }
 
-
     public Boolean getReturned() {
         return returned;
     }
 
     public void setReturned(Boolean returned) {
         this.returned = returned;
+    }
+
+    public String getReturnTtn() {
+        return returnTtn;
+    }
+
+    public void setReturnTtn(String returnTtn) {
+        this.returnTtn = returnTtn;
     }
 }
