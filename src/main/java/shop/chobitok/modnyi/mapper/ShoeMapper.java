@@ -10,6 +10,7 @@ public class ShoeMapper {
     public Shoe convertFromCreateShoeRequest(CreateShoeRequest createShoeRequest) {
         Shoe shoe = null;
         if (createShoeRequest != null) {
+            shoe = new Shoe();
             shoe = setToShoe(createShoeRequest, shoe);
         }
         return shoe;
