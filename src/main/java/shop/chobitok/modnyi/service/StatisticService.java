@@ -98,6 +98,9 @@ public class StatisticService {
                 //TODO: Make not returned
             } else {
                 Data returned = postaRepository.getTracking(npHelper.formGetTrackingRequest(data.getLastCreatedOnTheBasisNumber())).getData().get(0);
+                if (ShoeUtil.convertToStatus(returned.getStatusCode()) == Status.ЗМІНА_АДРЕСУ) {
+                    returned = postaRepository.getTracking(npHelper.formGetTrackingRequest(returned.getLastCreatedOnTheBasisNumber())).getData().get(0);
+                }
                 if (ShoeUtil.convertToStatus(returned.getStatusCode()) != Status.ОТРИМАНО) {
                     result.append(returned.getNumber() + "\n" + data.getCargoDescriptionString() + " "
                             + ShoeUtil.convertToStatus(returned.getStatusCode()) + "\n\n");
