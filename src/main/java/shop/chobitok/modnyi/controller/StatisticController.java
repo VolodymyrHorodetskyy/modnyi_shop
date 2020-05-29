@@ -2,6 +2,7 @@ package shop.chobitok.modnyi.controller;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.service.OrderService;
 import shop.chobitok.modnyi.service.StatisticService;
@@ -58,6 +59,12 @@ public class StatisticController {
     @GetMapping("/canceled")
     public StringResponse canceled(@RequestParam(required = false) boolean updateStatuses) {
         return orderService.getCanceledString(updateStatuses);
+    }
+
+    @GetMapping("/getSoldShoeRating")
+    public StringResponse getSoldShoeRating(@RequestParam(required = false) String from, @RequestParam(required = false) String to,
+                                            @RequestParam(required = false) Status status) {
+        return statisticService.getSoldShoes(from, to, status);
     }
 
 }

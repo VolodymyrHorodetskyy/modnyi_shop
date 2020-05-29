@@ -14,9 +14,14 @@ import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.util.NPHelper;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.OrderRepository;
+import shop.chobitok.modnyi.specification.OrderedSpecification;
+import shop.chobitok.modnyi.util.DateHelper;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toMap;
 
 @Service
 public class StatisticService {
@@ -251,6 +256,33 @@ public class StatisticService {
         }
         stringBuilderWithDesc.append(stringBuilderWithoutDesc.toString());
         return stringBuilderWithDesc.toString();
+    }
+
+    public StringResponse getSoldShoes(String dateFrom, String dateTo, Status status) {
+        LocalDateTime fromDate = DateHelper.formDateFrom(dateFrom);
+        LocalDateTime toDate = DateHelper.formDateTo(dateTo);
+        List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate, status));
+        final Map<Shoe, Integer> shoeIntegerMap = new HashMap<>();
+        for (Ordered ordered : orderedList) {
+            Shoe shoe = ordered.getOrderedShoes().get(0);
+            Integer amount = shoeIntegerMap.get(shoe);
+            if (amount == null) {
+                shoeIntegerMap.put(shoe, 1);
+            } else {
+                shoeIntegerMap.put(shoe, ++amount);
+            }
+        }
+        final Map<Shoe, Integer> sortedByAmount = shoeIntegerMap.entrySet()
+                .stream()
+                .sorted((Map.Entry.<Shoe, Integer>comparingByValue().reversed()))
+                .collect(
+                        toMap(e -> e.getKey(), e -> e.getValue(), (e1, e2) -> e2,
+                                LinkedHashMap::new));
+        StringBuilder builder = new StringBuilder();
+        for (Map.Entry<Shoe, Integer> entry : sortedByAmount.entrySet()) {
+            builder.append(entry.getKey().getModel() + " " + entry.getKey().getColor() + " = " + entry.getValue() + "\n");
+        }
+        return new StringResponse(builder.toString());
     }
 
 

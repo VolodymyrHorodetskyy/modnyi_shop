@@ -4,6 +4,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Client;
 import shop.chobitok.modnyi.entity.Ordered;
+import shop.chobitok.modnyi.entity.Status;
 
 import javax.persistence.criteria.*;
 import java.time.LocalDateTime;
@@ -18,6 +19,7 @@ public class OrderedSpecification implements Specification<Ordered> {
     private boolean withoutTTN;
     private LocalDateTime from;
     private LocalDateTime to;
+    private Status status;
 
     public OrderedSpecification(String model, String ttn, String phone, boolean withoutTTN) {
         this.model = model;
@@ -29,6 +31,12 @@ public class OrderedSpecification implements Specification<Ordered> {
     public OrderedSpecification(LocalDateTime from, LocalDateTime to) {
         this.from = from;
         this.to = to;
+    }
+
+    public OrderedSpecification(LocalDateTime from, LocalDateTime to, Status status) {
+        this.from = from;
+        this.to = to;
+        this.status = status;
     }
 
     @Override
@@ -54,9 +62,13 @@ public class OrderedSpecification implements Specification<Ordered> {
             Predicate predicateFrom = criteriaBuilder.greaterThanOrEqualTo(root.get("dateCreated"), from);
             predicateList.add(predicateFrom);
         }
-        if(to != null){
+        if (to != null) {
             Predicate predicateTo = criteriaBuilder.lessThanOrEqualTo(root.get("dateCreated"), to);
             predicateList.add(predicateTo);
+        }
+        if (status != null) {
+            Predicate statusPredicate = criteriaBuilder.equal(root.get("status"), status);
+            predicateList.add(statusPredicate);
         }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }

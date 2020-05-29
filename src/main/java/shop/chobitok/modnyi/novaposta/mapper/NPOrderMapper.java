@@ -49,6 +49,7 @@ public class NPOrderMapper {
                 ordered.setNameAndSurnameNP(data.getRecipientFullNameEW());
                 ordered.setLastCreatedOnTheBasisDocumentTypeNP(data.getLastCreatedOnTheBasisDocumentType());
                 ordered.setDatePayedKeepingNP(ShoeUtil.toLocalDateTime(data.getDatePayedKeeping()));
+                ordered.setDateCreated(ShoeUtil.toLocalDateTime(data.getDateCreated()));
                 setShoeAndSizeFromDescriptionNP(ordered, data.getCargoDescriptionString());
                 setPriceAndPrepayment(ordered, data);
             }

@@ -31,4 +31,6 @@ public interface OrderRepository extends JpaRepository<Ordered, Long> {
     List<Ordered> findByNotForDeliveryFileTrue();
 
     List<Ordered> findByDateCreatedGreaterThanEqualAndDateCreatedLessThanEqual(LocalDateTime dateTime1, LocalDateTime dateTime2);
+
+    List<Ordered> findByDateCreatedIsNull();
 }
