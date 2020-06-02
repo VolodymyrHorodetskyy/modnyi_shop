@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import javax.persistence.*;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -153,5 +154,23 @@ public class Shoe extends Audit {
 
     public void setPatterns(List<String> patterns) {
         this.patterns = patterns;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Shoe)) return false;
+        Shoe shoe = (Shoe) o;
+        return Objects.equals(name, shoe.name) &&
+                model.equals(shoe.model) &&
+                color.equals(shoe.color) &&
+                Objects.equals(description, shoe.description) &&
+                Objects.equals(cost, shoe.cost) &&
+                Objects.equals(price, shoe.price);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, model, color, description, cost, price);
     }
 }

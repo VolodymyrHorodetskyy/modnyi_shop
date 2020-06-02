@@ -6,6 +6,10 @@ import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.service.OrderService;
 import shop.chobitok.modnyi.service.StatisticService;
+import shop.chobitok.modnyi.service.entity.StatShoe;
+import shop.chobitok.modnyi.util.StringHelper;
+
+import java.util.List;
 
 @RestController
 @CrossOrigin
@@ -64,7 +68,12 @@ public class StatisticController {
     @GetMapping("/getSoldShoeRating")
     public StringResponse getSoldShoeRating(@RequestParam(required = false) String from, @RequestParam(required = false) String to,
                                             @RequestParam(required = false) Status status) {
-        return statisticService.getSoldShoes(from, to, status);
+        return StringHelper.fromSoldShoeResponse(statisticService.getSoldShoes(from, to, status));
+    }
+
+    @GetMapping("/getReceivedShoePercentage")
+    public List<StatShoe> getReceivedShoePercentage(@RequestParam(required = false) String from, @RequestParam(required = false) String to) {
+        return statisticService.getReceivedPercentage(from, to);
     }
 
 }

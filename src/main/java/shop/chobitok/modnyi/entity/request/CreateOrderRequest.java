@@ -34,7 +34,8 @@ public class CreateOrderRequest {
 
     private String orderBy;
 
-    private boolean fromStorage;
+    private boolean fullpayment;
+
 
     public String getTtn() {
         return ttn;
@@ -148,11 +149,11 @@ public class CreateOrderRequest {
         this.orderBy = orderBy;
     }
 
-    public boolean isFromStorage() {
-        return fromStorage;
+    public boolean isFullpayment() {
+        return fullpayment;
     }
 
-    public void setFromStorage(boolean fromStorage) {
-        this.fromStorage = fromStorage;
+    public void setFullpayment(boolean fullpayment) {
+        this.fullpayment = fullpayment;
     }
 }

@@ -52,11 +52,15 @@ public class OrderService {
     public GetAllOrderedResponse getAll(int page, int size, String TTN, String phone, String model, boolean withoutTTN, String orderBy) {
         PageRequest pageRequest = PageRequest.of(page, size, createSort(orderBy));
         GetAllOrderedResponse getAllOrderedResponse = new GetAllOrderedResponse();
-        Page orderedPage = orderRepository.findAll(new OrderedSpecification(model, TTN, phone, withoutTTN), pageRequest);
+        Page orderedPage = orderRepository.findAll(new OrderedSpecification(model, removeSpaces(TTN), phone, withoutTTN), pageRequest);
         getAllOrderedResponse.setOrderedList(orderedPage.getContent());
         PaginationInfo paginationInfo = new PaginationInfo(orderedPage.getPageable().getPageNumber(), orderedPage.getPageable().getPageSize(), orderedPage.getTotalPages(), orderedPage.getTotalElements());
         getAllOrderedResponse.setPaginationInfo(paginationInfo);
         return getAllOrderedResponse;
+    }
+
+    private String removeSpaces(String s) {
+        return s.replaceAll("\\s+", "");
     }
 
     private Sort createSort(String orderBy) {
@@ -97,11 +101,12 @@ public class OrderService {
         ordered.setSize(createOrderRequest.getSize());
         ordered.setAddress(createOrderRequest.getAddress());
         ordered.setNotes(createOrderRequest.getNotes());
-        ordered.setPrePayment(createOrderRequest.getPrepayment());
-        ordered.setPrice(createOrderRequest.getPrice());
-        if (createOrderRequest.isFromStorage()) {
-            storageService.setStorage(ordered);
+        if (createOrderRequest.isFullpayment()) {
+            ordered.setFullPayment(true);
+        } else {
+            ordered.setPrePayment(createOrderRequest.getPrepayment());
         }
+        ordered.setPrice(createOrderRequest.getPrice());
         return orderRepository.save(ordered);
     }
 

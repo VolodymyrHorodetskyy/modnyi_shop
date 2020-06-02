@@ -14,13 +14,14 @@ import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.util.NPHelper;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.OrderRepository;
+import shop.chobitok.modnyi.service.entity.StatShoe;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 @Service
@@ -41,15 +42,35 @@ public class StatisticService {
     }
 
     public StringResponse countNeedDeliveryFromDB(boolean updateStatuses) {
+        StringBuilder stringBuilder = new StringBuilder();
         if (updateStatuses) {
             orderService.updateOrderStatuses();
         }
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndNotForDeliveryFileFalseAndStatusOrderByDateCreated(Status.СТВОРЕНО);
-        List<String> ttns = orderedList.stream().map(ordered -> ordered.getTtn()).collect(Collectors.toList());
-        return countNeedDelivery(toTTNSet(ttns));
+        List<String> ttns = orderedList.stream().filter(ordered -> !StringUtils.isEmpty(ordered.getTtn())).map(ordered -> ordered.getTtn()).collect(toList());
+        List<Ordered> withoutTTNList = orderedList.stream().filter(ordered -> StringUtils.isEmpty(ordered.getTtn())).collect(toList());
+        stringBuilder.append(countNeedDelivery(toTTNSet(ttns)));
+        stringBuilder.append(getWitohutTTN(withoutTTNList) + "\n");
+        stringBuilder.append("Кількість :" + (ttns.size() + withoutTTNList.size()));
+        return new StringResponse(stringBuilder.toString());
     }
 
-    private StringResponse countNeedDelivery(Set<String> ttnSet) {
+    private String getWitohutTTN(List<Ordered> ordereds) {
+        if (ordereds != null) {
+            StringBuilder stringBuilder = new StringBuilder();
+            for (Ordered ordered : ordereds) {
+                for (Shoe shoe : ordered.getOrderedShoes()) {
+                    stringBuilder.append(shoe.getModel() + " " + shoe.getColor() + "\n");
+                    stringBuilder.append("заберуть у львові" + "\n");
+                }
+                stringBuilder.append("\n");
+            }
+            return stringBuilder.toString();
+        }
+        return null;
+    }
+
+    private String countNeedDelivery(Set<String> ttnSet) {
         List<String> stringList = new ArrayList<>();
         StringBuilder result = new StringBuilder();
         int count = 0;
@@ -61,8 +82,7 @@ public class StatisticService {
                 result.append(data.getNumber() + "\n" + data.getCargoDescriptionString() + "\n\n");
             }
         }
-        result.append("Кількість :" + count);
-        return new StringResponse(result.toString());
+        return result.toString();
     }
 
 
@@ -196,7 +216,7 @@ public class StatisticService {
         }
         Set<String> payedTTNSSet = readFileToTTNSet(payedTTNFile);
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.ОТРИМАНО))
-                .stream().filter(ordered -> !payedTTNSSet.contains(ordered.getTtn())).collect(Collectors.toList());
+                .stream().filter(ordered -> !payedTTNSSet.contains(ordered.getTtn())).collect(toList());
 
         for (Ordered ordered : orderedList) {
             if (ordered.getOrderedShoes().size() < 1) {
@@ -258,31 +278,57 @@ public class StatisticService {
         return stringBuilderWithDesc.toString();
     }
 
-    public StringResponse getSoldShoes(String dateFrom, String dateTo, Status status) {
+    public Map<Shoe, Integer> getSoldShoes(String dateFrom, String dateTo, Status status) {
         LocalDateTime fromDate = DateHelper.formDateFrom(dateFrom);
         LocalDateTime toDate = DateHelper.formDateTo(dateTo);
         List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate, status));
-        final Map<Shoe, Integer> shoeIntegerMap = new HashMap<>();
-        for (Ordered ordered : orderedList) {
-            Shoe shoe = ordered.getOrderedShoes().get(0);
-            Integer amount = shoeIntegerMap.get(shoe);
-            if (amount == null) {
-                shoeIntegerMap.put(shoe, 1);
-            } else {
-                shoeIntegerMap.put(shoe, ++amount);
-            }
-        }
+        final Map<Shoe, Integer> shoeIntegerMap = countShoesAmount(orderedList);
         final Map<Shoe, Integer> sortedByAmount = shoeIntegerMap.entrySet()
                 .stream()
                 .sorted((Map.Entry.<Shoe, Integer>comparingByValue().reversed()))
                 .collect(
                         toMap(e -> e.getKey(), e -> e.getValue(), (e1, e2) -> e2,
                                 LinkedHashMap::new));
-        StringBuilder builder = new StringBuilder();
-        for (Map.Entry<Shoe, Integer> entry : sortedByAmount.entrySet()) {
-            builder.append(entry.getKey().getModel() + " " + entry.getKey().getColor() + " = " + entry.getValue() + "\n");
+        return sortedByAmount;
+    }
+
+    public List<StatShoe> getReceivedPercentage(String dateFrom, String dateTo) {
+        LocalDateTime fromDate = DateHelper.formDateFrom(dateFrom);
+        LocalDateTime toDate = DateHelper.formDateTo(dateTo);
+        List<Ordered> receivedOrderList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate, Status.ОТРИМАНО));
+        List<Ordered> deniedOrderList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate, Status.ВІДМОВА));
+        final Map<Shoe, Integer> receivedMap = countShoesAmount(receivedOrderList);
+        final Map<Shoe, Integer> deniedMap = countShoesAmount(deniedOrderList);
+
+        List<StatShoe> statShoeList = new ArrayList<>();
+        for (Map.Entry<Shoe, Integer> entry : receivedMap.entrySet()) {
+            Shoe shoe = entry.getKey();
+            Integer receivedAmount = entry.getValue();
+            Integer deniedAmount = deniedMap.get(shoe);
+            if (deniedAmount != null) {
+                Integer generalAmount = receivedAmount + deniedAmount;
+                statShoeList.add(new StatShoe(shoe, receivedAmount, deniedAmount, receivedAmount * 100 / generalAmount, generalAmount));
+            } else {
+                statShoeList.add(new StatShoe(shoe, receivedAmount, 0, 100, receivedAmount));
+            }
+
         }
-        return new StringResponse(builder.toString());
+        statShoeList = statShoeList.stream().filter(statShoe -> statShoe.getGeneralAmount() > 5).sorted(Comparator.comparingInt(StatShoe::getReceivedPercentage).reversed()).collect(toList());
+        return statShoeList;
+    }
+
+    private Map<Shoe, Integer> countShoesAmount(List<Ordered> ordereds) {
+        final Map<Shoe, Integer> map = new HashMap<>();
+        for (Ordered ordered : ordereds) {
+            Shoe shoe = ordered.getOrderedShoes().get(0);
+            Integer amount = map.get(shoe);
+            if (amount == null) {
+                map.put(shoe, 1);
+            } else {
+                map.put(shoe, ++amount);
+            }
+        }
+        return map;
     }
 
 
