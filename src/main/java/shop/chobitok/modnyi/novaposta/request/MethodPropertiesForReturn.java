@@ -8,7 +8,7 @@ public class MethodPropertiesForReturn {
         private String IntDocNumber;
         private String PaymentMethod = "Cash";
         private String Reason = "49754eb2-a9e1-11e3-9fa0-0050568002cf";
-        private String SubtypeReason = "49754ecb-a9e1-11e3-9fa0-0050568002cf";
+        private String SubtypeReason = "49754ec8-a9e1-11e3-9fa0-0050568002cf";
         private String Note = "";
         private String OrderType = "orderCargoReturn";
         private String ReturnAddressRef = "dbf47cd9-638e-11ea-8513-b88303659df5";
