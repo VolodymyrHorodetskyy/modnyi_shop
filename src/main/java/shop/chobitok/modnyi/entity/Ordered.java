@@ -85,6 +85,9 @@ public class Ordered extends Audit {
     @Column
     private String returnTtn;
 
+    @Column
+    private boolean canceledAfter = false;
+
     public boolean isNotForDeliveryFile() {
         return notForDeliveryFile;
     }
@@ -283,5 +286,13 @@ public class Ordered extends Audit {
 
     public void setReturnTtn(String returnTtn) {
         this.returnTtn = returnTtn;
+    }
+
+    public boolean isCanceledAfter() {
+        return canceledAfter;
+    }
+
+    public void setCanceledAfter(boolean canceledAfter) {
+        this.canceledAfter = canceledAfter;
     }
 }

@@ -13,6 +13,8 @@ public class CanceledOrderReason extends Audit {
     private CancelReason reason;
     @Column
     private String comment;
+    @Column
+    private String ttn;
 
     public CanceledOrderReason() {
     }
@@ -45,5 +47,13 @@ public class CanceledOrderReason extends Audit {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public String getTtn() {
+        return ttn;
+    }
+
+    public void setTtn(String ttn) {
+        this.ttn = ttn;
     }
 }

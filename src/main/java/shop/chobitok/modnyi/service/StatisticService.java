@@ -113,7 +113,7 @@ public class StatisticService {
         }
         StringBuilder result = new StringBuilder();
         StringBuilder coincidence = new StringBuilder();
-        List<Ordered> deniedList = orderRepository.findAllByAvailableTrueAndReturnedFalseAndStatus(Status.ВІДМОВА);
+        List<Ordered> deniedList = orderRepository.findAllByAvailableTrueAndReturnedFalseAndCanceledAfterFalseAndStatus(Status.ВІДМОВА);
         List<Ordered> createdList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.СТВОРЕНО));
         List<Long> usedInCoincidence = new ArrayList<>();
         for (Ordered deniedOrder : deniedList) {
