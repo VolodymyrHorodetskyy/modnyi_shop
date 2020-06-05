@@ -313,7 +313,7 @@ public class StatisticService {
             }
 
         }
-        statShoeList = statShoeList.stream().filter(statShoe -> statShoe.getGeneralAmount() > 5).sorted(Comparator.comparingInt(StatShoe::getReceivedPercentage).reversed()).collect(toList());
+        statShoeList = statShoeList.stream().filter(statShoe -> statShoe.getGeneralAmount() > 4).sorted(Comparator.comparingInt(StatShoe::getReceivedPercentage).reversed()).collect(toList());
         return statShoeList;
     }
 
