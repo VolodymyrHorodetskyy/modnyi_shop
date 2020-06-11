@@ -294,6 +294,19 @@ public class OrderService {
         return orderRepository.saveAll(orderedList);
     }
 
+    public Ordered addShoeToOrder(AddShoeToOrderRequest addShoeToOrderRequest) {
+        Ordered ordered = orderRepository.getOne(addShoeToOrderRequest.getOrderId());
+        if (ordered == null) {
+            throw new ConflictException("Order not found");
+        }
+        Shoe shoe = shoeRepository.getOne(addShoeToOrderRequest.getShoeId());
+        if (shoe == null) {
+            throw new ConflictException("Shoe not found");
+        }
+        ordered.getOrderedShoes().add(shoe);
+        return orderRepository.save(ordered);
+    }
+
     private boolean isNumeric(String strNum) {
         if (strNum == null) {
             return false;

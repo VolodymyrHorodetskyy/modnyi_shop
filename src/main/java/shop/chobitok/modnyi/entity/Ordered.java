@@ -10,7 +10,7 @@ import java.util.List;
 @Entity
 public class Ordered extends Audit {
 
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @ManyToMany(cascade = CascadeType.ALL)
     private List<Shoe> orderedShoes;
 
     @ManyToOne(cascade = CascadeType.ALL)

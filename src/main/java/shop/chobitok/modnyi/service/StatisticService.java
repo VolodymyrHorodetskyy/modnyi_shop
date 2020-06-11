@@ -222,9 +222,10 @@ public class StatisticService {
             if (ordered.getOrderedShoes().size() < 1) {
                 result.append(ordered.getTtn() + " НЕ ВИЗНАЧЕНО\n");
             } else {
-                Shoe shoe = ordered.getOrderedShoes().get(0);
+                for (Shoe shoe : ordered.getOrderedShoes()) {
+                    sum += shoe.getCost();
+                }
                 result.append(ordered.getTtn() + "\n");
-                sum += shoe.getCost();
             }
         }
         result.append("\n Сума = " + sum);
