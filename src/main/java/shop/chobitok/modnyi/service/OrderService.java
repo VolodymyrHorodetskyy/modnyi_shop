@@ -168,6 +168,7 @@ public class OrderService {
         clientRepository.save(client);
         ordered.setPrePayment(updateOrderRequest.getPrepayment());
         ordered.setPrice(updateOrderRequest.getPrice());
+        ordered.setStatus(updateOrderRequest.getStatus());
         return orderRepository.save(ordered);
     }
 
