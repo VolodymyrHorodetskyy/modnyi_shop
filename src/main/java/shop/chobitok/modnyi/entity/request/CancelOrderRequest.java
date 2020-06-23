@@ -10,6 +10,16 @@ public class CancelOrderRequest {
 
     private String comment;
 
+    private String newTTN;
+
+    public String getNewTTN() {
+        return newTTN;
+    }
+
+    public void setNewTTN(String newTTN) {
+        this.newTTN = newTTN;
+    }
+
     public Long getOrderId() {
         return orderId;
     }

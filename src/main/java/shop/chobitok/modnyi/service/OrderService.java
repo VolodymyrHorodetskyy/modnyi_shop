@@ -119,10 +119,12 @@ public class OrderService {
         ordered.setStatus(Status.ВІДМОВА);
         CanceledOrderReason canceledOrderReason = canceledOrderReasonRepository.findFirstByOrderedId(cancelOrderRequest.getOrderId());
         if (canceledOrderReason == null) {
-            canceledOrderReason = new CanceledOrderReason(ordered, cancelOrderRequest.getReason(), cancelOrderRequest.getComment());
+            canceledOrderReason = new CanceledOrderReason(ordered, cancelOrderRequest.getReason(), cancelOrderRequest.getComment(),
+                    cancelOrderRequest.getNewTTN());
         } else {
             canceledOrderReason.setComment(cancelOrderRequest.getComment());
             canceledOrderReason.setReason(cancelOrderRequest.getReason());
+            canceledOrderReason.setTtn(cancelOrderRequest.getNewTTN());
         }
         canceledOrderReasonRepository.save(canceledOrderReason);
         orderRepository.save(ordered);
@@ -305,6 +307,15 @@ public class OrderService {
         }
         ordered.getOrderedShoes().add(shoe);
         return orderRepository.save(ordered);
+    }
+
+    public boolean makeAllPayed() {
+        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndPayedFalseAndStatusIn(Arrays.asList(Status.ОТРИМАНО));
+        for (Ordered ordered : orderedList) {
+            ordered.setPayed(true);
+        }
+        orderRepository.saveAll(orderedList);
+        return true;
     }
 
     private boolean isNumeric(String strNum) {

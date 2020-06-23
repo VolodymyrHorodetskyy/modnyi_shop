@@ -104,4 +104,9 @@ public class OrderController {
         return orderService.addShoeToOrder(addShoeToOrderRequest);
     }
 
+    @PatchMapping("/makeAllPayed")
+    public boolean makeAllPayed(){
+        return orderService.makeAllPayed();
+    }
+
 }

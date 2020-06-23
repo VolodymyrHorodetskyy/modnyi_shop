@@ -51,8 +51,8 @@ public class StatisticController {
     }
 
     @PostMapping("/needToPayedFromFile")
-    public StringResponse needToPayed(@RequestParam(required = false) boolean updateStatuses, @RequestParam MultipartFile file) {
-        return statisticService.needToPayed(updateStatuses, file);
+    public StringResponse needToPayed(@RequestParam(required = false) boolean updateStatuses) {
+        return statisticService.needToPayed(updateStatuses);
     }
 
     @GetMapping("/returned")

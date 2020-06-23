@@ -1,6 +1,7 @@
 package shop.chobitok.modnyi.service;
 
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Shoe;
@@ -35,7 +36,7 @@ public class ShoeService {
     }
 
     public List<Shoe> getAll(int page, int size, String model) {
-        return shoeRepository.findAll(new ShoeSpecification(model), PageRequest.of(page, size)).getContent();
+        return shoeRepository.findAll(new ShoeSpecification(model), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdDate"))).getContent();
     }
 
     public Shoe createShoe(CreateShoeRequest createShoeRequest) {

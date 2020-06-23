@@ -30,11 +30,13 @@ public class FinanceService {
         int received = 0;
         int denied = 0;
         for (Ordered ordered : orderedList) {
+            Double cost = 0d;
             if (ordered.getStatus() == Status.ОТРИМАНО) {
                 for (Shoe shoe : ordered.getOrderedShoes()) {
-                    sum += shoe.getPrice() - shoe.getCost();
+                    cost += shoe.getCost();
                     ++received;
                 }
+                sum = ordered.getPrice() - cost;
             } else if (ordered.getStatus() == Status.ВІДМОВА) {
                 ++denied;
             } else if (ordered.getStatus() == Status.СТВОРЕНО || ordered.getStatus() == Status.ВІДПРАВЛЕНО || ordered.getStatus() == Status.ДОСТАВЛЕНО) {
@@ -51,7 +53,6 @@ public class FinanceService {
         }
         return new EarningsResponse(fromDate, toDate, sum, predictedSum, received, denied, orderedList.size(), receivedPercentage);
     }
-
 
 
 }

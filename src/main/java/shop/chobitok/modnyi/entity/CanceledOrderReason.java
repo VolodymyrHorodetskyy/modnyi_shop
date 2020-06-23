@@ -19,10 +19,11 @@ public class CanceledOrderReason extends Audit {
     public CanceledOrderReason() {
     }
 
-    public CanceledOrderReason(Ordered ordered, CancelReason reason, String comment) {
+    public CanceledOrderReason(Ordered ordered, CancelReason reason, String comment, String ttn) {
         this.ordered = ordered;
         this.reason = reason;
         this.comment = comment;
+        this.ttn = ttn;
     }
 
     public Ordered getOrdered() {

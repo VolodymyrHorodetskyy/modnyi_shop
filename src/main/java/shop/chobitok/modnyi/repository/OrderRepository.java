@@ -24,6 +24,8 @@ public interface OrderRepository extends JpaRepository<Ordered, Long> {
 
     List<Ordered> findAllByAvailableTrueAndStatusIn(List<Status> statuses);
 
+    List<Ordered> findAllByAvailableTrueAndPayedFalseAndStatusIn(List<Status> statuses);
+
     List<Ordered> findAllByAvailableTrueAndReturnedFalseAndStatus(Status status);
 
     List<Ordered> findAllByAvailableTrueAndReturnedFalseAndCanceledAfterFalseAndStatus(Status status);

@@ -196,8 +196,9 @@ public class StatisticService {
                     stringBuilder.append("\n");
                     Ordered ordered = npOrderMapper.toOrdered(trackingEntity);
                     if (ordered.getOrderedShoes().size() > 0) {
-                        Shoe shoe = ordered.getOrderedShoes().get(0);
-                        sum += shoe.getCost();
+                        for (Shoe shoe : ordered.getOrderedShoes()) {
+                            sum += shoe.getCost();
+                        }
                     }
                     orderedList.add(ordered);
                 }
@@ -208,15 +209,13 @@ public class StatisticService {
         return stringBuilder.toString();
     }
 
-    public StringResponse needToPayed(boolean updateStatuses, MultipartFile payedTTNFile) {
+    public StringResponse needToPayed(boolean updateStatuses) {
         StringBuilder result = new StringBuilder();
         Double sum = 0d;
         if (updateStatuses) {
             orderService.updateOrderStatuses();
         }
-        Set<String> payedTTNSSet = readFileToTTNSet(payedTTNFile);
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.ОТРИМАНО))
-                .stream().filter(ordered -> !payedTTNSSet.contains(ordered.getTtn())).collect(toList());
+        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndPayedFalseAndStatusIn(Arrays.asList(Status.ОТРИМАНО));
 
         for (Ordered ordered : orderedList) {
             if (ordered.getOrderedShoes().size() < 1) {

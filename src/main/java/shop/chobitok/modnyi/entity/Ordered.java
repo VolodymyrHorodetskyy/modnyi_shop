@@ -88,6 +88,9 @@ public class Ordered extends Audit {
     @Column
     private boolean canceledAfter = false;
 
+    @Column
+    private boolean payed = false;
+
     public boolean isNotForDeliveryFile() {
         return notForDeliveryFile;
     }
@@ -294,5 +297,13 @@ public class Ordered extends Audit {
 
     public void setCanceledAfter(boolean canceledAfter) {
         this.canceledAfter = canceledAfter;
+    }
+
+    public boolean isPayed() {
+        return payed;
+    }
+
+    public void setPayed(boolean payed) {
+        this.payed = payed;
     }
 }
