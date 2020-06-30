@@ -2,6 +2,7 @@ package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Shoe;
@@ -281,7 +282,7 @@ public class StatisticService {
     public Map<Shoe, Integer> getSoldShoes(String dateFrom, String dateTo, Status status) {
         LocalDateTime fromDate = DateHelper.formDateFrom(dateFrom);
         LocalDateTime toDate = DateHelper.formDateTo(dateTo);
-        List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate, status));
+        List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate, status, true));
         final Map<Shoe, Integer> shoeIntegerMap = countShoesAmount(orderedList);
         final Map<Shoe, Integer> sortedByAmount = shoeIntegerMap.entrySet()
                 .stream()
@@ -313,19 +314,20 @@ public class StatisticService {
             }
 
         }
-        statShoeList = statShoeList.stream().filter(statShoe -> statShoe.getGeneralAmount() > 4).sorted(Comparator.comparingInt(StatShoe::getReceivedPercentage).reversed()).collect(toList());
+        statShoeList = statShoeList.stream().sorted(Comparator.comparingInt(StatShoe::getReceivedPercentage).reversed()).collect(toList());
         return statShoeList;
     }
 
     private Map<Shoe, Integer> countShoesAmount(List<Ordered> ordereds) {
         final Map<Shoe, Integer> map = new HashMap<>();
         for (Ordered ordered : ordereds) {
-            Shoe shoe = ordered.getOrderedShoes().get(0);
-            Integer amount = map.get(shoe);
-            if (amount == null) {
-                map.put(shoe, 1);
-            } else {
-                map.put(shoe, ++amount);
+            for (Shoe shoe : ordered.getOrderedShoes()) {
+                Integer amount = map.get(shoe);
+                if (amount == null) {
+                    map.put(shoe, 1);
+                } else {
+                    map.put(shoe, ++amount);
+                }
             }
         }
         return map;

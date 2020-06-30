@@ -20,6 +20,7 @@ public class OrderedSpecification implements Specification<Ordered> {
     private LocalDateTime from;
     private LocalDateTime to;
     private Status status;
+    private boolean excludeDeleted;
 
     public OrderedSpecification(String model, String ttn, String phone, boolean withoutTTN) {
         this.model = model;
@@ -37,6 +38,13 @@ public class OrderedSpecification implements Specification<Ordered> {
         this.from = from;
         this.to = to;
         this.status = status;
+    }
+
+    public OrderedSpecification(LocalDateTime from, LocalDateTime to, Status status, boolean excludeDeleted) {
+        this.from = from;
+        this.to = to;
+        this.status = status;
+        this.excludeDeleted = excludeDeleted;
     }
 
     @Override
@@ -69,6 +77,10 @@ public class OrderedSpecification implements Specification<Ordered> {
         if (status != null) {
             Predicate statusPredicate = criteriaBuilder.equal(root.get("status"), status);
             predicateList.add(statusPredicate);
+        }
+        if (excludeDeleted) {
+            Predicate excludeDeletedPredicate = criteriaBuilder.notEqual(root.get("status"), Status.ВИДАЛЕНО);
+            predicateList.add(excludeDeletedPredicate);
         }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }
