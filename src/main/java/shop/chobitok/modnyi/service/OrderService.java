@@ -36,17 +36,19 @@ public class OrderService {
     private StorageService storageService;
     private NovaPostaService novaPostaService;
     private CanceledOrderReasonRepository canceledOrderReasonRepository;
+    private NotificationService notificationService;
 
     @Value("${novaposta.phoneNumber}")
     private String phone;
 
-    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientRepository clientRepository, StorageService storageService, NovaPostaService novaPostaService, CanceledOrderReasonRepository canceledOrderReasonRepository) {
+    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientRepository clientRepository, StorageService storageService, NovaPostaService novaPostaService, CanceledOrderReasonRepository canceledOrderReasonRepository, NotificationService notificationService) {
         this.orderRepository = orderRepository;
         this.shoeRepository = shoeRepository;
         this.clientRepository = clientRepository;
         this.storageService = storageService;
         this.novaPostaService = novaPostaService;
         this.canceledOrderReasonRepository = canceledOrderReasonRepository;
+        this.notificationService = notificationService;
     }
 
     public GetAllOrderedResponse getAll(int page, int size, String TTN, String phone, String model, boolean withoutTTN, String orderBy) {
@@ -210,6 +212,7 @@ public class OrderService {
             }
         }
         updateAllCanceled();
+        notificationService.createMessage("Статуси обновлено", MessageType.STATUSES_UPDATED);
         return result.toString();
     }
 
@@ -241,6 +244,9 @@ public class OrderService {
                 ordered.setStatus(newStatus);
                 ordered.setStatusNP(data.getStatusCode());
                 orderRepository.save(ordered);
+                if (newStatus == Status.ВІДМОВА) {
+                    notificationService.createMessage("Клієнт відмовився", MessageType.ORDER_BECOME_CANCELED, ordered.getTtn());
+                }
                 return true;
             }
         }

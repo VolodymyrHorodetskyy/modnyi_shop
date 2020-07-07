@@ -10,7 +10,7 @@ public class Notification extends Audit {
     private String notif;
     @Column
     private MessageType messageType;
-   @Column
+    @Column
     private boolean read1 = false;
     @Column
     private String ttn;

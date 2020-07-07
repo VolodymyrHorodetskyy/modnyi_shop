@@ -9,6 +9,13 @@ public class Company extends Audit {
     @Column
     private String name;
 
+    public Company(String name) {
+        this.name = name;
+    }
+
+    public Company() {
+    }
+
     public String getName() {
         return name;
     }

@@ -12,18 +12,18 @@ import java.util.List;
 public class CheckerService {
 
     private OrderService orderService;
-    private MessageService messageService;
+    private NotificationService notificationService;
 
-    public CheckerService(OrderService orderService, MessageService messageService) {
+    public CheckerService(OrderService orderService, NotificationService notificationService) {
         this.orderService = orderService;
-        this.messageService = messageService;
+        this.notificationService = notificationService;
     }
 
     public List<Notification> checkCanceledOrders() {
         List<Notification> notifications = new ArrayList<>();
         List<Ordered> orderedList = orderService.getCanceled(true);
         for (Ordered ordered : orderedList) {
-            notifications.add(messageService.createMessage("Відмова на пошті", MessageType.ORDER_CANCELED, ordered.getTtn()));
+            notifications.add(notificationService.createMessage("Відмова на пошті", MessageType.ORDER_CANCELED, ordered.getTtn()));
         }
         return notifications;
     }
