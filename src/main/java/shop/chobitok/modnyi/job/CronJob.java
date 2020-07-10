@@ -15,16 +15,18 @@ public class CronJob {
     private OrderService orderService;
 
 
-    public CronJob(CheckerService checkerService, NotificationService notificationService) {
+    public CronJob(CheckerService checkerService, NotificationService notificationService, OrderService orderService) {
         this.checkerService = checkerService;
         this.notificationService = notificationService;
+        this.orderService = orderService;
     }
 
+    //  @Scheduled(cron = "0/30 * * * * ?")
     @Scheduled(cron = "0 0 8 * * *")
     public void dailyJob() {
         //    checkerService.checkCanceledOrders();
-        orderService.updateOrderStatuses();
-        notificationService.createMessage("checker worked", MessageType.CHECKER_WORKED);
+        orderService.updateOrderStatusesNovaPosta();
+        notificationService.createNotification("Чекер спрацював","", MessageType.CHECKER_WORKED);
     }
 
 }

@@ -1,11 +1,21 @@
 package shop.chobitok.modnyi.mapper;
 
 import org.springframework.stereotype.Service;
+import shop.chobitok.modnyi.entity.Company;
 import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.entity.request.CreateShoeRequest;
+import shop.chobitok.modnyi.exception.ConflictException;
+import shop.chobitok.modnyi.repository.CompanyRepository;
+import shop.chobitok.modnyi.service.CompanyService;
 
 @Service
 public class ShoeMapper {
+
+    private CompanyRepository companyRepository;
+
+    public ShoeMapper(CompanyRepository companyRepository) {
+        this.companyRepository = companyRepository;
+    }
 
     public Shoe convertFromCreateShoeRequest(CreateShoeRequest createShoeRequest) {
         Shoe shoe = null;
@@ -21,6 +31,11 @@ public class ShoeMapper {
     }
 
     private Shoe setToShoe(CreateShoeRequest createShoeRequest, Shoe shoe) {
+        Company company = companyRepository.getOne(createShoeRequest.getCompanyId());
+        if (company == null) {
+            throw new ConflictException("Company not found");
+        }
+        shoe.setCompany(company);
         shoe.setPrice(createShoeRequest.getPrice());
         shoe.setName(createShoeRequest.getName());
         shoe.setModel(createShoeRequest.getModel());

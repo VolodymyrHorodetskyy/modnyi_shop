@@ -76,7 +76,7 @@ public class OrderController {
 
     @PatchMapping("/updateStatuses")
     public String updateStatuses() {
-        return orderService.updateOrderStatuses();
+        return orderService.updateOrderStatusesNovaPosta();
     }
 
     @GetMapping("/getCanceled")

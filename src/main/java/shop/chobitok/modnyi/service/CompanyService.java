@@ -5,6 +5,8 @@ import shop.chobitok.modnyi.entity.Company;
 import shop.chobitok.modnyi.entity.request.CreateCompanyRequest;
 import shop.chobitok.modnyi.repository.CompanyRepository;
 
+import java.util.List;
+
 @Service
 public class CompanyService {
 
@@ -19,5 +21,8 @@ public class CompanyService {
         return companyRepository.save(company);
     }
 
+    public List<Company> getCompanies(){
+        return companyRepository.findAll();
+    }
 
 }

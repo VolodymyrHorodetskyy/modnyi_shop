@@ -7,7 +7,9 @@ import javax.persistence.Entity;
 public class Notification extends Audit {
 
     @Column
-    private String notif;
+    private String topic;
+    @Column
+    private String content;
     @Column
     private MessageType messageType;
     @Column
@@ -18,18 +20,19 @@ public class Notification extends Audit {
     public Notification() {
     }
 
-    public Notification(String notif, MessageType messageType, String ttn) {
-        this.notif = notif;
+    public Notification(String topic, String content, MessageType messageType, String ttn) {
+        this.topic = topic;
+        this.content = content;
         this.messageType = messageType;
         this.ttn = ttn;
     }
 
-    public String getNotif() {
-        return notif;
+    public String getTopic() {
+        return topic;
     }
 
-    public void setNotif(String notif) {
-        this.notif = notif;
+    public void setTopic(String topic) {
+        this.topic = topic;
     }
 
     public MessageType getMessageType() {
@@ -54,5 +57,13 @@ public class Notification extends Audit {
 
     public void setTtn(String ttn) {
         this.ttn = ttn;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
     }
 }

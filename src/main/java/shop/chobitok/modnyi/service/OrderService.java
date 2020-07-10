@@ -203,16 +203,16 @@ public class OrderService {
         return createOrders(novaPostaService.createOrderedFromTTNFile(request));
     }
 
-    public String updateOrderStatuses() {
+    public String updateOrderStatusesNovaPosta() {
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.СТВОРЕНО, Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО));
         StringBuilder result = new StringBuilder();
         for (Ordered ordered : orderedList) {
-            if (updateStatus(ordered)) {
+            if (updateStatusByNovaPosta(ordered)) {
                 result.append(ordered.getTtn() + " ... статус змінено на " + ordered.getStatus() + "\n");
             }
         }
         updateAllCanceled();
-        notificationService.createMessage("Статуси обновлено", MessageType.STATUSES_UPDATED);
+        notificationService.createNotification("Статуси обновлено", result.toString(), MessageType.STATUSES_UPDATED);
         return result.toString();
     }
 
@@ -235,7 +235,7 @@ public class OrderService {
     }
 
 
-    private boolean updateStatus(Ordered ordered) {
+    private boolean updateStatusByNovaPosta(Ordered ordered) {
         TrackingEntity trackingEntity = novaPostaService.getTrackingEntity(null, ordered.getTtn());
         if (trackingEntity != null && trackingEntity.getData().size() > 0) {
             Data data = trackingEntity.getData().get(0);
@@ -245,7 +245,7 @@ public class OrderService {
                 ordered.setStatusNP(data.getStatusCode());
                 orderRepository.save(ordered);
                 if (newStatus == Status.ВІДМОВА) {
-                    notificationService.createMessage("Клієнт відмовився", MessageType.ORDER_BECOME_CANCELED, ordered.getTtn());
+                    notificationService.createNotification("Клієнт відмовився", "", MessageType.ORDER_BECOME_CANCELED, ordered.getTtn());
                 }
                 return true;
             }
@@ -255,7 +255,7 @@ public class OrderService {
 
     public List<Ordered> getCanceled(boolean updateStatuses) {
         if (updateStatuses) {
-            updateOrderStatuses();
+            updateOrderStatusesNovaPosta();
         }
         List<Ordered> canceledOrdereds = orderRepository.findBystatusNP(103);
         return canceledOrdereds;

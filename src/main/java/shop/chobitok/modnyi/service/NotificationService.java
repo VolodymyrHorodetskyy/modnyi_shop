@@ -22,7 +22,7 @@ public class NotificationService {
         this.notificationRepository = notificationRepository;
     }
 
-    public Notification createMessage(String message, MessageType type, String ttn) {
+/*    public Notification createMessage(String message, String content,  MessageType type, String ttn) {
         List<Notification> notifications = notificationRepository.findByTtnAndMessageType(ttn, MessageType.ORDER_CANCELED);
         if (notifications.size() > 0) {
             for (Notification notification1 : notifications) {
@@ -34,12 +34,20 @@ public class NotificationService {
             return notificationRepository.save(new Notification(message, type, ttn));
         }
         return null;
+    }*/
+
+    public Notification createNotification(String topic, String content, MessageType type, String ttn) {
+        Notification notification = new Notification();
+        notification.setMessageType(type);
+        notification.setTopic(topic);
+        notification.setContent(content);
+        notification.setTtn(ttn);
+        return notificationRepository.save(notification);
     }
 
-    public Notification createMessage(String message, MessageType type) {
-        return createMessage(message, type, null);
+    public Notification createNotification(String topic, String content, MessageType type) {
+        return createNotification(topic, content, type, null);
     }
-
 
     public Page getNotifications(int page, int size, Boolean read) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("read1", "createdDate"));

@@ -11,6 +11,7 @@ public class CreateShoeRequest {
     private Double price;
     private Double cost;
     private List<String> patterns;
+    private Long companyId;
 
     public String getName() {
         return name;
@@ -66,5 +67,13 @@ public class CreateShoeRequest {
 
     public void setPatterns(List<String> patterns) {
         this.patterns = patterns;
+    }
+
+    public Long getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Long companyId) {
+        this.companyId = companyId;
     }
 }

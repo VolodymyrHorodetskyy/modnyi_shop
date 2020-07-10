@@ -1,15 +1,15 @@
 package shop.chobitok.modnyi.controller;
 
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.Company;
 import shop.chobitok.modnyi.entity.request.CreateCompanyRequest;
 import shop.chobitok.modnyi.service.CompanyService;
 
+import java.util.List;
+
 @RestController
-@RequestMapping
+@CrossOrigin
+@RequestMapping("/company")
 public class CompanyController {
 
     private CompanyService companyService;
@@ -21,6 +21,11 @@ public class CompanyController {
     @PostMapping
     public Company createCompany(@RequestBody CreateCompanyRequest createCompanyRequest) {
         return companyService.createCompany(createCompanyRequest);
+    }
+
+    @GetMapping
+    public List<Company> getCompanies(){
+        return companyService.getCompanies();
     }
 
 }

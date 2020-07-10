@@ -2,7 +2,6 @@ package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Shoe;
@@ -45,7 +44,7 @@ public class StatisticService {
     public StringResponse countNeedDeliveryFromDB(boolean updateStatuses) {
         StringBuilder stringBuilder = new StringBuilder();
         if (updateStatuses) {
-            orderService.updateOrderStatuses();
+            orderService.updateOrderStatusesNovaPosta();
         }
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndNotForDeliveryFileFalseAndStatusOrderByDateCreated(Status.СТВОРЕНО);
         List<String> ttns = orderedList.stream().filter(ordered -> !StringUtils.isEmpty(ordered.getTtn())).map(ordered -> ordered.getTtn()).collect(toList());
@@ -211,10 +210,11 @@ public class StatisticService {
     }
 
     public StringResponse needToPayed(boolean updateStatuses) {
+        Map<String, NeedToBePayed> companySumMap = new HashMap<>();
         StringBuilder result = new StringBuilder();
         Double sum = 0d;
         if (updateStatuses) {
-            orderService.updateOrderStatuses();
+            orderService.updateOrderStatusesNovaPosta();
         }
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndPayedFalseAndStatusIn(Arrays.asList(Status.ОТРИМАНО));
 
@@ -223,14 +223,37 @@ public class StatisticService {
                 result.append(ordered.getTtn() + " НЕ ВИЗНАЧЕНО\n");
             } else {
                 for (Shoe shoe : ordered.getOrderedShoes()) {
-                    sum += shoe.getCost();
+                    NeedToBePayed needToBePayed = companySumMap.get(shoe.getCompany().getName());
+                    if (needToBePayed == null) {
+                        needToBePayed = new NeedToBePayed();
+                        needToBePayed.sum = shoe.getCost();
+                        needToBePayed.ttns = new ArrayList<>();
+                        needToBePayed.ttns.add(ordered.getTtn());
+                        companySumMap.put(shoe.getCompany().getName(), needToBePayed);
+                    } else {
+                        needToBePayed.sum += shoe.getCost();
+                        needToBePayed.ttns.add(ordered.getTtn());
+                    }
                 }
-                result.append(ordered.getTtn() + "\n");
             }
         }
-        result.append("\n Сума = " + sum);
+        for (Map.Entry<String, NeedToBePayed> entry : companySumMap.entrySet()) {
+            result.append(entry.getKey() + "\n\n");
+            for (String s : entry.getValue().ttns) {
+                result.append(s + "\n");
+            }
+            result.append("Сума = " + entry.getValue().sum + "\n\n\n");
+        }
         return new StringResponse(result.toString());
     }
+
+    class NeedToBePayed {
+
+        Double sum;
+        List<String> ttns;
+
+    }
+
 
     public String countAllReceivedAndDenied(String pathAllTTNFile) {
         StringBuilder stringBuilder = new StringBuilder();

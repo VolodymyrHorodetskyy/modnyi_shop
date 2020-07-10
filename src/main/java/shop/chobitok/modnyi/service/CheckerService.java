@@ -23,7 +23,7 @@ public class CheckerService {
         List<Notification> notifications = new ArrayList<>();
         List<Ordered> orderedList = orderService.getCanceled(true);
         for (Ordered ordered : orderedList) {
-            notifications.add(notificationService.createMessage("Відмова на пошті", MessageType.ORDER_CANCELED, ordered.getTtn()));
+            notifications.add(notificationService.createNotification("Відмова на пошті", "", MessageType.ORDER_CANCELED, ordered.getTtn()));
         }
         return notifications;
     }
