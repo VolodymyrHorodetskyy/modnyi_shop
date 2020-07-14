@@ -104,5 +104,10 @@ public class OrderController {
         return orderService.makeAllPayed();
     }
 
+    @PostMapping("/webhook")
+    public void webhook(@RequestBody String s){
+        System.out.println(s);
+    }
+
 
 }

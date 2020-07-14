@@ -226,7 +226,12 @@ public class OrderService {
                 if (newStatus == Status.ВІДМОВА) {
                     notificationService.createNotification("Клієнт відмовився", "", MessageType.ORDER_BECOME_CANCELED, ordered.getTtn());
                 } else {
-//TODO: Send mail
+                    Client client = ordered.getClient();
+                    if (client != null) {
+                        if (!StringUtils.isEmpty(client.getMail())) {
+                            mailService.sendStatusNotificationEmail(client.getMail(), newStatus);
+                        }
+                    }
                 }
                 return true;
             }

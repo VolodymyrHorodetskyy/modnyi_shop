@@ -18,7 +18,6 @@ public class ClientService {
     }
 
     public Client createClient(CreateOrderRequest createOrderRequest) {
-        //TODO : make possibility to edit user
         List<Client> clients = clientRepository.findByPhone(createOrderRequest.getPhone());
         Client client = null;
         if (clients.size() > 0) {
