@@ -10,6 +10,8 @@ public class CreateOrderRequest {
     @NotEmpty
     private String phone;
 
+    private String mail;
+
     private Status status;
 
     private Double price;
@@ -155,5 +157,13 @@ public class CreateOrderRequest {
 
     public void setFullpayment(boolean fullpayment) {
         this.fullpayment = fullpayment;
+    }
+
+    public String getMail() {
+        return mail;
+    }
+
+    public void setMail(String mail) {
+        this.mail = mail;
     }
 }

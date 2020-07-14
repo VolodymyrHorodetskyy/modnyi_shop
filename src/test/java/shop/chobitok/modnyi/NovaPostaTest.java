@@ -117,4 +117,13 @@ public class NovaPostaTest {
 
 
 
+    @Autowired
+    private MailService mailService;
+
+    @Test
+    public void mailSender(){
+        mailService.sendStatusNotificationEmail("horodetskyyv@gmail.com", Status.ВІДПРАВЛЕНО);
+    }
+
+
 }

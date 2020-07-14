@@ -44,11 +44,6 @@ public class OrderController {
         return novaPostaService.createOrderFromNP(fromNPToOrderRequest);
     }
 
-    @PostMapping("/fromTTNFile")
-    public List<Ordered> createListFromTTN(@RequestBody FromTTNFileRequest fromTTNFileRequest) {
-        return orderService.createFromTTNListAndSave(fromTTNFileRequest);
-    }
-
     @PostMapping
     public Ordered createOrdered(@RequestBody @Valid CreateOrderRequest createOrderRequest) {
         return orderService.createOrder(createOrderRequest);

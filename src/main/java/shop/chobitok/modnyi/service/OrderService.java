@@ -17,7 +17,6 @@ import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
-import shop.chobitok.modnyi.repository.ClientRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
@@ -32,23 +31,25 @@ public class OrderService {
 
     private OrderRepository orderRepository;
     private ShoeRepository shoeRepository;
-    private ClientRepository clientRepository;
+    private ClientService clientService;
     private StorageService storageService;
     private NovaPostaService novaPostaService;
     private CanceledOrderReasonRepository canceledOrderReasonRepository;
     private NotificationService notificationService;
+    private MailService mailService;
 
     @Value("${novaposta.phoneNumber}")
     private String phone;
 
-    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientRepository clientRepository, StorageService storageService, NovaPostaService novaPostaService, CanceledOrderReasonRepository canceledOrderReasonRepository, NotificationService notificationService) {
+    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, StorageService storageService, NovaPostaService novaPostaService, CanceledOrderReasonRepository canceledOrderReasonRepository, NotificationService notificationService, MailService mailService) {
         this.orderRepository = orderRepository;
         this.shoeRepository = shoeRepository;
-        this.clientRepository = clientRepository;
+        this.clientService = clientService;
         this.storageService = storageService;
         this.novaPostaService = novaPostaService;
         this.canceledOrderReasonRepository = canceledOrderReasonRepository;
         this.notificationService = notificationService;
+        this.mailService = mailService;
     }
 
     public GetAllOrderedResponse getAll(int page, int size, String TTN, String phone, String model, boolean withoutTTN, String orderBy) {
@@ -59,6 +60,11 @@ public class OrderService {
         PaginationInfo paginationInfo = new PaginationInfo(orderedPage.getPageable().getPageNumber(), orderedPage.getPageable().getPageSize(), orderedPage.getTotalPages(), orderedPage.getTotalElements());
         getAllOrderedResponse.setPaginationInfo(paginationInfo);
         return getAllOrderedResponse;
+    }
+
+    public List<Ordered> getOrdersByStatus(Status status) {
+        updateOrderStatusesNovaPosta();
+        return orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(status));
     }
 
     private String removeSpaces(String s) {
@@ -97,7 +103,7 @@ public class OrderService {
         List<Shoe> shoes = new ArrayList<>();
         shoes.add(shoe);
         ordered.setOrderedShoes(shoes);
-        ordered.setClient(createClient(createOrderRequest));
+        ordered.setClient(clientService.createClient(createOrderRequest));
         ordered.setTtn(createOrderRequest.getTtn());
         ordered.setStatus(createOrderRequest.getStatus());
         ordered.setSize(createOrderRequest.getSize());
@@ -133,23 +139,6 @@ public class OrderService {
         return ordered;
     }
 
-    private Client createClient(CreateOrderRequest createOrderRequest) {
-        //TODO : make possibility to edit user
-        List<Client> clients = clientRepository.findByPhone(createOrderRequest.getPhone());
-        Client client = null;
-        if (clients.size() > 0) {
-            client = clients.get(0);
-        } else {
-            client = new Client();
-            client.setPhone(createOrderRequest.getPhone());
-            client.setName(createOrderRequest.getName());
-            client.setLastName(createOrderRequest.getLastName());
-            client.setMiddleName(createOrderRequest.getMiddleName());
-            client = clientRepository.save(client);
-        }
-        return client;
-    }
-
     public Ordered updateOrder(Long id, UpdateOrderRequest updateOrderRequest) {
         Ordered ordered = orderRepository.getOne(id);
         if (ordered == null) {
@@ -158,16 +147,7 @@ public class OrderService {
         ordered.setFullPayment(updateOrderRequest.isFull_payment());
         ordered.setNotes(updateOrderRequest.getNotes());
         updateShoeAndSize(ordered, updateOrderRequest);
-        Client client = ordered.getClient();
-        if (client == null) {
-            client = new Client();
-            ordered.setClient(client);
-        }
-        client.setMiddleName(updateOrderRequest.getMiddleName());
-        client.setName(updateOrderRequest.getName());
-        client.setLastName(updateOrderRequest.getLastName());
-        client.setPhone(updateOrderRequest.getPhone());
-        clientRepository.save(client);
+        clientService.updateOrCreateClient(ordered.getClient(), updateOrderRequest);
         ordered.setPrePayment(updateOrderRequest.getPrepayment());
         ordered.setPrice(updateOrderRequest.getPrice());
         ordered.setStatus(updateOrderRequest.getStatus());
@@ -199,10 +179,6 @@ public class OrderService {
         return new StringResponse(result.toString());
     }
 
-    public List<Ordered> createFromTTNListAndSave(FromTTNFileRequest request) {
-        return createOrders(novaPostaService.createOrderedFromTTNFile(request));
-    }
-
     public String updateOrderStatusesNovaPosta() {
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.СТВОРЕНО, Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО));
         StringBuilder result = new StringBuilder();
@@ -212,7 +188,6 @@ public class OrderService {
             }
         }
         updateAllCanceled();
-        notificationService.createNotification("Статуси обновлено", result.toString(), MessageType.STATUSES_UPDATED);
         return result.toString();
     }
 
@@ -240,12 +215,18 @@ public class OrderService {
         if (trackingEntity != null && trackingEntity.getData().size() > 0) {
             Data data = trackingEntity.getData().get(0);
             Status newStatus = ShoeUtil.convertToStatus(data.getStatusCode());
-            if (ordered.getStatus() != newStatus) {
+            Status oldStatus = ordered.getStatus();
+            if (oldStatus != newStatus) {
+                if (oldStatus == Status.СТВОРЕНО) {
+                    novaPostaService.createOrUpdateOrderFromNP(ordered);
+                }
                 ordered.setStatus(newStatus);
                 ordered.setStatusNP(data.getStatusCode());
                 orderRepository.save(ordered);
                 if (newStatus == Status.ВІДМОВА) {
                     notificationService.createNotification("Клієнт відмовився", "", MessageType.ORDER_BECOME_CANCELED, ordered.getTtn());
+                } else {
+//TODO: Send mail
                 }
                 return true;
             }

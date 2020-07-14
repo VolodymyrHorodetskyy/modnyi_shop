@@ -23,20 +23,19 @@ import java.util.List;
 public class NPOrderMapper {
 
     private ShoeService shoeService;
-    private ClientRepository clientRepository;
     private List<Integer> sizes = Arrays.asList(36, 37, 38, 39, 40);
 
-    public NPOrderMapper(ShoeService shoeService, ClientRepository clientRepository) {
+    public NPOrderMapper(ShoeService shoeService) {
         this.shoeService = shoeService;
-        this.clientRepository = clientRepository;
     }
 
-    public Ordered toOrdered(TrackingEntity trackingEntity) {
-        Ordered ordered = null;
+    public Ordered toOrdered(Ordered ordered, TrackingEntity trackingEntity) {
         if (trackingEntity != null) {
             List<Data> dataList = trackingEntity.getData();
             if (dataList != null && dataList.size() > 0) {
-                ordered = new Ordered();
+                if (ordered == null) {
+                    ordered = new Ordered();
+                }
                 Data data = dataList.get(0);
                 ordered.setTtn(data.getNumber());
                 ordered.setAddress(data.getRecipientAddress());
@@ -55,6 +54,10 @@ public class NPOrderMapper {
             }
         }
         return ordered;
+    }
+
+    public Ordered toOrdered(TrackingEntity trackingEntity) {
+        return toOrdered(null, trackingEntity);
     }
 
     public Ordered toOrdered(ListTrackingEntity entity, String ttn) {

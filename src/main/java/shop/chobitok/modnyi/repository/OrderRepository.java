@@ -26,15 +26,10 @@ public interface OrderRepository extends JpaRepository<Ordered, Long> {
 
     List<Ordered> findAllByAvailableTrueAndPayedFalseAndStatusIn(List<Status> statuses);
 
-    List<Ordered> findAllByAvailableTrueAndReturnedFalseAndStatus(Status status);
-
     List<Ordered> findAllByAvailableTrueAndReturnedFalseAndCanceledAfterFalseAndStatus(Status status);
 
     List<Ordered> findBystatusNP(Integer status);
 
     List<Ordered> findByNotForDeliveryFileTrue();
 
-    List<Ordered> findByDateCreatedGreaterThanEqualAndDateCreatedLessThanEqual(LocalDateTime dateTime1, LocalDateTime dateTime2);
-
-    List<Ordered> findByDateCreatedIsNull();
 }

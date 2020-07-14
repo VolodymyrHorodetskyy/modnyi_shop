@@ -9,6 +9,7 @@ public class UpdateOrderRequest {
     private String name;
     private String lastName;
     private String middleName;
+    private String mail;
     private Status status;
     private String address;
     private String phone;
@@ -113,5 +114,13 @@ public class UpdateOrderRequest {
 
     public void setFull_payment(boolean full_payment) {
         this.full_payment = full_payment;
+    }
+
+    public String getMail() {
+        return mail;
+    }
+
+    public void setMail(String mail) {
+        this.mail = mail;
     }
 }

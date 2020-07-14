@@ -1,9 +1,7 @@
 package shop.chobitok.modnyi.entity;
 
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import java.util.List;
 
 @Entity
 public class Client extends Audit {
@@ -12,15 +10,14 @@ public class Client extends Audit {
     private String name;
     @Column
     private String lastName;
-
     @Column
     private String middleName;
-
     @Column
     private String phone;
-
     @Column
     private String comment;
+    @Column
+    private String mail;
 
     public String getName() {
         return name;
@@ -62,4 +59,11 @@ public class Client extends Audit {
         this.comment = comment;
     }
 
+    public String getMail() {
+        return mail;
+    }
+
+    public void setMail(String mail) {
+        this.mail = mail;
+    }
 }

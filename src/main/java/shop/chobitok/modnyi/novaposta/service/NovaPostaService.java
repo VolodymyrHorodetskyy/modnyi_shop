@@ -37,7 +37,7 @@ public class NovaPostaService {
         this.npHelper = npHelper;
     }
 
-    public Ordered createOrderFromNP(FromNPToOrderRequest fromNPToOrderRequest) {
+    public Ordered createOrUpdateOrderFromNP(Ordered ordered, FromNPToOrderRequest fromNPToOrderRequest) {
         if (StringUtils.isEmpty(fromNPToOrderRequest.getTtn())) {
             throw new ConflictException("Заповніть ТТН");
         }
@@ -55,24 +55,20 @@ public class NovaPostaService {
                     return npOrderMapper.toOrdered(entity, fromNPToOrderRequest.getTtn());
                 }
             } else {
-                return npOrderMapper.toOrdered(trackingEntity);
+                return npOrderMapper.toOrdered(ordered, trackingEntity);
             }
         }
         return null;
     }
 
-    public List<Ordered> createOrderedFromTTNFile(FromTTNFileRequest request) {
-        List<Ordered> orderedList = new ArrayList<>();
-        List<String> strings = ShoeUtil.readTXTFile(request.getPath());
-        for (String ttn : strings) {
-            FromNPToOrderRequest fromNPToOrderRequest = new FromNPToOrderRequest();
-            fromNPToOrderRequest.setPhone("+380637638967");
-            fromNPToOrderRequest.setTtn(ttn);
-            Ordered ordered = createOrderFromNP(fromNPToOrderRequest);
-            orderedList.add(ordered);
-        }
-        return orderedList;
+    public Ordered createOrUpdateOrderFromNP(Ordered ordered) {
+        return createOrUpdateOrderFromNP(ordered, new FromNPToOrderRequest(ordered.getTtn()));
     }
+
+    public Ordered createOrderFromNP(FromNPToOrderRequest fromNPToOrderRequest) {
+        return createOrUpdateOrderFromNP(null, fromNPToOrderRequest);
+    }
+
 
     public String returnCargo(String ttn) {
         CheckPossibilityCreateReturnResponse checkPossibilityCreateReturnResponse = postaRepository.checkPossibilitReturn(ttn);
