@@ -5,8 +5,9 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Ordered;
+import shop.chobitok.modnyi.entity.Shoe;
+import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.request.FromNPToOrderRequest;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.mapper.DtoMapper;
@@ -16,15 +17,22 @@ import shop.chobitok.modnyi.novaposta.request.Document;
 import shop.chobitok.modnyi.novaposta.request.GetTrackingRequest;
 import shop.chobitok.modnyi.novaposta.request.MethodProperties;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
+import shop.chobitok.modnyi.novaposta.util.NPHelper;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
+import shop.chobitok.modnyi.repository.NotificationRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
+import shop.chobitok.modnyi.service.CheckerService;
 import shop.chobitok.modnyi.service.FinanceService;
+import shop.chobitok.modnyi.service.MailService;
+import shop.chobitok.modnyi.service.StatisticService;
+import shop.chobitok.modnyi.util.FileReader;
 
-import java.time.LocalDate;
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @RunWith(SpringRunner.class)
@@ -115,6 +123,52 @@ public class NovaPostaTest {
         "дм лаковані".matches(".*дм\\s.*лак.*");
     }
 
+    @Test
+    public void testList() {
+        Shoe shoe = new Shoe();
+        shoe.setPatterns(Arrays.asList("pattern", "2"));
+        shoeRepository.save(shoe);
+    }
+
+    @Autowired
+    private NPOrderMapper npOrderMapper;
+
+    @Test
+    public void parse() {
+        //Creating a File object for directory
+        File directoryPath = new File("C:\\Users\\vhorodetskyi\\Pictures\\Saved Pictures");
+        //List of all files and directories
+        String contents[] = directoryPath.list();
+        System.out.println("List of files and directories in the specified directory:");
+        for (int i = 0; i < contents.length; i++) {
+            System.out.println(contents[i].substring(5, 9));
+        }
+    }
+
+    @Autowired
+    private StatisticService statisticService;
+
+    @Autowired
+    private NPHelper npHelper;
+
+    @Test
+    public void dateCreated() {
+        List<Ordered> orderedList = orderRepository.findAll();
+        for (Ordered order : orderedList) {
+        }
+        orderRepository.saveAll(orderedList);
+        //ShoeUtil.toLocalDateTime(data.getDateCreated())
+    }
+
+    @Autowired
+    private CheckerService checkerService;
+    @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Test
+    public void checker() {
+        checkerService.checkCanceledOrders();
+    }
 
 
     @Autowired
