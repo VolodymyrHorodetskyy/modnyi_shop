@@ -10,9 +10,6 @@ import shop.chobitok.modnyi.entity.Notification;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.repository.NotificationRepository;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
 @Service
 public class NotificationService {
 
@@ -21,20 +18,6 @@ public class NotificationService {
     public NotificationService(NotificationRepository notificationRepository) {
         this.notificationRepository = notificationRepository;
     }
-
-/*    public Notification createMessage(String message, String content,  MessageType type, String ttn) {
-        List<Notification> notifications = notificationRepository.findByTtnAndMessageType(ttn, MessageType.ORDER_CANCELED);
-        if (notifications.size() > 0) {
-            for (Notification notification1 : notifications) {
-                if (notification1.getCreatedDate().plusDays(2).isBefore(LocalDateTime.now())) {
-                    return notificationRepository.save(new Notification(message, type, ttn));
-                }
-            }
-        } else {
-            return notificationRepository.save(new Notification(message, type, ttn));
-        }
-        return null;
-    }*/
 
     public Notification createNotification(String topic, String content, MessageType type, String ttn) {
         Notification notification = new Notification();
@@ -50,7 +33,7 @@ public class NotificationService {
     }
 
     public Page getNotifications(int page, int size, Boolean read) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("read1", "createdDate"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("read1").and(Sort.by("createdDate").descending()));
         if (read != null) {
             return notificationRepository.findByRead1(read, pageable);
         }

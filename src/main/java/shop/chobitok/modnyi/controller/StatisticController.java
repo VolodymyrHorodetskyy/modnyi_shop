@@ -1,7 +1,6 @@
 package shop.chobitok.modnyi.controller;
 
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.service.OrderService;
