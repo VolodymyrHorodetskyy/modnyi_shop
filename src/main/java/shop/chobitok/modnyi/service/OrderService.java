@@ -158,25 +158,31 @@ public class OrderService {
         List<String> splited = splitTTNString(request.getTtns());
         StringBuilder result = new StringBuilder();
         for (String ttn : splited) {
-            if (orderRepository.findOneByAvailableTrueAndTtn(ttn) == null) {
-                FromNPToOrderRequest fromNPToOrderRequest = new FromNPToOrderRequest();
-                fromNPToOrderRequest.setPhone(phone);
-                fromNPToOrderRequest.setTtn(ttn);
-                try {
-                    Ordered ordered = orderRepository.save(novaPostaService.createOrderFromNP(fromNPToOrderRequest));
-                    if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
-                        result.append(ttn + "  ... взуття або розмір не визначено \n");
-                    } else {
-                        result.append(ttn + "  ... імпортовано \n");
-                    }
-                } catch (ConflictException e) {
-                    result.append(ttn + "  ... неможливо знайти ттн \n");
-                }
-            } else {
-                result.append(ttn + "  ... вже існує в базі \n");
-            }
+            result.append(importOrderFromTTNString(ttn));
         }
         return new StringResponse(result.toString());
+    }
+
+    public String importOrderFromTTNString(String ttn) {
+        StringBuilder result = new StringBuilder();
+        if (orderRepository.findOneByAvailableTrueAndTtn(ttn) == null) {
+            FromNPToOrderRequest fromNPToOrderRequest = new FromNPToOrderRequest();
+            fromNPToOrderRequest.setPhone(phone);
+            fromNPToOrderRequest.setTtn(ttn);
+            try {
+                Ordered ordered = orderRepository.save(novaPostaService.createOrderFromNP(fromNPToOrderRequest));
+                if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
+                    result.append(ttn + "  ... взуття або розмір не визначено \n");
+                } else {
+                    result.append(ttn + "  ... імпортовано \n");
+                }
+            } catch (ConflictException e) {
+                result.append(ttn + "  ... неможливо знайти ттн \n");
+            }
+        } else {
+            result.append(ttn + "  ... вже існує в базі \n");
+        }
+        return result.toString();
     }
 
     public String updateOrderStatusesNovaPosta() {

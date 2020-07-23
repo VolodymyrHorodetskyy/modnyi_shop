@@ -3,11 +3,10 @@ package shop.chobitok.modnyi.controller;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.AppOrder;
 import shop.chobitok.modnyi.entity.AppOrderStatus;
-import shop.chobitok.modnyi.entity.request.AddCommentToAppOrderRequest;
-import shop.chobitok.modnyi.entity.request.ChangeAppOrderStatusAndCommentRequest;
+import shop.chobitok.modnyi.entity.request.ChangeAppOrderRequest;
+import shop.chobitok.modnyi.entity.response.ChangeAppOrderResponse;
 import shop.chobitok.modnyi.service.AppOrderService;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -34,8 +33,8 @@ public class AppOrderController {
     }
 
     @PatchMapping("/changeStatusAndComment")
-    public AppOrder changeStatus(@RequestBody ChangeAppOrderStatusAndCommentRequest request) {
-        return appOrderService.changeAppOrderStatus(request);
+    public ChangeAppOrderResponse changeStatus(@RequestBody ChangeAppOrderRequest request) {
+        return appOrderService.changeAppOrder(request);
     }
 
     @GetMapping("/statuses")
@@ -43,9 +42,5 @@ public class AppOrderController {
         return Arrays.asList(AppOrderStatus.values());
     }
 
-    @PatchMapping("/addCommnet")
-    public AppOrder addComment(@RequestBody AddCommentToAppOrderRequest request) {
-        return appOrderService.addComment(request);
-    }
 
 }

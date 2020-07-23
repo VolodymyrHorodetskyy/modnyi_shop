@@ -4,10 +4,11 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.AppOrder;
 import shop.chobitok.modnyi.entity.AppOrderStatus;
-import shop.chobitok.modnyi.entity.request.AddCommentToAppOrderRequest;
-import shop.chobitok.modnyi.entity.request.ChangeAppOrderStatusAndCommentRequest;
+import shop.chobitok.modnyi.entity.request.ChangeAppOrderRequest;
+import shop.chobitok.modnyi.entity.response.ChangeAppOrderResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.repository.AppOrderRepository;
 import shop.chobitok.modnyi.specification.AppOrderSpecification;
@@ -16,7 +17,6 @@ import shop.chobitok.modnyi.util.DateHelper;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,9 +26,11 @@ import java.util.Map;
 public class AppOrderService {
 
     private AppOrderRepository appOrderRepository;
+    private OrderService orderService;
 
-    public AppOrderService(AppOrderRepository appOrderRepository) {
+    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService) {
         this.appOrderRepository = appOrderRepository;
+        this.orderService = orderService;
     }
 
     public AppOrder catchOrder(String s) {
@@ -80,26 +82,22 @@ public class AppOrderService {
         return appOrderMap;
     }
 
-    public AppOrder changeAppOrderStatus(ChangeAppOrderStatusAndCommentRequest request) {
+    public ChangeAppOrderResponse changeAppOrder(ChangeAppOrderRequest request) {
         AppOrder appOrder = appOrderRepository.getOne(request.getId());
+        String message = null;
         if (appOrder == null) {
             throw new ConflictException("AppOrder not found");
         }
         if (appOrder.getStatus() != request.getStatus()) {
             appOrder.setPreviousStatus(appOrder.getStatus());
         }
+        String ttn = request.getTtn();
+        appOrder.setTtn(ttn);
+        if (!StringUtils.isEmpty(ttn)) {
+            message = orderService.importOrderFromTTNString(ttn);
+        }
         appOrder.setStatus(request.getStatus());
         appOrder.setComment(request.getComment());
-        return appOrderRepository.save(appOrder);
+        return new ChangeAppOrderResponse(message, appOrderRepository.save(appOrder));
     }
-
-    public AppOrder addComment(AddCommentToAppOrderRequest request) {
-        AppOrder appOrder = appOrderRepository.getOne(request.getId());
-        if (appOrder == null) {
-            throw new ConflictException("AppOrder not found");
-        }
-        appOrder.setComment(request.getComment());
-        return appOrderRepository.save(appOrder);
-    }
-
 }

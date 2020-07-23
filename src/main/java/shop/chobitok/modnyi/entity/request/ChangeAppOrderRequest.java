@@ -2,11 +2,12 @@ package shop.chobitok.modnyi.entity.request;
 
 import shop.chobitok.modnyi.entity.AppOrderStatus;
 
-public class ChangeAppOrderStatusAndCommentRequest {
+public class ChangeAppOrderRequest {
 
     private Long id;
     private String comment;
     private AppOrderStatus status;
+    private String ttn;
 
     public Long getId() {
         return id;
@@ -30,5 +31,13 @@ public class ChangeAppOrderStatusAndCommentRequest {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public String getTtn() {
+        return ttn;
+    }
+
+    public void setTtn(String ttn) {
+        this.ttn = ttn;
     }
 }

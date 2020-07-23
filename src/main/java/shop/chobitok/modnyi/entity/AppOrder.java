@@ -33,6 +33,8 @@ public class AppOrder extends Audit {
     private AppOrderStatus previousStatus;
     @Column
     private String comment;
+    @Column
+    private String ttn;
 
 
     public AppOrder() {
@@ -121,5 +123,13 @@ public class AppOrder extends Audit {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public String getTtn() {
+        return ttn;
+    }
+
+    public void setTtn(String ttn) {
+        this.ttn = ttn;
     }
 }
