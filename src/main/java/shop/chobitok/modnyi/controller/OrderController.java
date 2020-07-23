@@ -1,8 +1,6 @@
 package shop.chobitok.modnyi.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import shop.chobitok.modnyi.entity.AppOrder;
 import shop.chobitok.modnyi.entity.CancelReason;
 import shop.chobitok.modnyi.entity.CanceledOrderReason;
 import shop.chobitok.modnyi.entity.Ordered;
@@ -11,7 +9,6 @@ import shop.chobitok.modnyi.entity.request.*;
 import shop.chobitok.modnyi.entity.response.GetAllOrderedResponse;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
-import shop.chobitok.modnyi.repository.AppOrderRepository;
 import shop.chobitok.modnyi.service.OrderService;
 import shop.chobitok.modnyi.service.UtilService;
 
@@ -105,14 +102,6 @@ public class OrderController {
     @PatchMapping("/makeAllPayed")
     public boolean makeAllPayed(){
         return orderService.makeAllPayed();
-    }
-
-    @Autowired
-    private AppOrderRepository appOrderRepository;
-
-    @PostMapping("/webhook")
-    public void webhook(@RequestBody String s){
-        appOrderRepository.save(new AppOrder(s));
     }
 
 
