@@ -2,6 +2,7 @@ package shop.chobitok.modnyi.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import java.util.Objects;
 
 @Entity
 public class Client extends Audit {
@@ -65,5 +66,33 @@ public class Client extends Audit {
 
     public void setMail(String mail) {
         this.mail = mail;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Client)) return false;
+        Client client = (Client) o;
+        return name.equals(client.name) &&
+                lastName.equals(client.lastName) &&
+                Objects.equals(middleName, client.middleName) &&
+                phone.equals(client.phone);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, lastName, middleName, phone);
+    }
+
+    @Override
+    public String toString() {
+        return "Client{" +
+                "name='" + name + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", middleName='" + middleName + '\'' +
+                ", phone='" + phone + '\'' +
+                ", comment='" + comment + '\'' +
+                ", mail='" + mail + '\'' +
+                '}';
     }
 }

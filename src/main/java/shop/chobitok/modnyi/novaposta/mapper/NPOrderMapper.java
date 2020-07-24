@@ -2,7 +2,6 @@ package shop.chobitok.modnyi.novaposta.mapper;
 
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import shop.chobitok.modnyi.entity.Client;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.entity.Status;
@@ -11,7 +10,7 @@ import shop.chobitok.modnyi.novaposta.entity.DataForList;
 import shop.chobitok.modnyi.novaposta.entity.ListTrackingEntity;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
-import shop.chobitok.modnyi.repository.ClientRepository;
+import shop.chobitok.modnyi.service.ClientService;
 import shop.chobitok.modnyi.service.ShoeService;
 
 import java.util.ArrayList;
@@ -23,10 +22,14 @@ import java.util.List;
 public class NPOrderMapper {
 
     private ShoeService shoeService;
+    private ClientService clientService;
+
     private List<Integer> sizes = Arrays.asList(36, 37, 38, 39, 40);
 
-    public NPOrderMapper(ShoeService shoeService) {
+
+    public NPOrderMapper(ShoeService shoeService, ClientService clientService) {
         this.shoeService = shoeService;
+        this.clientService = clientService;
     }
 
     public Ordered toOrdered(Ordered ordered, TrackingEntity trackingEntity) {
@@ -43,7 +46,7 @@ public class NPOrderMapper {
                 ordered.setStatusNP(data.getStatusCode());
                 ordered.setPostComment(data.getCargoDescriptionString());
                 ordered.setLastTransactionDateTime(ShoeUtil.toLocalDateTime(data.getLastTransactionDateTimeGM()));
-                ordered.setClient(parseClient(data));
+                ordered.setClient(clientService.parseClient(data));
                 ordered.setReturnSumNP(data.getRedeliverySum());
                 ordered.setNameAndSurnameNP(data.getRecipientFullNameEW());
                 ordered.setLastCreatedOnTheBasisDocumentTypeNP(data.getLastCreatedOnTheBasisDocumentType());
@@ -68,7 +71,7 @@ public class NPOrderMapper {
             if (filteredData != null) {
                 ordered = new Ordered();
                 ordered.setTtn(filteredData.getIntDocNumber());
-                ordered.setClient(parseClient(filteredData.getRecipientContactPerson(), filteredData.getRecipientsPhone()));
+                ordered.setClient(clientService.parseClient(filteredData.getRecipientContactPerson(), filteredData.getRecipientsPhone()));
                 ordered.setAddress(filteredData.getRecipientAddressDescription());
                 ordered.setStatus(Status.СТВОРЕНО);
                 ordered.setStatusNP(1);
@@ -84,27 +87,6 @@ public class NPOrderMapper {
         return ordered;
     }
 
-
-    private Client parseClient(Data data) {
-        return parseClient(StringUtils.isEmpty(data.getRecipientFullName()) ? data.getRecipientFullNameEW() : data.getRecipientFullName(), data.getPhoneRecipient());
-    }
-
-    private Client parseClient(String clientFullName, String phoneRecipient) {
-        Client client = null;
-        if (!StringUtils.isEmpty(clientFullName)) {
-            client = new Client();
-            String[] strings = clientFullName.split(" ");
-            if (strings.length > 0) {
-                client.setLastName(strings[0]);
-                client.setName(strings[1]);
-                if (strings.length > 2) {
-                    client.setMiddleName(strings[2]);
-                }
-            }
-            client.setPhone("+" + phoneRecipient);
-        }
-        return client;
-    }
 
     public Shoe parseShoe(String string) {
         List<Shoe> shoes = shoeService.getAll(0, 100, "");

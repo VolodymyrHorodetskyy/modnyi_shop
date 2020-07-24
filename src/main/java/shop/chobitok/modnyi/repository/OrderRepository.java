@@ -32,4 +32,8 @@ public interface OrderRepository extends JpaRepository<Ordered, Long> {
 
     List<Ordered> findByNotForDeliveryFileTrue();
 
+    List<Ordered> findByClientPhone(String phone);
+
+    List<Ordered> findByClientId(Long id);
+
 }
