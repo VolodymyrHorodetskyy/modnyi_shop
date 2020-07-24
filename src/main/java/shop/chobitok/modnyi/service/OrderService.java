@@ -155,9 +155,9 @@ public class OrderService {
     }
 
     public StringResponse importOrdersByTTNString(ImportOrdersFromStringRequest request) {
-        List<String> splited = splitTTNString(request.getTtns());
+        List<String> splitted = splitTTNString(request.getTtns());
         StringBuilder result = new StringBuilder();
-        for (String ttn : splited) {
+        for (String ttn : splitted) {
             result.append(importOrderFromTTNString(ttn));
         }
         return new StringResponse(result.toString());

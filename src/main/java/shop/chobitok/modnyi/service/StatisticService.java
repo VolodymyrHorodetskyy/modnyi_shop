@@ -23,6 +23,7 @@ import java.util.*;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
 
 @Service
 public class StatisticService {
@@ -76,7 +77,7 @@ public class StatisticService {
         int count = 0;
         for (String s : ttnSet) {
             Data data = postaRepository.getTracking(npHelper.formGetTrackingRequest(s)).getData().get(0);
-            if (ShoeUtil.convertToStatus(data.getStatusCode()) == Status.СТВОРЕНО) {
+            if (convertToStatus(data.getStatusCode()) == Status.СТВОРЕНО) {
                 ++count;
                 stringList.add(data.getNumber() + "\n" + data.getCargoDescriptionString());
                 result.append(data.getNumber() + "\n" + data.getCargoDescriptionString() + "\n\n");
@@ -123,15 +124,16 @@ public class StatisticService {
                 //TODO: Make not returned
             } else {
                 Data returned = postaRepository.getTracking(npHelper.formGetTrackingRequest(data.getLastCreatedOnTheBasisNumber())).getData().get(0);
-                if (ShoeUtil.convertToStatus(returned.getStatusCode()) == Status.ЗМІНА_АДРЕСУ) {
+                if (convertToStatus(returned.getStatusCode()) == Status.ЗМІНА_АДРЕСУ) {
                     returned = postaRepository.getTracking(npHelper.formGetTrackingRequest(returned.getLastCreatedOnTheBasisNumber())).getData().get(0);
                 }
-                if (ShoeUtil.convertToStatus(returned.getStatusCode()) != Status.ОТРИМАНО) {
+                Status returnedStatus = convertToStatus(returned.getStatusCode());
+                if (returnedStatus != Status.ОТРИМАНО && returnedStatus != Status.НЕ_ЗНАЙДЕНО) {
                     result.append(returned.getNumber() + "\n" + data.getCargoDescriptionString() + " "
-                            + ShoeUtil.convertToStatus(returned.getStatusCode()) + "\n\n");
+                            + convertToStatus(returned.getStatusCode()) + "\n\n");
                     for (Ordered created : createdList) {
                         if (!usedInCoincidence.contains(deniedOrder.getId()) && deniedOrder.getOrderedShoes().get(0).getId().equals(created.getOrderedShoes().get(0).getId()) && deniedOrder.getSize().equals(created.getSize())) {
-                            coincidence.append(created.getTtn() + "\n" + returned.getNumber() + "\n" + data.getCargoDescriptionString() + " " + ShoeUtil.convertToStatus(returned.getStatusCode()) + "\n\n");
+                            coincidence.append(created.getTtn() + "\n" + returned.getNumber() + "\n" + data.getCargoDescriptionString() + " " + convertToStatus(returned.getStatusCode()) + "\n\n");
                             usedInCoincidence.add(deniedOrder.getId());
                             if (excludeFromDeliveryFile) {
                                 created.setNotForDeliveryFile(true);
@@ -191,7 +193,7 @@ public class StatisticService {
             if (!payedTTNSet.contains(s)) {
                 TrackingEntity trackingEntity = postaRepository.getTracking(npHelper.formGetTrackingRequest(s));
                 Data data = trackingEntity.getData().get(0);
-                if (ShoeUtil.convertToStatus(data.getStatusCode()) == Status.ОТРИМАНО) {
+                if (convertToStatus(data.getStatusCode()) == Status.ОТРИМАНО) {
                     stringBuilder.append(data.getNumber());
                     stringBuilder.append("\n");
                     Ordered ordered = npOrderMapper.toOrdered(trackingEntity);
@@ -248,12 +250,9 @@ public class StatisticService {
     }
 
     class NeedToBePayed {
-
         Double sum;
         List<String> ttns;
-
     }
-
 
     public String countAllReceivedAndDenied(String pathAllTTNFile) {
         StringBuilder stringBuilder = new StringBuilder();
@@ -266,7 +265,7 @@ public class StatisticService {
         int denied = 0;
         for (String s : allTTNList) {
             TrackingEntity trackingEntity = postaRepository.getTracking(npHelper.formGetTrackingRequest(s));
-            Status status = ShoeUtil.convertToStatus(trackingEntity.getData().get(0).getStatusCode());
+            Status status = convertToStatus(trackingEntity.getData().get(0).getStatusCode());
             if (status == Status.ОТРИМАНО) {
                 ++received;
             } else if (status == Status.ВІДМОВА) {

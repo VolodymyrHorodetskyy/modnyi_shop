@@ -19,6 +19,8 @@ public class ShoeUtil {
                 return Status.ВІДПРАВЛЕНО;
             } else if (statusCode == 2) {
                 return Status.ВИДАЛЕНО;
+            } else if (statusCode == 3) {
+                return Status.НЕ_ЗНАЙДЕНО;
             } else if (statusCode == 1) {
                 return Status.СТВОРЕНО;
             } else if (statusCode == 7 || statusCode == 8) {

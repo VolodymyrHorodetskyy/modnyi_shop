@@ -86,7 +86,7 @@ public class NPOrderMapper {
 
 
     private Client parseClient(Data data) {
-        return parseClient(data.getRecipientFullName(), data.getPhoneRecipient());
+        return parseClient(StringUtils.isEmpty(data.getRecipientFullName()) ? data.getRecipientFullNameEW() : data.getRecipientFullName(), data.getPhoneRecipient());
     }
 
     private Client parseClient(String clientFullName, String phoneRecipient) {
