@@ -52,10 +52,10 @@ public class OrderService {
         this.mailService = mailService;
     }
 
-    public GetAllOrderedResponse getAll(int page, int size, String TTN, String phone, String model, boolean withoutTTN, String orderBy) {
+    public GetAllOrderedResponse getAll(int page, int size, String TTN, String phoneOrName, String model, boolean withoutTTN, String orderBy) {
         PageRequest pageRequest = PageRequest.of(page, size, createSort(orderBy));
         GetAllOrderedResponse getAllOrderedResponse = new GetAllOrderedResponse();
-        Page orderedPage = orderRepository.findAll(new OrderedSpecification(model, removeSpaces(TTN), phone, withoutTTN), pageRequest);
+        Page orderedPage = orderRepository.findAll(new OrderedSpecification(model, removeSpaces(TTN), phoneOrName, withoutTTN), pageRequest);
         getAllOrderedResponse.setOrderedList(orderedPage.getContent());
         PaginationInfo paginationInfo = new PaginationInfo(orderedPage.getPageable().getPageNumber(), orderedPage.getPageable().getPageSize(), orderedPage.getTotalPages(), orderedPage.getTotalElements());
         getAllOrderedResponse.setPaginationInfo(paginationInfo);

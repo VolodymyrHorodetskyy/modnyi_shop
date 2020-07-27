@@ -15,17 +15,17 @@ public class OrderedSpecification implements Specification<Ordered> {
 
     private String model;
     private String ttn;
-    private String phone;
+    private String phoneOrName;
     private boolean withoutTTN;
     private LocalDateTime from;
     private LocalDateTime to;
     private Status status;
     private boolean excludeDeleted;
 
-    public OrderedSpecification(String model, String ttn, String phone, boolean withoutTTN) {
+    public OrderedSpecification(String model, String ttn, String phoneOrName, boolean withoutTTN) {
         this.model = model;
         this.ttn = ttn;
-        this.phone = phone;
+        this.phoneOrName = phoneOrName;
         this.withoutTTN = withoutTTN;
     }
 
@@ -57,10 +57,12 @@ public class OrderedSpecification implements Specification<Ordered> {
             Predicate ttnPredicate = criteriaBuilder.like(root.get("ttn"), "%" + ttn + "%");
             predicateList.add(ttnPredicate);
         }
-        if (!StringUtils.isEmpty(phone)) {
+        if (!StringUtils.isEmpty(phoneOrName)) {
             Join<Ordered, Client> clientJoin = root.join("client");
-            Predicate phonePredicate = criteriaBuilder.like(clientJoin.get("phone"), "%" + phone + "%");
-            predicateList.add(phonePredicate);
+            Predicate phonePredicate = criteriaBuilder.like(clientJoin.get("phone"), "%" + phoneOrName + "%");
+            Predicate namePredicate = criteriaBuilder.like(clientJoin.get("name"), "%" + phoneOrName + "%");
+            Predicate lastNamePredicate = criteriaBuilder.like(clientJoin.get("lastName"), "%" + phoneOrName + "%");
+            predicateList.add(criteriaBuilder.or(phonePredicate, namePredicate, lastNamePredicate));
         }
         if (withoutTTN) {
             Predicate withoutTTN = criteriaBuilder.isTrue(root.get("withoutTTN"));
