@@ -12,6 +12,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 @Configuration
 public class SecuirtyConfig extends WebSecurityConfigurerAdapter {
@@ -21,28 +27,49 @@ public class SecuirtyConfig extends WebSecurityConfigurerAdapter {
     public SecuirtyConfig(UserDetailSecuirtyService userDetailSecuirtyService) {
         this.userDetailSecuirtyService = userDetailSecuirtyService;
     }
+
+    @Bean
+    public CorsFilter corsFilter() {
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(false); //updated to false
+        config.addAllowedOrigin("*");
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("GET");
+        config.addAllowedMethod("PUT");
+        config.addAllowedMethod("POST");
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
+    }
+
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurerAdapter() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/").allowedOrigins("http://localhost:4200");
+            }
+        };
+    }
+
 /*
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authenticationProvider(authenticationProvider());
     }*/
 
-    @Override
+   /* @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.authenticationProvider(authenticationProvider());
-    }
+    }*/
 
     @Override
     public void configure(WebSecurity web) throws Exception {
         web.httpFirewall(allowUrlEncodedSlashHttpFirewall());
     }
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http.httpBasic().and()
-                .authorizeRequests()
-                .antMatchers("/", "/**").permitAll();
-    }
+
 
     /*    @Autowired
     public void configureGlobal(AuthenticationManagerBuilder builder) throws Exception {
