@@ -76,7 +76,7 @@ public class NPOrderMapper {
                 ordered.setStatus(Status.СТВОРЕНО);
                 ordered.setStatusNP(1);
                 ordered.setPostComment(filteredData.getDescription());
-                ordered.setReturnSumNP(filteredData.getCost());
+                ordered.setReturnSumNP(Double.valueOf(filteredData.getBackwardDeliveryMoney()));
                 ordered.setNameAndSurnameNP(filteredData.getRecipientContactPerson());
                 ordered.setDateCreated(ShoeUtil.toLocalDateTime(filteredData.getDateTime()));
                 //TODO: setLastCreatedOnTheBasisDocumentTypeNP ?

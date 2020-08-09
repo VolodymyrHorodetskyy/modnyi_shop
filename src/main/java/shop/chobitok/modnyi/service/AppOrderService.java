@@ -88,16 +88,21 @@ public class AppOrderService {
         if (appOrder == null) {
             throw new ConflictException("AppOrder not found");
         }
-        if (appOrder.getStatus() != request.getStatus()) {
-            appOrder.setPreviousStatus(appOrder.getStatus());
-        }
+        changeStatus(appOrder, request.getStatus());
         String ttn = request.getTtn();
         appOrder.setTtn(ttn);
         if (!StringUtils.isEmpty(ttn)) {
             message = orderService.importOrderFromTTNString(ttn);
         }
-        appOrder.setStatus(request.getStatus());
         appOrder.setComment(request.getComment());
         return new ChangeAppOrderResponse(message, appOrderRepository.save(appOrder));
+    }
+
+    public AppOrder changeStatus(AppOrder appOrder, AppOrderStatus status) {
+        if (appOrder.getStatus() != status) {
+            appOrder.setPreviousStatus(appOrder.getStatus());
+        }
+        appOrder.setStatus(status);
+        return appOrder;
     }
 }

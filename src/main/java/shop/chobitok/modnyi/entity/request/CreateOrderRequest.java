@@ -9,33 +9,21 @@ public class CreateOrderRequest {
     private String ttn;
     @NotEmpty
     private String phone;
-
     private String mail;
-
     private Status status;
-
     private Double price;
-
     private String address;
-
     private Integer size;
-
     private Long shoe;
-
     private String comment;
-
     private Double prepayment;
     @NotEmpty
     private String name;
     @NotEmpty
     private String lastName;
-
     private String middleName;
-
     private String notes;
-
     private String orderBy;
-
     private boolean fullpayment;
 
 

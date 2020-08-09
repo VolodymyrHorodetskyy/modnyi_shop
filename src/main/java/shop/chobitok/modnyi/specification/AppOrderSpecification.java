@@ -37,7 +37,7 @@ public class AppOrderSpecification implements Specification<AppOrder> {
             predicateList.add(criteriaBuilder.or(phonePredicate, namePredicate));
         }
         if (from != null) {
-            Predicate fromPredicate = criteriaBuilder.greaterThanOrEqualTo(root.get("createdDate"), from);
+            Predicate fromPredicate = criteriaBuilder.greaterThanOrEqualTo(root.get("lastModifiedDate"), from);
             predicateList.add(fromPredicate);
         }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
