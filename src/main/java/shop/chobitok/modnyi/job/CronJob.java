@@ -28,6 +28,7 @@ public class CronJob {
         orderService.updateOrderStatusesNovaPosta();
         checkerService.checkPayedKeepingOrders();
         checkerService.checkCanceledOrders();
+        checkerService.makeAppOrderNewAgain();
         notificationService.createNotification("Чекер спрацював", "", MessageType.CHECKER_WORKED);
     }
 

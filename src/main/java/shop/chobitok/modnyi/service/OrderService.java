@@ -52,6 +52,10 @@ public class OrderService {
         this.mailService = mailService;
     }
 
+    public Ordered findByTTN(String ttn) {
+        return orderRepository.findOneByAvailableTrueAndTtn(ttn);
+    }
+
     public GetAllOrderedResponse getAll(int page, int size, String TTN, String phoneOrName, String model, boolean withoutTTN, String orderBy) {
         PageRequest pageRequest = PageRequest.of(page, size, createSort(orderBy));
         GetAllOrderedResponse getAllOrderedResponse = new GetAllOrderedResponse();

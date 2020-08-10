@@ -7,10 +7,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.AppOrder;
 import shop.chobitok.modnyi.entity.AppOrderStatus;
+import shop.chobitok.modnyi.entity.Client;
 import shop.chobitok.modnyi.entity.request.ChangeAppOrderRequest;
 import shop.chobitok.modnyi.entity.response.ChangeAppOrderResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.repository.AppOrderRepository;
+import shop.chobitok.modnyi.repository.ClientRepository;
 import shop.chobitok.modnyi.specification.AppOrderSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
 
@@ -27,6 +29,7 @@ public class AppOrderService {
 
     private AppOrderRepository appOrderRepository;
     private OrderService orderService;
+    private ClientRepository clientRepository;
 
     public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService) {
         this.appOrderRepository = appOrderRepository;
@@ -89,10 +92,16 @@ public class AppOrderService {
             throw new ConflictException("AppOrder not found");
         }
         changeStatus(appOrder, request.getStatus());
-        String ttn = request.getTtn();
+        String ttn = request.getTtn().replaceAll("\\s+", "");
         appOrder.setTtn(ttn);
         if (!StringUtils.isEmpty(ttn)) {
             message = orderService.importOrderFromTTNString(ttn);
+        }
+        String mail = appOrder.getMail();
+        if (!StringUtils.isEmpty(mail)) {
+            Client client = orderService.findByTTN(ttn).getClient();
+            client.setMail(mail);
+            clientRepository.save(client);
         }
         appOrder.setComment(request.getComment());
         return new ChangeAppOrderResponse(message, appOrderRepository.save(appOrder));
