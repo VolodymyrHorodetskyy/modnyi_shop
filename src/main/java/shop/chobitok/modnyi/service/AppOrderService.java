@@ -92,9 +92,10 @@ public class AppOrderService {
             throw new ConflictException("AppOrder not found");
         }
         changeStatus(appOrder, request.getStatus());
-        String ttn = request.getTtn().replaceAll("\\s+", "");
-        appOrder.setTtn(ttn);
+        String ttn = request.getTtn();
         if (!StringUtils.isEmpty(ttn)) {
+            ttn = ttn.replaceAll("\\s+", "");
+            appOrder.setTtn(ttn);
             message = orderService.importOrderFromTTNString(ttn);
         }
         String mail = appOrder.getMail();
