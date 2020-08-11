@@ -97,12 +97,12 @@ public class AppOrderService {
             ttn = ttn.replaceAll("\\s+", "");
             appOrder.setTtn(ttn);
             message = orderService.importOrderFromTTNString(ttn);
-        }
-        String mail = appOrder.getMail();
-        if (!StringUtils.isEmpty(mail)) {
-            Client client = orderService.findByTTN(ttn).getClient();
-            client.setMail(mail);
-            clientRepository.save(client);
+            String mail = appOrder.getMail();
+            if (!StringUtils.isEmpty(mail)) {
+                Client client = orderService.findByTTN(ttn).getClient();
+                client.setMail(mail);
+                clientRepository.save(client);
+            }
         }
         appOrder.setComment(request.getComment());
         return new ChangeAppOrderResponse(message, appOrderRepository.save(appOrder));
