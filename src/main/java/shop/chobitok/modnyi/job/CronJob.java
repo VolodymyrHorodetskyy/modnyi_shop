@@ -22,7 +22,7 @@ public class CronJob {
     }
 
     //  @Scheduled(cron = "0/30 * * * * ?")
-    @Scheduled(cron = "0 0 8 * * *")
+    @Scheduled(cron = "0 0 4 * * *")
     public void dailyJob() {
         //    checkerService.checkCanceledOrders();
         orderService.updateOrderStatusesNovaPosta();
