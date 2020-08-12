@@ -31,9 +31,10 @@ public class AppOrderService {
     private OrderService orderService;
     private ClientRepository clientRepository;
 
-    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService) {
+    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository) {
         this.appOrderRepository = appOrderRepository;
         this.orderService = orderService;
+        this.clientRepository = clientRepository;
     }
 
     public AppOrder catchOrder(String s) {
