@@ -71,7 +71,7 @@ public class AppOrderService {
     }
 
     public Map<AppOrderStatus, List<AppOrder>> getAll(Long id, String phoneAndName, String from) {
-        List<AppOrder> appOrders = appOrderRepository.findAll(new AppOrderSpecification(id, phoneAndName, DateHelper.formDate(from)), Sort.by("createdDate"));
+        List<AppOrder> appOrders = appOrderRepository.findAll(new AppOrderSpecification(id, phoneAndName, DateHelper.formDate(from)), Sort.by(Sort.Direction.DESC, "createdDate"));
         Map<AppOrderStatus, List<AppOrder>> appOrderMap = new HashMap<>();
         for (AppOrder appOrder : appOrders) {
             List<AppOrder> appOrders1 = appOrderMap.get(appOrder.getStatus());
