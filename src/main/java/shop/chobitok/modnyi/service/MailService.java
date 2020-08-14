@@ -14,7 +14,6 @@ public class MailService {
 
     private JavaMailSender javaMailSender;
 
-
     public MailService(JavaMailSender javaMailSender) {
         this.javaMailSender = javaMailSender;
     }

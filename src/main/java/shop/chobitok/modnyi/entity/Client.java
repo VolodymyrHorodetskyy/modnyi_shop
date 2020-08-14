@@ -72,11 +72,12 @@ public class Client extends Audit {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Client)) return false;
+
         Client client = (Client) o;
-        return name.equals(client.name) &&
-                lastName.equals(client.lastName) &&
-                Objects.equals(middleName, client.middleName) &&
-                phone.equals(client.phone);
+
+        if (!name.equals(client.name)) return false;
+        if (!lastName.equals(client.lastName)) return false;
+        return phone.equals(client.phone);
     }
 
     @Override
