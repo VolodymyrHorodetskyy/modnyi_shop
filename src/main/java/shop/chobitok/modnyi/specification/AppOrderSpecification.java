@@ -3,6 +3,7 @@ package shop.chobitok.modnyi.specification;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.AppOrder;
+import shop.chobitok.modnyi.entity.AppOrderStatus;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -17,11 +18,13 @@ public class AppOrderSpecification implements Specification<AppOrder> {
     private Long id;
     private String phoneAndName;
     private LocalDateTime from;
+    private List<AppOrderStatus> statuses;
 
-    public AppOrderSpecification(Long id, String phoneAndName, LocalDateTime from) {
+    public AppOrderSpecification(Long id, String phoneAndName, LocalDateTime from, List<AppOrderStatus> statuses) {
         this.id = id;
         this.phoneAndName = phoneAndName;
         this.from = from;
+        this.statuses = statuses;
     }
 
     @Override
@@ -39,6 +42,9 @@ public class AppOrderSpecification implements Specification<AppOrder> {
         if (from != null) {
             Predicate fromPredicate = criteriaBuilder.greaterThanOrEqualTo(root.get("lastModifiedDate"), from);
             predicateList.add(fromPredicate);
+        }
+        if (statuses != null && statuses.size() > 0) {
+            predicateList.add(root.get("status").in(statuses));
         }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }

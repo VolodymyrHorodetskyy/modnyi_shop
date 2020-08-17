@@ -28,8 +28,8 @@ public class AppOrderController {
     }
 
     @GetMapping
-    public Map<AppOrderStatus, List<AppOrder>> getAll(Long id, String phoneAndName, String from) {
-        return appOrderService.getAll(id, phoneAndName, from);
+    public Map<AppOrderStatus, List<AppOrder>> getAll(Long id, String phoneAndName, String fromForNotReady, String fromForReady) {
+        return appOrderService.getAll(id, phoneAndName, fromForNotReady, fromForReady);
     }
 
     @PatchMapping("/changeStatusAndComment")

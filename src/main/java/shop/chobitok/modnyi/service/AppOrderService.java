@@ -19,10 +19,9 @@ import shop.chobitok.modnyi.util.DateHelper;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class AppOrderService {
@@ -70,10 +69,18 @@ public class AppOrderService {
         return appOrderRepository.save(appOrder);
     }
 
-    public Map<AppOrderStatus, List<AppOrder>> getAll(Long id, String phoneAndName, String from) {
-        List<AppOrder> appOrders = appOrderRepository.findAll(new AppOrderSpecification(id, phoneAndName, DateHelper.formDate(from)), Sort.by(Sort.Direction.DESC, "createdDate"));
+    public Map<AppOrderStatus, List<AppOrder>> getAll(Long id, String phoneAndName, String fromForNotReady, String fromForReady) {
+        List<AppOrder> appOrdersNotReady = appOrderRepository.findAll(
+                new AppOrderSpecification(id, phoneAndName, DateHelper.formDate(fromForNotReady),
+                        Arrays.asList(AppOrderStatus.Новий, AppOrderStatus.Не_Відповідає, AppOrderStatus.Чекаємо_оплату)),
+                Sort.by(Sort.Direction.DESC, "createdDate"));
+        List<AppOrder> appOrdersReady = appOrderRepository.findAll(
+                new AppOrderSpecification(id, phoneAndName, DateHelper.formDate(fromForReady),
+                        Arrays.asList(AppOrderStatus.Передплачено, AppOrderStatus.Повна_оплата, AppOrderStatus.Скасовано)),
+                Sort.by(Sort.Direction.DESC, "createdDate"));
+        List<AppOrder> combinedAppOrders = Stream.concat(appOrdersNotReady.stream(), appOrdersReady.stream()).collect(Collectors.toList());
         Map<AppOrderStatus, List<AppOrder>> appOrderMap = new HashMap<>();
-        for (AppOrder appOrder : appOrders) {
+        for (AppOrder appOrder : combinedAppOrders) {
             List<AppOrder> appOrders1 = appOrderMap.get(appOrder.getStatus());
             if (appOrders1 == null) {
                 appOrders1 = new ArrayList<>();
