@@ -1,8 +1,10 @@
 package shop.chobitok.modnyi.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.Notification;
+import shop.chobitok.modnyi.service.MailService;
 import shop.chobitok.modnyi.service.NotificationService;
 
 @RestController
@@ -30,5 +32,14 @@ public class NotificationController {
     public Integer getUnread() {
         return notificationService.getUnreadAmount();
     }
+
+    @Autowired
+    private MailService mailService;
+
+    @GetMapping("/sendMail")
+    public void sendMail(String subject, String to) {
+        mailService.sendEmail(subject, "", to);
+    }
+
 
 }
