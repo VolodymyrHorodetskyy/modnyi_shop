@@ -7,6 +7,7 @@ import shop.chobitok.modnyi.entity.request.ChangeAppOrderRequest;
 import shop.chobitok.modnyi.entity.response.ChangeAppOrderResponse;
 import shop.chobitok.modnyi.service.AppOrderService;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +40,15 @@ public class AppOrderController {
 
     @GetMapping("/statuses")
     public List<AppOrderStatus> getStatus() {
-        return Arrays.asList(AppOrderStatus.values());
+        List<AppOrderStatus> appOrderStatuses = new ArrayList<>();
+        appOrderStatuses.add(AppOrderStatus.Новий);
+        appOrderStatuses.add(AppOrderStatus.В_обробці);
+        for (AppOrderStatus appOrderStatus : AppOrderStatus.values()) {
+            if (!appOrderStatuses.contains(appOrderStatus)) {
+                appOrderStatuses.add(appOrderStatus);
+            }
+        }
+        return appOrderStatuses;
     }
 
 
