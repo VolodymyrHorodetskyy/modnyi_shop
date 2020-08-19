@@ -76,7 +76,7 @@ public class AppOrderService {
     public Map<AppOrderStatus, List<AppOrder>> getAll(Long id, String phoneAndName, String fromForNotReady, String fromForReady) {
         List<AppOrder> appOrdersNotReady = appOrderRepository.findAll(
                 new AppOrderSpecification(id, phoneAndName, DateHelper.formDate(fromForNotReady),
-                        Arrays.asList(AppOrderStatus.Новий, AppOrderStatus.Не_Відповідає, AppOrderStatus.Чекаємо_оплату, AppOrderStatus.В_обробці)),
+                        Arrays.asList(AppOrderStatus.Новий, AppOrderStatus.Не_Відповідає, AppOrderStatus.Чекаємо_оплату)),
                 Sort.by(Sort.Direction.DESC, "createdDate"));
         List<AppOrder> appOrdersReady = appOrderRepository.findAll(
                 new AppOrderSpecification(id, phoneAndName, DateHelper.formDate(fromForReady),

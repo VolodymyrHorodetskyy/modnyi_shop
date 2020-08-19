@@ -53,7 +53,7 @@ public class CheckerService {
     }
 
     public Notification makeAppOrderNewAgain() {
-        List<AppOrder> appOrders = appOrderRepository.findByStatusIn(Arrays.asList(AppOrderStatus.Чекаємо_оплату, AppOrderStatus.Не_Відповідає, AppOrderStatus.В_обробці));
+        List<AppOrder> appOrders = appOrderRepository.findByStatusIn(Arrays.asList(AppOrderStatus.Чекаємо_оплату, AppOrderStatus.Не_Відповідає));
         if (appOrders.size() > 0) {
             List<AppOrder> updated = new ArrayList<>();
             StringBuilder phones = new StringBuilder();
