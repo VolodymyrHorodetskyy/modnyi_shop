@@ -227,7 +227,7 @@ public class OrderService {
             Status newStatus = ShoeUtil.convertToStatus(data.getStatusCode());
             Status oldStatus = ordered.getStatus();
             if (oldStatus != newStatus) {
-                if (oldStatus == Status.СТВОРЕНО) {
+                if (oldStatus == Status.СТВОРЕНО && newStatus != Status.ВИДАЛЕНО) {
                     novaPostaService.createOrUpdateOrderFromNP(ordered);
                 }
                 ordered.setStatus(newStatus);
