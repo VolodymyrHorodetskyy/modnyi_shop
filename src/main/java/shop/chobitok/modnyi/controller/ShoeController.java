@@ -51,10 +51,5 @@ public class ShoeController {
     }
 
 
-    @GetMapping("/fromTildaCSV")
-    public List<Shoe> fromTildaCSV(@RequestParam String path) {
-        return shoeService.fromTildaCSV(path);
-    }
-
 
 }

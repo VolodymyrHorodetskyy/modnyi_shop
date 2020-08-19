@@ -33,4 +33,8 @@ public class DateHelper {
         return localDateTime;
     }
 
+    public static LocalDateTime formLocalDateTimeStartOfTheDay(LocalDateTime dateTime) {
+        return dateTime.with(LocalTime.of(0, 0, 0));
+    }
+
 }

@@ -32,11 +32,11 @@ public class FillDB {
    // @PostConstruct
     public void init() {
 
-        try {
+    /*    try {
             shoeService.fromTildaCSV(ResourceUtils.getFile("classpath:files/123").getPath());
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        }
+        }*/
         /*Company company = new Company();
         company.setName("LadyShoes");
         companyRepository.save(company);

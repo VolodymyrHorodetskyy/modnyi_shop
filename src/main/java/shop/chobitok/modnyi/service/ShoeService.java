@@ -5,33 +5,40 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Shoe;
+import shop.chobitok.modnyi.entity.ShoePrice;
 import shop.chobitok.modnyi.entity.request.AddOrRemovePatternRequest;
 import shop.chobitok.modnyi.entity.request.CreateShoeRequest;
 import shop.chobitok.modnyi.entity.request.UpdateShoeRequest;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.mapper.ShoeMapper;
 import shop.chobitok.modnyi.repository.CompanyRepository;
+import shop.chobitok.modnyi.repository.ShoePriceRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.specification.ShoeSpecification;
+import shop.chobitok.modnyi.util.DateHelper;
 
+import javax.transaction.Transactional;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import static shop.chobitok.modnyi.util.DateHelper.formLocalDateTimeStartOfTheDay;
 
 @Service
 public class ShoeService {
 
     private ShoeRepository shoeRepository;
-
-    private CompanyRepository companyRepository;
+    private ShoePriceRepository shoePriceRepository;
     private ShoeMapper shoeMapper;
 
-    public ShoeService(ShoeRepository shoeRepository, CompanyRepository companyRepository, ShoeMapper shoeMapper) {
+
+    public ShoeService(ShoeRepository shoeRepository, ShoePriceRepository shoePriceRepository, ShoeMapper shoeMapper) {
         this.shoeRepository = shoeRepository;
-        this.companyRepository = companyRepository;
+        this.shoePriceRepository = shoePriceRepository;
         this.shoeMapper = shoeMapper;
     }
 
@@ -84,8 +91,19 @@ public class ShoeService {
         return strings;
     }
 
+    public ShoePrice setNewPrice(Shoe shoe, LocalDateTime from, Double price, Double cost) {
+        ShoePrice shoePrice = shoePriceRepository.findOneByToIsNullAndShoeId(shoe.getId());
+        from = formLocalDateTimeStartOfTheDay(from);
+        if (shoePrice != null) {
+            shoePrice.setTo(from);
+            shoePriceRepository.save(shoePrice);
+        }
+        ShoePrice newShoePrice = new ShoePrice(shoe, from, cost, price);
+        return shoePriceRepository.save(newShoePrice);
+    }
 
-    public List<Shoe> fromTildaCSV(String path) {
+
+ /*   public List<Shoe> fromTildaCSV(String path) {
         BufferedReader br = null;
         String line = "";
         String cvsSplitBy = ",";
@@ -124,6 +142,6 @@ public class ShoeService {
             }
         }
         return null;
-    }
+    }*/
 
 }
