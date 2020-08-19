@@ -73,10 +73,12 @@ public class ClientService {
             }
             client.setPhone("+" + phoneRecipient);
         }
-        List<Client> fromDbList = clientRepository.findByPhoneContains(phoneRecipient);
-        for (Client clientFromDb : fromDbList) {
-            if (client == null || clientFromDb.equals(client)) {
-                return clientFromDb;
+        if (!StringUtils.isEmpty(phoneRecipient)) {
+            List<Client> fromDbList = clientRepository.findByPhoneContains(phoneRecipient);
+            for (Client clientFromDb : fromDbList) {
+                if (client == null || clientFromDb.equals(client)) {
+                    return clientFromDb;
+                }
             }
         }
         return client;
