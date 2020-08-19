@@ -8,11 +8,13 @@ import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.AppOrder;
 import shop.chobitok.modnyi.entity.AppOrderStatus;
 import shop.chobitok.modnyi.entity.Client;
+import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.request.ChangeAppOrderRequest;
 import shop.chobitok.modnyi.entity.response.ChangeAppOrderResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.repository.AppOrderRepository;
 import shop.chobitok.modnyi.repository.ClientRepository;
+import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.specification.AppOrderSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
 
@@ -29,11 +31,13 @@ public class AppOrderService {
     private AppOrderRepository appOrderRepository;
     private OrderService orderService;
     private ClientRepository clientRepository;
+    private OrderRepository orderRepository;
 
-    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository) {
+    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository) {
         this.appOrderRepository = appOrderRepository;
         this.orderService = orderService;
         this.clientRepository = clientRepository;
+        this.orderRepository = orderRepository;
     }
 
     public AppOrder catchOrder(String s) {
@@ -106,11 +110,19 @@ public class AppOrderService {
             appOrder.setTtn(ttn);
             message = orderService.importOrderFromTTNString(ttn);
             String mail = appOrder.getMail();
+            Ordered ordered = orderService.findByTTN(ttn);
             if (!StringUtils.isEmpty(mail)) {
-                Client client = orderService.findByTTN(ttn).getClient();
+                Client client = ordered.getClient();
                 client.setMail(mail);
                 clientRepository.save(client);
             }
+            if (!StringUtils.isEmpty(request.getComment())) {
+                if (StringUtils.isEmpty(ordered.getNotes())) {
+                    ordered.setNotes(request.getComment());
+                    orderRepository.save(ordered);
+                }
+            }
+
         }
         appOrder.setComment(request.getComment());
         return new ChangeAppOrderResponse(message, appOrderRepository.save(appOrder));
