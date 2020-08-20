@@ -26,12 +26,6 @@ public class Shoe extends Audit {
     private Company company;
 
     @Column
-    private Double cost;
-
-    @Column
-    private Double price;
-
-    @Column
     private String photoPath;
 
     @Column
@@ -48,16 +42,6 @@ public class Shoe extends Audit {
 
 
     public Shoe() {
-    }
-
-    public Shoe(String name, String model, String description, Company company, Double cost, Double price, String photoPath) {
-        this.name = name;
-        this.model = model;
-        this.description = description;
-        this.company = company;
-        this.cost = cost;
-        this.price = price;
-        this.photoPath = photoPath;
     }
 
     public String getName() {
@@ -90,22 +74,6 @@ public class Shoe extends Audit {
 
     public void setCompany(Company company) {
         this.company = company;
-    }
-
-    public Double getCost() {
-        return cost;
-    }
-
-    public void setCost(Double cost) {
-        this.cost = cost;
-    }
-
-    public Double getPrice() {
-        return price;
-    }
-
-    public void setPrice(Double price) {
-        this.price = price;
     }
 
     public String getPhotoPath() {
@@ -156,21 +124,4 @@ public class Shoe extends Audit {
         this.patterns = patterns;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Shoe)) return false;
-        Shoe shoe = (Shoe) o;
-        return Objects.equals(name, shoe.name) &&
-                model.equals(shoe.model) &&
-                color.equals(shoe.color) &&
-                Objects.equals(description, shoe.description) &&
-                Objects.equals(cost, shoe.cost) &&
-                Objects.equals(price, shoe.price);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, model, color, description, cost, price);
-    }
 }

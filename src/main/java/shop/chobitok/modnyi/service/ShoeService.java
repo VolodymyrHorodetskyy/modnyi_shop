@@ -11,19 +11,11 @@ import shop.chobitok.modnyi.entity.request.CreateShoeRequest;
 import shop.chobitok.modnyi.entity.request.UpdateShoeRequest;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.mapper.ShoeMapper;
-import shop.chobitok.modnyi.repository.CompanyRepository;
 import shop.chobitok.modnyi.repository.ShoePriceRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.specification.ShoeSpecification;
-import shop.chobitok.modnyi.util.DateHelper;
 
-import javax.transaction.Transactional;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import static shop.chobitok.modnyi.util.DateHelper.formLocalDateTimeStartOfTheDay;
@@ -32,14 +24,13 @@ import static shop.chobitok.modnyi.util.DateHelper.formLocalDateTimeStartOfTheDa
 public class ShoeService {
 
     private ShoeRepository shoeRepository;
-    private ShoePriceRepository shoePriceRepository;
     private ShoeMapper shoeMapper;
+    private ShoePriceService shoePriceService;
 
-
-    public ShoeService(ShoeRepository shoeRepository, ShoePriceRepository shoePriceRepository, ShoeMapper shoeMapper) {
+    public ShoeService(ShoeRepository shoeRepository, ShoeMapper shoeMapper, ShoePriceService shoePriceService) {
         this.shoeRepository = shoeRepository;
-        this.shoePriceRepository = shoePriceRepository;
         this.shoeMapper = shoeMapper;
+        this.shoePriceService = shoePriceService;
     }
 
     public List<Shoe> getAll(int page, int size, String model) {
@@ -47,7 +38,9 @@ public class ShoeService {
     }
 
     public Shoe createShoe(CreateShoeRequest createShoeRequest) {
-        return shoeRepository.save(shoeMapper.convertFromCreateShoeRequest(createShoeRequest));
+        Shoe shoe = shoeRepository.save(shoeMapper.convertFromCreateShoeRequest(createShoeRequest));
+        shoePriceService.setNewPrice(shoe, createShoeRequest.getPrice(), createShoeRequest.getCost());
+        return shoe;
     }
 
     public Shoe updateShoe(UpdateShoeRequest updateShoeRequest) {
@@ -89,17 +82,6 @@ public class ShoeService {
             }
         }
         return strings;
-    }
-
-    public ShoePrice setNewPrice(Shoe shoe, LocalDateTime from, Double price, Double cost) {
-        ShoePrice shoePrice = shoePriceRepository.findOneByToIsNullAndShoeId(shoe.getId());
-        from = formLocalDateTimeStartOfTheDay(from);
-        if (shoePrice != null) {
-            shoePrice.setTo(from);
-            shoePriceRepository.save(shoePrice);
-        }
-        ShoePrice newShoePrice = new ShoePrice(shoe, from, cost, price);
-        return shoePriceRepository.save(newShoePrice);
     }
 
 

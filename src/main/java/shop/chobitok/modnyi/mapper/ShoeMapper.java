@@ -36,11 +36,9 @@ public class ShoeMapper {
             throw new ConflictException("Company not found");
         }
         shoe.setCompany(company);
-        shoe.setPrice(createShoeRequest.getPrice());
         shoe.setName(createShoeRequest.getName());
         shoe.setModel(createShoeRequest.getModel());
         shoe.setColor(createShoeRequest.getColor());
-        shoe.setCost(createShoeRequest.getCost());
         shoe.setDescription(createShoeRequest.getDescription());
         return shoe;
     }

@@ -11,9 +11,9 @@ public class ShoePrice extends Audit {
     @ManyToOne
     private Shoe shoe;
     @Column(nullable = false)
-    private LocalDateTime from;
+    private LocalDateTime fromDate;
     @Column
-    private LocalDateTime to;
+    private LocalDateTime toDate;
     @Column(nullable = false)
     private Double cost;
     @Column(nullable = false)
@@ -22,9 +22,9 @@ public class ShoePrice extends Audit {
     public ShoePrice() {
     }
 
-    public ShoePrice(Shoe shoe, LocalDateTime from, Double cost, Double price) {
+    public ShoePrice(Shoe shoe, LocalDateTime fromDate, Double cost, Double price) {
         this.shoe = shoe;
-        this.from = from;
+        this.fromDate = fromDate;
         this.cost = cost;
         this.price = price;
     }
@@ -37,20 +37,20 @@ public class ShoePrice extends Audit {
         this.shoe = shoe;
     }
 
-    public LocalDateTime getFrom() {
-        return from;
+    public LocalDateTime getFromDate() {
+        return fromDate;
     }
 
-    public void setFrom(LocalDateTime from) {
-        this.from = from;
+    public void setFromDate(LocalDateTime fromDate) {
+        this.fromDate = fromDate;
     }
 
-    public LocalDateTime getTo() {
-        return to;
+    public LocalDateTime getToDate() {
+        return toDate;
     }
 
-    public void setTo(LocalDateTime to) {
-        this.to = to;
+    public void setToDate(LocalDateTime toDate) {
+        this.toDate = toDate;
     }
 
     public Double getCost() {
