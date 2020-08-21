@@ -40,9 +40,25 @@ public class Shoe extends Audit {
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> patterns;
 
-
     public Shoe() {
     }
+
+    public Shoe(Shoe shoe) {
+        setId(shoe.getId());
+        setCreatedDate(shoe.getCreatedDate());
+        setLastModifiedDate(shoe.getLastModifiedDate());
+        this.name = shoe.getName();
+        this.model = shoe.getModel();
+        this.color = shoe.getColor();
+        this.description = shoe.getDescription();
+        this.company = shoe.getCompany();
+        this.photoPath = shoe.getPhotoPath();
+        this.available = shoe.isAvailable();
+        this.deleted = shoe.isDeleted();
+        this.imported = shoe.isImported();
+        this.patterns = shoe.getPatterns();
+    }
+
 
     public String getName() {
         return name;

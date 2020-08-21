@@ -43,7 +43,7 @@ public class FillDB {
 
         String model = "191 лаковані";
         Shoe shoe ;
-        if (shoeService.getAll(0, 10, model).size() <= 0 || shoeService.getAll(0, 10, model).get(0) == null) {
+        if (shoeService.getAllShoeWithPrice(0, 10, model).size() <= 0 || shoeService.getAllShoeWithPrice(0, 10, model).get(0) == null) {
             shoe = new Shoe();
             shoe.setName("191 лаковані");
             shoe.setModel("191 лаковані");
@@ -53,7 +53,7 @@ public class FillDB {
             shoe.setPhotoPath("192l/1.jpg");
             shoe = shoeService.createShoe(shoe);
         }else{
-            shoe = shoeService.getAll(0, 10, model).get(0);
+            shoe = shoeService.getAllShoeWithPrice(0, 10, model).get(0);
         }
         Client client = new Client();
         client.setName("Наталія");

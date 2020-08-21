@@ -9,6 +9,7 @@ import shop.chobitok.modnyi.entity.ShoePrice;
 import shop.chobitok.modnyi.entity.request.AddOrRemovePatternRequest;
 import shop.chobitok.modnyi.entity.request.CreateShoeRequest;
 import shop.chobitok.modnyi.entity.request.UpdateShoeRequest;
+import shop.chobitok.modnyi.entity.response.ShoeWithPrice;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.mapper.ShoeMapper;
 import shop.chobitok.modnyi.repository.ShoePriceRepository;
@@ -31,6 +32,10 @@ public class ShoeService {
         this.shoeRepository = shoeRepository;
         this.shoeMapper = shoeMapper;
         this.shoePriceService = shoePriceService;
+    }
+
+    public List<ShoeWithPrice> getAllShoeWithPrice(int page, int size, String model) {
+        return shoeMapper.convertToShoePrice(shoeRepository.findAll(new ShoeSpecification(model), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdDate"))).getContent());
     }
 
     public List<Shoe> getAll(int page, int size, String model) {

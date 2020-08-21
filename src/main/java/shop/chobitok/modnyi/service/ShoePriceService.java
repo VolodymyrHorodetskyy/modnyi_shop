@@ -60,4 +60,8 @@ public class ShoePriceService {
         return shoePrices.get(0);
     }
 
+    public ShoePrice getActualShoePrice(Shoe shoe){
+        return shoePriceRepository.findTopByShoeId(shoe.getId(), Sort.by(Sort.Direction.DESC, "fromDate").and(Sort.by(Sort.Direction.DESC, "createdDate")));
+    }
+
 }

@@ -1,9 +1,6 @@
 package shop.chobitok.modnyi.controller;
 
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.ShoePrice;
 import shop.chobitok.modnyi.entity.request.CreateShoePriceRequest;
 import shop.chobitok.modnyi.service.ShoePriceService;
@@ -20,7 +17,7 @@ public class ShoePriceController {
     }
 
     @PostMapping
-    public ShoePrice shoePrice(CreateShoePriceRequest createShoePriceRequest) {
+    public ShoePrice shoePrice(@RequestBody CreateShoePriceRequest createShoePriceRequest) {
         return shoePriceService.setNewPrice(createShoePriceRequest);
     }
 

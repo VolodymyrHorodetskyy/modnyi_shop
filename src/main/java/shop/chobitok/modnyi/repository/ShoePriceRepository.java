@@ -12,4 +12,6 @@ public interface ShoePriceRepository extends JpaRepository<ShoePrice, Long> {
 
     List<ShoePrice> findByShoeId(Long shoeId, Sort sort);
 
+    ShoePrice findTopByShoeId(Long shoeId, Sort sort);
+
 }
