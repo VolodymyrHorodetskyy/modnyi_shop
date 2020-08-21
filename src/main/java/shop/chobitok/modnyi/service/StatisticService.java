@@ -33,13 +33,15 @@ public class StatisticService {
     private NPOrderMapper npOrderMapper;
     private NPHelper npHelper;
     private OrderService orderService;
+    private ShoePriceService shoePriceService;
 
-    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, NPOrderMapper npOrderMapper, NPHelper npHelper, OrderService orderService) {
+    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, NPOrderMapper npOrderMapper, NPHelper npHelper, OrderService orderService, ShoePriceService shoePriceService) {
         this.postaRepository = postaRepository;
         this.orderRepository = orderRepository;
         this.npOrderMapper = npOrderMapper;
         this.npHelper = npHelper;
         this.orderService = orderService;
+        this.shoePriceService = shoePriceService;
     }
 
     public StringResponse countNeedDeliveryFromDB(boolean updateStatuses) {
@@ -199,7 +201,7 @@ public class StatisticService {
                     Ordered ordered = npOrderMapper.toOrdered(trackingEntity);
                     if (ordered.getOrderedShoes().size() > 0) {
                         for (Shoe shoe : ordered.getOrderedShoes()) {
-                            sum += shoe.getCost();
+                            sum += shoePriceService.getShoePrice(shoe, ordered).getCost();
                         }
                     }
                     orderedList.add(ordered);
@@ -228,12 +230,12 @@ public class StatisticService {
                     NeedToBePayed needToBePayed = companySumMap.get(shoe.getCompany().getName());
                     if (needToBePayed == null) {
                         needToBePayed = new NeedToBePayed();
-                        needToBePayed.sum = shoe.getCost();
+                        needToBePayed.sum = shoePriceService.getShoePrice(shoe, ordered).getCost();
                         needToBePayed.ttns = new ArrayList<>();
                         needToBePayed.ttns.add(ordered.getTtn());
                         companySumMap.put(shoe.getCompany().getName(), needToBePayed);
                     } else {
-                        needToBePayed.sum += shoe.getCost();
+                        needToBePayed.sum += shoePriceService.getShoePrice(shoe, ordered).getCost();
                         needToBePayed.ttns.add(ordered.getTtn());
                     }
                 }

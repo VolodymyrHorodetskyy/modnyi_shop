@@ -11,6 +11,7 @@ import shop.chobitok.modnyi.novaposta.entity.ListTrackingEntity;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.service.ClientService;
+import shop.chobitok.modnyi.service.ShoePriceService;
 import shop.chobitok.modnyi.service.ShoeService;
 
 import java.util.ArrayList;
@@ -23,13 +24,14 @@ public class NPOrderMapper {
 
     private ShoeService shoeService;
     private ClientService clientService;
+    private ShoePriceService shoePriceService;
 
     private List<Integer> sizes = Arrays.asList(36, 37, 38, 39, 40);
 
-
-    public NPOrderMapper(ShoeService shoeService, ClientService clientService) {
+    public NPOrderMapper(ShoeService shoeService, ClientService clientService, ShoePriceService shoePriceService) {
         this.shoeService = shoeService;
         this.clientService = clientService;
+        this.shoePriceService = shoePriceService;
     }
 
     public Ordered toOrdered(Ordered ordered, TrackingEntity trackingEntity) {
@@ -145,8 +147,9 @@ public class NPOrderMapper {
         if (ordered.getOrderedShoes() != null && ordered.getOrderedShoes().size() > 0) {
             Shoe shoe = ordered.getOrderedShoes().get(0);
             if (shoe != null) {
-                Double prepayment = shoe.getPrice() - redeliverySum;
-                ordered.setPrice(shoe.getPrice());
+                //     Double prepayment = shoe.getPrice() - redeliverySum;
+                Double prepayment = shoePriceService.getShoePrice(shoe, ordered).getPrice() - redeliverySum;
+                ordered.setPrice(shoePriceService.getShoePrice(shoe, ordered).getPrice());
                 if (prepayment < 0) {
                     prepayment = 0d;
                 } else if (prepayment == 99) {

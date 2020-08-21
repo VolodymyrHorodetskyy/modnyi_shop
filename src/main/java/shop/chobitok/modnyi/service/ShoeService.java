@@ -5,34 +5,37 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Shoe;
+import shop.chobitok.modnyi.entity.ShoePrice;
 import shop.chobitok.modnyi.entity.request.AddOrRemovePatternRequest;
 import shop.chobitok.modnyi.entity.request.CreateShoeRequest;
 import shop.chobitok.modnyi.entity.request.UpdateShoeRequest;
+import shop.chobitok.modnyi.entity.response.ShoeWithPrice;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.mapper.ShoeMapper;
-import shop.chobitok.modnyi.repository.CompanyRepository;
+import shop.chobitok.modnyi.repository.ShoePriceRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.specification.ShoeSpecification;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
+
+import static shop.chobitok.modnyi.util.DateHelper.formLocalDateTimeStartOfTheDay;
 
 @Service
 public class ShoeService {
 
     private ShoeRepository shoeRepository;
-
-    private CompanyRepository companyRepository;
     private ShoeMapper shoeMapper;
+    private ShoePriceService shoePriceService;
 
-    public ShoeService(ShoeRepository shoeRepository, CompanyRepository companyRepository, ShoeMapper shoeMapper) {
+    public ShoeService(ShoeRepository shoeRepository, ShoeMapper shoeMapper, ShoePriceService shoePriceService) {
         this.shoeRepository = shoeRepository;
-        this.companyRepository = companyRepository;
         this.shoeMapper = shoeMapper;
+        this.shoePriceService = shoePriceService;
+    }
+
+    public List<ShoeWithPrice> getAllShoeWithPrice(int page, int size, String model) {
+        return shoeMapper.convertToShoePrice(shoeRepository.findAll(new ShoeSpecification(model), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdDate"))).getContent());
     }
 
     public List<Shoe> getAll(int page, int size, String model) {
@@ -40,7 +43,9 @@ public class ShoeService {
     }
 
     public Shoe createShoe(CreateShoeRequest createShoeRequest) {
-        return shoeRepository.save(shoeMapper.convertFromCreateShoeRequest(createShoeRequest));
+        Shoe shoe = shoeRepository.save(shoeMapper.convertFromCreateShoeRequest(createShoeRequest));
+        shoePriceService.setNewPrice(shoe, createShoeRequest.getPrice(), createShoeRequest.getCost());
+        return shoe;
     }
 
     public Shoe updateShoe(UpdateShoeRequest updateShoeRequest) {
@@ -85,7 +90,7 @@ public class ShoeService {
     }
 
 
-    public List<Shoe> fromTildaCSV(String path) {
+ /*   public List<Shoe> fromTildaCSV(String path) {
         BufferedReader br = null;
         String line = "";
         String cvsSplitBy = ",";
@@ -124,6 +129,6 @@ public class ShoeService {
             }
         }
         return null;
-    }
+    }*/
 
 }

@@ -5,6 +5,7 @@ import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.entity.request.AddOrRemovePatternRequest;
 import shop.chobitok.modnyi.entity.request.CreateShoeRequest;
 import shop.chobitok.modnyi.entity.request.UpdateShoeRequest;
+import shop.chobitok.modnyi.entity.response.ShoeWithPrice;
 import shop.chobitok.modnyi.service.ShoeService;
 
 import java.util.List;
@@ -21,8 +22,8 @@ public class ShoeController {
     }
 
     @GetMapping
-    public List<Shoe> getAll(@RequestParam int page, @RequestParam int size, @RequestParam(required = false) String model) {
-        return shoeService.getAll(page, size, model);
+    public List<ShoeWithPrice> getAll(@RequestParam int page, @RequestParam int size, @RequestParam(required = false) String model) {
+        return shoeService.getAllShoeWithPrice(page, size, model);
     }
 
     @PostMapping
@@ -50,11 +51,6 @@ public class ShoeController {
         return shoeService.removePattern(request);
     }
 
-
-    @GetMapping("/fromTildaCSV")
-    public List<Shoe> fromTildaCSV(@RequestParam String path) {
-        return shoeService.fromTildaCSV(path);
-    }
 
 
 }
