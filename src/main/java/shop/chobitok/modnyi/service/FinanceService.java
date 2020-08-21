@@ -3,6 +3,7 @@ package shop.chobitok.modnyi.service;
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Shoe;
+import shop.chobitok.modnyi.entity.ShoePrice;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.response.EarningsResponse;
 import shop.chobitok.modnyi.repository.OrderRepository;
@@ -16,9 +17,11 @@ import java.util.List;
 public class FinanceService {
 
     private OrderRepository orderRepository;
+    private ShoePriceService shoePriceService;
 
-    public FinanceService(OrderRepository orderRepository) {
+    public FinanceService(OrderRepository orderRepository, ShoePriceService shoePriceService) {
         this.orderRepository = orderRepository;
+        this.shoePriceService = shoePriceService;
     }
 
     public EarningsResponse getEarnings(String dateTime1, String dateTime2) {
@@ -33,7 +36,7 @@ public class FinanceService {
             Double cost = 0d;
             if (ordered.getStatus() == Status.ОТРИМАНО) {
                 for (Shoe shoe : ordered.getOrderedShoes()) {
-                    cost += shoe.getCost();
+                    cost += shoePriceService.getShoePrice(shoe, ordered).getCost();
                     ++received;
                 }
                 sum += ordered.getPrice() - cost;
@@ -41,7 +44,8 @@ public class FinanceService {
                 ++denied;
             } else if (ordered.getStatus() == Status.СТВОРЕНО || ordered.getStatus() == Status.ВІДПРАВЛЕНО || ordered.getStatus() == Status.ДОСТАВЛЕНО) {
                 for (Shoe shoe : ordered.getOrderedShoes()) {
-                    predictedSum += shoe.getPrice() - shoe.getCost();
+                    ShoePrice shoePrice = shoePriceService.getShoePrice(shoe, ordered);
+                    predictedSum += shoePrice.getPrice() - shoePrice.getCost();
                 }
             }
         }
