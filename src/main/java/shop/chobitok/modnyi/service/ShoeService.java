@@ -44,7 +44,6 @@ public class ShoeService {
 
     public Shoe createShoe(CreateShoeRequest createShoeRequest) {
         Shoe shoe = shoeRepository.save(shoeMapper.convertFromCreateShoeRequest(createShoeRequest));
-        shoePriceService.setNewPrice(shoe, createShoeRequest.getPrice(), createShoeRequest.getCost());
         return shoe;
     }
 
