@@ -32,7 +32,10 @@ public class ShoePriceService {
         } else {
             from = formLocalDateTimeStartOfTheDay(from);
         }
-        if (shoePrice != null && (!shoePrice.getCost().equals(cost) || !shoePrice.getPrice().equals(price))) {
+        if (shoePrice == null) {
+            ShoePrice newShoePrice = new ShoePrice(shoe, from, cost, price);
+            return shoePriceRepository.save(newShoePrice);
+        } else if (shoePrice != null && (!shoePrice.getCost().equals(cost) || !shoePrice.getPrice().equals(price))) {
             shoePrice.setToDate(from);
             shoePriceRepository.save(shoePrice);
 
@@ -57,10 +60,10 @@ public class ShoePriceService {
                 return shoePrice;
             }
         }
-        return shoePrices.get(0);
+        return getActualShoePrice(shoe);
     }
 
-    public ShoePrice getActualShoePrice(Shoe shoe){
+    public ShoePrice getActualShoePrice(Shoe shoe) {
         return shoePriceRepository.findTopByShoeId(shoe.getId(), Sort.by(Sort.Direction.DESC, "fromDate").and(Sort.by(Sort.Direction.DESC, "createdDate")));
     }
 
