@@ -94,19 +94,11 @@ public class OrderService {
         } else {
             ordered.setWithoutTTN(true);
         }
-        Shoe shoe;
-        if (createOrderRequest.getShoe() != null) {
-            shoe = shoeRepository.getOne(createOrderRequest.getShoe());
-            if (shoe == null) {
-                throw new ConflictException("Взуття не може бути пусте");
-            }
+        if (createOrderRequest.getShoes() != null && createOrderRequest.getShoes().size() > 0) {
+            ordered.setOrderedShoes(shoeRepository.findAllById(createOrderRequest.getShoes()));
         } else {
             throw new ConflictException("Взуття не може бути пусте");
         }
-
-        List<Shoe> shoes = new ArrayList<>();
-        shoes.add(shoe);
-        ordered.setOrderedShoes(shoes);
         ordered.setClient(clientService.createClient(createOrderRequest));
         ordered.setTtn(createOrderRequest.getTtn());
         ordered.setStatus(createOrderRequest.getStatus());
@@ -121,6 +113,7 @@ public class OrderService {
         ordered.setPrice(createOrderRequest.getPrice());
         return orderRepository.save(ordered);
     }
+
 
     @Transactional
     public Ordered cancelOrder(CancelOrderRequest cancelOrderRequest) {
@@ -280,14 +273,7 @@ public class OrderService {
     }
 
     private void updateShoeAndSize(Ordered ordered, UpdateOrderRequest updateOrderRequest) {
-        List<Shoe> shoes = ordered.getOrderedShoes();
-        if (shoes != null && shoes.size() > 0) {
-            shoes.remove(0);
-        } else if (shoes == null) {
-            shoes = new ArrayList<>();
-        }
-        shoes.add(shoeRepository.getOne(updateOrderRequest.getShoe()));
-        ordered.setOrderedShoes(shoes);
+        ordered.setOrderedShoes(shoeRepository.findAllById(updateOrderRequest.getShoes()));
         ordered.setSize(updateOrderRequest.getSize());
     }
 

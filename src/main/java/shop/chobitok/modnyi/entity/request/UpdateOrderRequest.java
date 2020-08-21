@@ -3,6 +3,8 @@ package shop.chobitok.modnyi.entity.request;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import shop.chobitok.modnyi.entity.Status;
 
+import java.util.List;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UpdateOrderRequest {
 
@@ -14,7 +16,7 @@ public class UpdateOrderRequest {
     private String address;
     private String phone;
     private Integer size;
-    private Long shoe;
+    private List<Long> shoes;
     private String notes;
     private Double price;
     private Double prepayment;
@@ -76,12 +78,12 @@ public class UpdateOrderRequest {
         this.size = size;
     }
 
-    public Long getShoe() {
-        return shoe;
+    public List<Long> getShoes() {
+        return shoes;
     }
 
-    public void setShoe(Long shoe) {
-        this.shoe = shoe;
+    public void setShoes(List<Long> shoes) {
+        this.shoes = shoes;
     }
 
     public String getNotes() {

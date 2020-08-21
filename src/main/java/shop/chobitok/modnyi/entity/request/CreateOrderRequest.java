@@ -3,6 +3,7 @@ package shop.chobitok.modnyi.entity.request;
 import shop.chobitok.modnyi.entity.Status;
 
 import javax.validation.constraints.NotEmpty;
+import java.util.List;
 
 public class CreateOrderRequest {
 
@@ -14,7 +15,7 @@ public class CreateOrderRequest {
     private Double price;
     private String address;
     private Integer size;
-    private Long shoe;
+    private List<Long> shoes;
     private String comment;
     private Double prepayment;
     @NotEmpty
@@ -67,12 +68,12 @@ public class CreateOrderRequest {
         this.size = size;
     }
 
-    public Long getShoe() {
-        return shoe;
+    public List<Long> getShoes() {
+        return shoes;
     }
 
-    public void setShoe(Long shoe) {
-        this.shoe = shoe;
+    public void setShoes(List<Long> shoes) {
+        this.shoes = shoes;
     }
 
     public String getComment() {
