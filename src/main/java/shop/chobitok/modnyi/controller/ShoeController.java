@@ -22,8 +22,8 @@ public class ShoeController {
     }
 
     @GetMapping
-    public List<ShoeWithPrice> getAll(@RequestParam int page, @RequestParam int size, @RequestParam(required = false) String model) {
-        return shoeService.getAllShoeWithPrice(page, size, model);
+    public List<ShoeWithPrice> getAll(@RequestParam int page, @RequestParam int size, @RequestParam(required = false) String modelAndColor) {
+        return shoeService.getAllShoeWithPrice(page, size, modelAndColor);
     }
 
     @PostMapping

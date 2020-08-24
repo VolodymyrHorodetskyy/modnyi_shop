@@ -5,37 +5,30 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Shoe;
-import shop.chobitok.modnyi.entity.ShoePrice;
 import shop.chobitok.modnyi.entity.request.AddOrRemovePatternRequest;
 import shop.chobitok.modnyi.entity.request.CreateShoeRequest;
 import shop.chobitok.modnyi.entity.request.UpdateShoeRequest;
 import shop.chobitok.modnyi.entity.response.ShoeWithPrice;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.mapper.ShoeMapper;
-import shop.chobitok.modnyi.repository.ShoePriceRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.specification.ShoeSpecification;
 
-import java.time.LocalDateTime;
 import java.util.List;
-
-import static shop.chobitok.modnyi.util.DateHelper.formLocalDateTimeStartOfTheDay;
 
 @Service
 public class ShoeService {
 
     private ShoeRepository shoeRepository;
     private ShoeMapper shoeMapper;
-    private ShoePriceService shoePriceService;
 
-    public ShoeService(ShoeRepository shoeRepository, ShoeMapper shoeMapper, ShoePriceService shoePriceService) {
+    public ShoeService(ShoeRepository shoeRepository, ShoeMapper shoeMapper) {
         this.shoeRepository = shoeRepository;
         this.shoeMapper = shoeMapper;
-        this.shoePriceService = shoePriceService;
     }
 
-    public List<ShoeWithPrice> getAllShoeWithPrice(int page, int size, String model) {
-        return shoeMapper.convertToShoePrice(shoeRepository.findAll(new ShoeSpecification(model), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdDate"))).getContent());
+    public List<ShoeWithPrice> getAllShoeWithPrice(int page, int size, String modelAndColor) {
+        return shoeMapper.convertToShoePrice(shoeRepository.findAll(new ShoeSpecification(modelAndColor), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdDate"))).getContent());
     }
 
     public List<Shoe> getAll(int page, int size, String model) {
