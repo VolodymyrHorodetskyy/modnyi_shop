@@ -63,8 +63,8 @@ public class StatisticService {
             StringBuilder stringBuilder = new StringBuilder();
             for (Ordered ordered : ordereds) {
                 for (Shoe shoe : ordered.getOrderedShoes()) {
-                    stringBuilder.append(shoe.getModel() + " " + shoe.getColor() + "\n");
-                    stringBuilder.append("заберуть у львові" + "\n");
+                    stringBuilder.append(shoe.getModel() + " " + shoe.getColor() + ", " + ordered.getSize() + "\n");
+                    stringBuilder.append("без накладної" + "\n");
                 }
                 stringBuilder.append("\n");
             }
@@ -107,13 +107,11 @@ public class StatisticService {
 
     //TODO refactor, split
     public StringResponse getReturned(boolean excludeFromDeliveryFile) {
-        if (excludeFromDeliveryFile) {
-            List<Ordered> orderedList = orderRepository.findByNotForDeliveryFileTrue();
-            for (Ordered order : orderedList) {
-                order.setNotForDeliveryFile(false);
-            }
-            orderRepository.saveAll(orderedList);
+        List<Ordered> orderedList = orderRepository.findByNotForDeliveryFileTrue();
+        for (Ordered order : orderedList) {
+            order.setNotForDeliveryFile(false);
         }
+        orderRepository.saveAll(orderedList);
         StringBuilder result = new StringBuilder();
         StringBuilder coincidence = new StringBuilder();
         List<Ordered> deniedList = orderRepository.findAllByAvailableTrueAndReturnedFalseAndCanceledAfterFalseAndStatus(Status.ВІДМОВА);
@@ -134,7 +132,7 @@ public class StatisticService {
                     result.append(returned.getNumber() + "\n" + data.getCargoDescriptionString() + " "
                             + convertToStatus(returned.getStatusCode()) + "\n\n");
                     for (Ordered created : createdList) {
-                        if (!usedInCoincidence.contains(deniedOrder.getId()) && deniedOrder.getOrderedShoes().get(0).getId().equals(created.getOrderedShoes().get(0).getId()) && deniedOrder.getSize().equals(created.getSize())) {
+                        if (!usedInCoincidence.contains(deniedOrder.getId()) && deniedOrder.getOrderedShoes().equals(created.getOrderedShoes()) && deniedOrder.getSize().equals(created.getSize())) {
                             coincidence.append(created.getTtn() + "\n" + returned.getNumber() + "\n" + data.getCargoDescriptionString() + " " + convertToStatus(returned.getStatusCode()) + "\n\n");
                             usedInCoincidence.add(deniedOrder.getId());
                             if (excludeFromDeliveryFile) {
@@ -154,6 +152,10 @@ public class StatisticService {
         result.append(coincidence.toString());
         return new StringResponse(result.toString());
     }
+
+  /*  private String compareShoeArrays(List<Shoe> shoes, List<Shoe> shoes2) {
+        shoes.equals(shoes2);
+    }*/
 
     private Set<String> readFileToTTNSet(String path) {
         List<String> allTTNList = ShoeUtil.readTXTFile(path);

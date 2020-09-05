@@ -12,6 +12,8 @@ public class CancelOrderRequest {
 
     private String newTTN;
 
+    private String returnTTN;
+
     public String getNewTTN() {
         return newTTN;
     }
@@ -42,5 +44,13 @@ public class CancelOrderRequest {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public String getReturnTTN() {
+        return returnTTN;
+    }
+
+    public void setReturnTTN(String returnTTN) {
+        this.returnTTN = returnTTN;
     }
 }

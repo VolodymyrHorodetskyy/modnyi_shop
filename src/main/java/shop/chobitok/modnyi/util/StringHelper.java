@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.util;
 
+import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.entity.response.EarningsResponse;
 import shop.chobitok.modnyi.entity.response.StringResponse;
@@ -23,6 +24,13 @@ public class StringHelper {
             builder.append(entry.getKey().getModel() + " " + entry.getKey().getColor() + " = " + entry.getValue() + "\n");
         }
         return new StringResponse(builder.toString());
+    }
+
+    public static String removeSpaces(String s) {
+        if (!StringUtils.isEmpty(s)) {
+            s.replaceAll("\\s+", "");
+        }
+        return s;
     }
 
 }

@@ -21,6 +21,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
+
 @Service
 public class NovaPostaService {
 
@@ -92,6 +94,14 @@ public class NovaPostaService {
         } else {
             return null;
         }
+    }
+
+    public Status getStatus(String ttn) {
+        TrackingEntity trackingEntity = getTrackingEntity(null, ttn);
+        if (trackingEntity != null && trackingEntity.getData().size() > 0) {
+            return convertToStatus(trackingEntity.getData().get(0).getStatusCode());
+        }
+        return null;
     }
 
     private GetTrackingRequest createTrackingRequest(FromNPToOrderRequest fromNPToOrderRequest) {

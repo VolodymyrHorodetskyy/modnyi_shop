@@ -14,16 +14,22 @@ public class CanceledOrderReason extends Audit {
     @Column
     private String comment;
     @Column
-    private String ttn;
+    private String returnTtn;
+    @Column
+    private String newTtn;
+    @Column
+    private Status status;
+    @Column(nullable = false)
+    private boolean manual = false;
 
     public CanceledOrderReason() {
     }
 
-    public CanceledOrderReason(Ordered ordered, CancelReason reason, String comment, String ttn) {
+    public CanceledOrderReason(Ordered ordered, CancelReason reason, String comment, String newTtn) {
         this.ordered = ordered;
         this.reason = reason;
         this.comment = comment;
-        this.ttn = ttn;
+        this.newTtn = newTtn;
     }
 
     public Ordered getOrdered() {
@@ -50,11 +56,35 @@ public class CanceledOrderReason extends Audit {
         this.comment = comment;
     }
 
-    public String getTtn() {
-        return ttn;
+    public String getReturnTtn() {
+        return returnTtn;
     }
 
-    public void setTtn(String ttn) {
-        this.ttn = ttn;
+    public void setReturnTtn(String returnTtn) {
+        this.returnTtn = returnTtn;
+    }
+
+    public String getNewTtn() {
+        return newTtn;
+    }
+
+    public void setNewTtn(String newTtn) {
+        this.newTtn = newTtn;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public boolean isManual() {
+        return manual;
+    }
+
+    public void setManual(boolean manual) {
+        this.manual = manual;
     }
 }

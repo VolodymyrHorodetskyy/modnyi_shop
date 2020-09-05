@@ -91,7 +91,7 @@ public class NovaPostaTest {
                 ordered.setLastModifiedDate(ShoeUtil.toLocalDateTime(trackingEntity.getData().get(0).getDateCreated()));
                 orderRepository.save(ordered);
             } else {
-                ordered.getTtn();
+                ordered.getReturnTtn();
             }*/
         }
     }

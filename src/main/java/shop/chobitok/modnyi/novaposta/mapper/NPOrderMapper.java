@@ -26,7 +26,7 @@ public class NPOrderMapper {
     private ClientService clientService;
     private ShoePriceService shoePriceService;
 
-    private List<Integer> sizes = Arrays.asList(36, 37, 38, 39, 40);
+    private List<Integer> sizes = Arrays.asList(36, 37, 38, 39, 40, 41);
 
     public NPOrderMapper(ShoeService shoeService, ClientService clientService, ShoePriceService shoePriceService) {
         this.shoeService = shoeService;

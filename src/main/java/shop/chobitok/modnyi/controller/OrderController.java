@@ -84,11 +84,6 @@ public class OrderController {
         return orderService.returnAllCanceled(updateStatuses);
     }
 
-    @PatchMapping("/cancelOrder")
-    public Ordered cancelOrdered(@RequestBody CancelOrderRequest request) {
-        return orderService.cancelOrder(request);
-    }
-
     @GetMapping("/getCanceledOrder")
     public CanceledOrderReason getCancelOrder(@RequestParam Long id) {
         return orderService.getCanceledOrderReason(id);
