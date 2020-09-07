@@ -19,7 +19,6 @@ import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
-import shop.chobitok.modnyi.util.StringHelper;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;

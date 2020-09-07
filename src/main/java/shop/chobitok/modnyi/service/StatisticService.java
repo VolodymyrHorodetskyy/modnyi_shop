@@ -63,7 +63,7 @@ public class StatisticService {
             StringBuilder stringBuilder = new StringBuilder();
             for (Ordered ordered : ordereds) {
                 for (Shoe shoe : ordered.getOrderedShoes()) {
-                    stringBuilder.append(shoe.getModel() + " " + shoe.getColor() + ", " + ordered.getSize() + "\n");
+                    stringBuilder.append(shoe.getModel() + " " + shoe.getColor() + ", " + ordered.getSize() + " розмір"+"\n");
                     stringBuilder.append("без накладної" + "\n");
                 }
                 stringBuilder.append("\n");
