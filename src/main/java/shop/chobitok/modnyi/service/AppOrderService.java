@@ -73,13 +73,13 @@ public class AppOrderService {
         return appOrderRepository.save(appOrder);
     }
 
-    public Map<AppOrderStatus, List<AppOrder>> getAll(Long id, String phoneAndName, String fromForNotReady, String fromForReady) {
+    public Map<AppOrderStatus, List<AppOrder>> getAll(Long id, String phoneAndName, String comment, String fromForNotReady, String fromForReady) {
         List<AppOrder> appOrdersNotReady = appOrderRepository.findAll(
-                new AppOrderSpecification(id, phoneAndName, DateHelper.formDate(fromForNotReady),
+                new AppOrderSpecification(id, phoneAndName, comment, DateHelper.formDate(fromForNotReady),
                         Arrays.asList(AppOrderStatus.Новий, AppOrderStatus.Не_Відповідає, AppOrderStatus.Чекаємо_оплату, AppOrderStatus.В_обробці)),
                 Sort.by(Sort.Direction.DESC, "createdDate"));
         List<AppOrder> appOrdersReady = appOrderRepository.findAll(
-                new AppOrderSpecification(id, phoneAndName, DateHelper.formDate(fromForReady),
+                new AppOrderSpecification(id, phoneAndName, comment, DateHelper.formDate(fromForReady),
                         Arrays.asList(AppOrderStatus.Передплачено, AppOrderStatus.Повна_оплата, AppOrderStatus.Скасовано)),
                 Sort.by(Sort.Direction.DESC, "createdDate"));
         List<AppOrder> combinedAppOrders = Stream.concat(appOrdersNotReady.stream(), appOrdersReady.stream()).collect(Collectors.toList());

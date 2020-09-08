@@ -17,12 +17,14 @@ public class AppOrderSpecification implements Specification<AppOrder> {
 
     private Long id;
     private String phoneAndName;
+    private String comment;
     private LocalDateTime from;
     private List<AppOrderStatus> statuses;
 
-    public AppOrderSpecification(Long id, String phoneAndName, LocalDateTime from, List<AppOrderStatus> statuses) {
+    public AppOrderSpecification(Long id, String phoneAndName, String comment, LocalDateTime from, List<AppOrderStatus> statuses) {
         this.id = id;
         this.phoneAndName = phoneAndName;
+        this.comment = comment;
         this.from = from;
         this.statuses = statuses;
     }
@@ -45,6 +47,10 @@ public class AppOrderSpecification implements Specification<AppOrder> {
         }
         if (statuses != null && statuses.size() > 0) {
             predicateList.add(root.get("status").in(statuses));
+        }
+        if (!StringUtils.isEmpty(comment)) {
+            Predicate commentPredicate = criteriaBuilder.like(root.get("comment"), "%" + comment + "%");
+            predicateList.add(commentPredicate);
         }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }
