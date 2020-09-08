@@ -49,7 +49,7 @@ public class AppOrderService {
             appOrder.setName(splitted[0].substring(splitted[0].indexOf("=") + 1));
             for (String s1 : splitted) {
                 if (s1.contains("phone")) {
-                    appOrder.setPhone(s1.substring(s1.indexOf("=") + 1));
+                    appOrder.setPhone(s1.substring(s1.indexOf("=") + 1).replaceAll("[^0-9]",""));
                 } else if (s1.contains("Email")) {
                     appOrder.setMail(s1.substring(s1.indexOf("=") + 1));
                 } else if (s1.contains("dont_call")) {
