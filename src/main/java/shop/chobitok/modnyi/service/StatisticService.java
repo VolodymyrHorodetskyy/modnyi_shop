@@ -3,9 +3,8 @@ package shop.chobitok.modnyi.service;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
-import shop.chobitok.modnyi.entity.Ordered;
-import shop.chobitok.modnyi.entity.Shoe;
-import shop.chobitok.modnyi.entity.Status;
+import shop.chobitok.modnyi.entity.*;
+import shop.chobitok.modnyi.entity.response.AmountsInfoResponse;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
@@ -13,12 +12,16 @@ import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.util.NPHelper;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
+import shop.chobitok.modnyi.repository.AppOrderRepository;
+import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.service.entity.StatShoe;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static java.util.stream.Collectors.toList;
@@ -34,14 +37,18 @@ public class StatisticService {
     private NPHelper npHelper;
     private OrderService orderService;
     private ShoePriceService shoePriceService;
+    private AppOrderRepository appOrderRepository;
+    private CanceledOrderReasonRepository canceledOrderReasonRepository;
 
-    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, NPOrderMapper npOrderMapper, NPHelper npHelper, OrderService orderService, ShoePriceService shoePriceService) {
+    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, NPOrderMapper npOrderMapper, NPHelper npHelper, OrderService orderService, ShoePriceService shoePriceService, AppOrderRepository appOrderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository) {
         this.postaRepository = postaRepository;
         this.orderRepository = orderRepository;
         this.npOrderMapper = npOrderMapper;
         this.npHelper = npHelper;
         this.orderService = orderService;
         this.shoePriceService = shoePriceService;
+        this.appOrderRepository = appOrderRepository;
+        this.canceledOrderReasonRepository = canceledOrderReasonRepository;
     }
 
     public StringResponse countNeedDeliveryFromDB(boolean updateStatuses) {
@@ -50,40 +57,30 @@ public class StatisticService {
             orderService.updateOrderStatusesNovaPosta();
         }
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndNotForDeliveryFileFalseAndStatusOrderByDateCreated(Status.СТВОРЕНО);
-        List<String> ttns = orderedList.stream().filter(ordered -> !StringUtils.isEmpty(ordered.getTtn())).map(ordered -> ordered.getTtn()).collect(toList());
-        List<Ordered> withoutTTNList = orderedList.stream().filter(ordered -> StringUtils.isEmpty(ordered.getTtn())).collect(toList());
-        stringBuilder.append(countNeedDelivery(toTTNSet(ttns)));
-        stringBuilder.append(getWitohutTTN(withoutTTNList) + "\n");
-        stringBuilder.append("Кількість :" + (ttns.size() + withoutTTNList.size()));
+        stringBuilder.append(countNeedDelivery(orderedList));
+        stringBuilder.append("Кількість : " + orderedList.size());
         return new StringResponse(stringBuilder.toString());
     }
 
-    private String getWitohutTTN(List<Ordered> ordereds) {
-        if (ordereds != null) {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (Ordered ordered : ordereds) {
-                for (Shoe shoe : ordered.getOrderedShoes()) {
-                    stringBuilder.append(shoe.getModel() + " " + shoe.getColor() + ", " + ordered.getSize() + " розмір"+"\n");
-                    stringBuilder.append("без накладної" + "\n");
-                }
-                stringBuilder.append("\n");
-            }
-            return stringBuilder.toString();
-        }
-        return null;
-    }
-
-    private String countNeedDelivery(Set<String> ttnSet) {
-        List<String> stringList = new ArrayList<>();
+    private String countNeedDelivery(List<Ordered> orderedList) {
+        DateTimeFormatter formatters = DateTimeFormatter.ofPattern("d.MM");
         StringBuilder result = new StringBuilder();
-        int count = 0;
-        for (String s : ttnSet) {
-            Data data = postaRepository.getTracking(npHelper.formGetTrackingRequest(s)).getData().get(0);
-            if (convertToStatus(data.getStatusCode()) == Status.СТВОРЕНО) {
-                ++count;
-                stringList.add(data.getNumber() + "\n" + data.getCargoDescriptionString());
-                result.append(data.getNumber() + "\n" + data.getCargoDescriptionString() + "\n\n");
+        LocalDate current = null;
+        for (Ordered ordered : orderedList) {
+            if (current == null || !ordered.getCreatedDate().toLocalDate().isEqual(current)) {
+                current = ordered.getCreatedDate().toLocalDate();
+                result.append(current.format(formatters)).append("\n\n");
             }
+            if (!StringUtils.isEmpty(ordered.getTtn())) {
+                result.append(ordered.getTtn() + "\n" + ordered.getPostComment() + "\n\n");
+            } else {
+                result.append("без накладноЇ\n");
+                for (Shoe shoe : ordered.getOrderedShoes()) {
+                    result.append(shoe.getModel()).append(" ").append(shoe.getColor());
+                }
+                result.append(", ").append(ordered.getSize()).append("\n\n");
+            }
+
         }
         return result.toString();
     }
@@ -170,9 +167,9 @@ public class StatisticService {
         return toTTNSet(ShoeUtil.readTXTFile(file));
     }
 
-    private Set<String> toTTNSet(List<String> allTTNList) {
+    private Set<String> toTTNSet(List<String> orderedList) {
         Set<String> allTTNSet = new LinkedHashSet<>();
-        for (String s : allTTNList) {
+        for (String s : orderedList) {
             allTTNSet.add(s.replaceAll("\\s+", ""));
         }
         return allTTNSet;
@@ -342,6 +339,12 @@ public class StatisticService {
         }
         statShoeList = statShoeList.stream().sorted(Comparator.comparingInt(StatShoe::getReceivedPercentage).reversed()).collect(toList());
         return statShoeList;
+    }
+
+    public AmountsInfoResponse countAmounts() {
+        int newAppOrdersSize = appOrderRepository.findByStatusIn(Arrays.asList(AppOrderStatus.Новий)).size();
+        int canceledWithoutReasonSize = canceledOrderReasonRepository.findByReasonIn(Arrays.asList(CancelReason.НЕ_ВИЗНАЧЕНО)).size();
+        return new AmountsInfoResponse(newAppOrdersSize, canceledWithoutReasonSize);
     }
 
     private Map<Shoe, Integer> countShoesAmount(List<Ordered> ordereds) {

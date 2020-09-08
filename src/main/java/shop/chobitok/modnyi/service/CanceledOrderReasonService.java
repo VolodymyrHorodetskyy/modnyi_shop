@@ -10,6 +10,8 @@ import shop.chobitok.modnyi.entity.CanceledOrderReason;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.request.CancelOrderRequest;
+import shop.chobitok.modnyi.entity.request.CancelOrderWithIdRequest;
+import shop.chobitok.modnyi.entity.request.CancelOrderWithOrderRequest;
 import shop.chobitok.modnyi.entity.response.GetCanceledResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.novaposta.entity.Data;
@@ -20,12 +22,10 @@ import shop.chobitok.modnyi.novaposta.util.NPHelper;
 import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
-import shop.chobitok.modnyi.util.StringHelper;
+import shop.chobitok.modnyi.specification.OrderedSpecification;
 
-import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
@@ -48,9 +48,8 @@ public class CanceledOrderReasonService {
         this.npHelper = npHelper;
     }
 
-    @Transactional
-    public Ordered cancelOrder(CancelOrderRequest cancelOrderRequest) {
-        Ordered ordered = orderRepository.getOne(cancelOrderRequest.getOrderId());
+    public Ordered cancelOrder(CancelOrderWithOrderRequest cancelOrderRequest) {
+        Ordered ordered = orderRepository.findById(cancelOrderRequest.getOrderId()).orElse(null);
         if (ordered == null) {
             throw new ConflictException("Немає такого замовлення");
         }
@@ -65,8 +64,8 @@ public class CanceledOrderReasonService {
             canceledOrderReason.setNewTtn(cancelOrderRequest.getNewTTN());
         }
         canceledOrderReason.setManual(true);
-        canceledOrderReasonRepository.save(canceledOrderReason);
         orderRepository.save(ordered);
+        canceledOrderReasonRepository.save(canceledOrderReason);
         return ordered;
     }
 
@@ -81,8 +80,8 @@ public class CanceledOrderReasonService {
         return canceledOrderReasonRepository.save(canceledOrderReason);
     }
 
-    public List<CanceledOrderReason> checkIfWithoutStatusExistsAndSetReturnTtnAndStatus() {
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.ВІДМОВА));
+    public List<CanceledOrderReason> checkIfWithoutCancelReasonExistsAndCreateDefaultReason(LocalDateTime from) {
+        List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(from, null, Status.ВІДМОВА));
         List<CanceledOrderReason> canceledOrderReasons = new ArrayList<>();
         for (Ordered ordered : orderedList) {
             if (canceledOrderReasonRepository.findFirstByOrderedId(ordered.getId()) == null) {
@@ -93,7 +92,7 @@ public class CanceledOrderReasonService {
         return canceledOrderReasons;
     }
 
-    public List<CanceledOrderReason> setReturnTtnAndStatus() {
+    public List<CanceledOrderReason> setReturnTtnAndUpdateStatus() {
         List<CanceledOrderReason> canceledOrderReasons = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(LocalDateTime.now().minusMonths(1), true));
         List<CanceledOrderReason> updated = new ArrayList<>();
         for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
@@ -131,10 +130,32 @@ public class CanceledOrderReasonService {
     }
 
 
-    public GetCanceledResponse getAll(int page, int size, String ttn, String phoneOrName, Boolean manual) {
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "reason").and(Sort.by(Sort.Direction.DESC, "createdDate")));
-        Page page1 = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(LocalDateTime.now().minusMonths(1), false, removeSpaces(ttn), phoneOrName, manual), pageRequest);
+    public GetCanceledResponse getAll(int page, int size, String ttn, String phoneOrName, Boolean manual, Boolean withoutReason) {
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdDate"));
+        Page page1 = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(LocalDateTime.now().minusMonths(1), false, removeSpaces(ttn), phoneOrName, manual, withoutReason), pageRequest);
         return new GetCanceledResponse(page1.getContent(), page1.getTotalElements());
+    }
+
+    public CanceledOrderReason setReason(CancelOrderWithIdRequest cancelOrderWithIdRequest) {
+        CanceledOrderReason canceledOrderReason = canceledOrderReasonRepository.findById(cancelOrderWithIdRequest.getId()).orElse(null);
+        if (canceledOrderReason == null) {
+            throw new ConflictException("CancelOrderReason не існує");
+        }
+        canceledOrderReason.setNewTtn(cancelOrderWithIdRequest.getNewTTN());
+        canceledOrderReason.setReason(cancelOrderWithIdRequest.getReason());
+        canceledOrderReason.setComment(cancelOrderWithIdRequest.getComment());
+        if (canceledOrderReason.isManual()) {
+            canceledOrderReason.setReturnTtn(cancelOrderWithIdRequest.getReturnTTN());
+        }
+        return canceledOrderReasonRepository.save(canceledOrderReason);
+    }
+
+    public CanceledOrderReason getCanceledOrderReasonByOrderId(Long orderedId) {
+        return canceledOrderReasonRepository.findFirstByOrderedId(orderedId);
+    }
+
+    public CanceledOrderReason getById(Long id){
+        return canceledOrderReasonRepository.findById(id).orElse(null);
     }
 
 }

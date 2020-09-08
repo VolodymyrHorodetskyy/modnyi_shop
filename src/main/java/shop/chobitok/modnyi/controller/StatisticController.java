@@ -2,6 +2,7 @@ package shop.chobitok.modnyi.controller;
 
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.Status;
+import shop.chobitok.modnyi.entity.response.AmountsInfoResponse;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.service.OrderService;
 import shop.chobitok.modnyi.service.StatisticService;
@@ -73,6 +74,11 @@ public class StatisticController {
     @GetMapping("/getReceivedShoePercentage")
     public List<StatShoe> getReceivedShoePercentage(@RequestParam(required = false) String from, @RequestParam(required = false) String to) {
         return statisticService.getReceivedPercentage(from, to);
+    }
+
+    @GetMapping("/getAmountsInfo")
+    public AmountsInfoResponse amountsInfoResponse(){
+        return statisticService.countAmounts();
     }
 
 }

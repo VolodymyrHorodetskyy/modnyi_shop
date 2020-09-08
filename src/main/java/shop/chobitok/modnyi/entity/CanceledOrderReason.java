@@ -19,7 +19,7 @@ public class CanceledOrderReason extends Audit {
     private String newTtn;
     @Column
     private Status status;
-    @Column(nullable = false)
+    @Column
     private boolean manual = false;
 
     public CanceledOrderReason() {

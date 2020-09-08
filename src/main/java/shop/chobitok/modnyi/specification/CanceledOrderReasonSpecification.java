@@ -17,13 +17,15 @@ public class CanceledOrderReasonSpecification implements Specification<CanceledO
     private String ttn;
     private String phoneOrName;
     private Boolean manual;
+    private Boolean withoutReason;
 
-    public CanceledOrderReasonSpecification(LocalDateTime from, boolean statusNotReceived, String ttn, String phoneOrName, Boolean manual) {
+    public CanceledOrderReasonSpecification(LocalDateTime from, boolean statusNotReceived, String ttn, String phoneOrName, Boolean manual, Boolean withoutReason) {
         this.from = from;
         this.statusNotReceived = statusNotReceived;
         this.ttn = ttn;
         this.phoneOrName = phoneOrName;
         this.manual = manual;
+        this.withoutReason = withoutReason;
     }
 
     public CanceledOrderReasonSpecification(LocalDateTime from, boolean statusNotReceived, CancelReason cancelReason) {
@@ -70,6 +72,10 @@ public class CanceledOrderReasonSpecification implements Specification<CanceledO
         if (manual != null && manual == true) {
             Predicate manualPredicate = criteriaBuilder.isTrue(root.get("manual"));
             predicates.add(manualPredicate);
+        }
+        if (withoutReason != null && withoutReason == true) {
+            Predicate withoutReasonPredicate = criteriaBuilder.equal(root.get("reason"), CancelReason.НЕ_ВИЗНАЧЕНО);
+            predicates.add(withoutReasonPredicate);
         }
         return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
     }

@@ -4,8 +4,6 @@ import shop.chobitok.modnyi.entity.CancelReason;
 
 public class CancelOrderRequest {
 
-    private Long orderId;
-
     private CancelReason reason;
 
     private String comment;
@@ -20,14 +18,6 @@ public class CancelOrderRequest {
 
     public void setNewTTN(String newTTN) {
         this.newTTN = newTTN;
-    }
-
-    public Long getOrderId() {
-        return orderId;
-    }
-
-    public void setOrderId(Long orderId) {
-        this.orderId = orderId;
     }
 
     public CancelReason getReason() {

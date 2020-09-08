@@ -248,10 +248,6 @@ public class OrderService {
         return new StringResponse(result.toString());
     }
 
-    public CanceledOrderReason getCanceledOrderReason(Long orderedId) {
-        return canceledOrderReasonRepository.findFirstByOrderedId(orderedId);
-    }
-
     private void updateShoeAndSize(Ordered ordered, UpdateOrderRequest updateOrderRequest) {
         ordered.setOrderedShoes(shoeRepository.findAllById(updateOrderRequest.getShoes()));
         ordered.setSize(updateOrderRequest.getSize());

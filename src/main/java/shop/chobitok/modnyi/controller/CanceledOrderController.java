@@ -1,8 +1,10 @@
 package shop.chobitok.modnyi.controller;
 
 import org.springframework.web.bind.annotation.*;
+import shop.chobitok.modnyi.entity.CanceledOrderReason;
 import shop.chobitok.modnyi.entity.Ordered;
-import shop.chobitok.modnyi.entity.request.CancelOrderRequest;
+import shop.chobitok.modnyi.entity.request.CancelOrderWithIdRequest;
+import shop.chobitok.modnyi.entity.request.CancelOrderWithOrderRequest;
 import shop.chobitok.modnyi.entity.response.GetCanceledResponse;
 import shop.chobitok.modnyi.service.CanceledOrderReasonService;
 
@@ -18,15 +20,29 @@ public class CanceledOrderController {
     }
 
     @PatchMapping("/cancelOrder")
-    public Ordered cancelOrdered(@RequestBody CancelOrderRequest request) {
+    public Ordered cancelOrdered(@RequestBody CancelOrderWithOrderRequest request) {
         return canceledOrderReasonService.cancelOrder(request);
+    }
+
+    @PatchMapping("/setReason")
+    public CanceledOrderReason setReason(@RequestBody CancelOrderWithIdRequest cancelOrderWithIdRequest) {
+        return canceledOrderReasonService.setReason(cancelOrderWithIdRequest);
     }
 
     @GetMapping
     public GetCanceledResponse getAll(@RequestParam int page, @RequestParam int size, @RequestParam(required = false) String ttn,
-                                      @RequestParam(required = false) String phoneOrName, @RequestParam(required = false) Boolean manual) {
-        return canceledOrderReasonService.getAll(page, size, ttn, phoneOrName, manual);
+                                      @RequestParam(required = false) String phoneOrName, @RequestParam(required = false) Boolean manual,
+                                      @RequestParam(required = false) Boolean withoutReason) {
+        return canceledOrderReasonService.getAll(page, size, ttn, phoneOrName, manual, withoutReason);
     }
 
+    @GetMapping("/getCanceledOrderByOrderId")
+    public CanceledOrderReason getCancelOrderById(@RequestParam Long id) {
+        return canceledOrderReasonService.getCanceledOrderReasonByOrderId(id);
+    }
+   @GetMapping("/getCanceledOrder")
+    public CanceledOrderReason getCancelOrder(@RequestParam Long id) {
+        return canceledOrderReasonService.getById(id);
+    }
 
 }
