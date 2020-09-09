@@ -56,6 +56,9 @@ public class ShoePriceService {
     public ShoePrice getShoePrice(Shoe shoe, Ordered ordered) {
         List<ShoePrice> shoePrices = shoePriceRepository.findByShoeId(shoe.getId(), Sort.by(Sort.Direction.DESC, "fromDate").and(Sort.by(Sort.Direction.DESC, "createdDate")));
         for (ShoePrice shoePrice : shoePrices) {
+            if (ordered.getCreatedDate() == null) {
+                return getActualShoePrice(shoe);
+            }
             if (shoePrice.getFromDate().isBefore(ordered.getDateCreated()) || shoePrice.getFromDate().isEqual(ordered.getDateCreated())) {
                 return shoePrice;
             }

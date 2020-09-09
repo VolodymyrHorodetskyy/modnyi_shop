@@ -51,10 +51,15 @@ public class NovaPostaService {
             Data data = trackingEntity.getData().get(0);
             //if status created
             if (data.getStatusCode().equals(3) || ShoeUtil.convertToStatus(data.getStatusCode()) == Status.СТВОРЕНО) {
-                ListTrackingEntity entity = postaRepository.getTrackingEntityList(LocalDateTime.now().minusDays(10), LocalDateTime.now());
+                ListTrackingEntity entity = postaRepository.getTrackingEntityList(LocalDateTime.now().minusDays(5), LocalDateTime.now());
                 List<DataForList> list = entity.getData();
                 if (list.size() > 0) {
-                    return npOrderMapper.toOrdered(entity, fromNPToOrderRequest.getTtn());
+                    Ordered ordered1 = npOrderMapper.toOrdered(entity, fromNPToOrderRequest.getTtn());
+                    if (ordered1 != null) {
+                        return ordered1;
+                    } else {
+                        return npOrderMapper.toOrdered(ordered, trackingEntity);
+                    }
                 }
             } else {
                 return npOrderMapper.toOrdered(ordered, trackingEntity);
