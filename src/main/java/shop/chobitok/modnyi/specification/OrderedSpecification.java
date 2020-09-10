@@ -21,6 +21,12 @@ public class OrderedSpecification implements Specification<Ordered> {
     private LocalDateTime to;
     private Status status;
     private boolean excludeDeleted;
+    private Boolean notForDeliveryFile;
+
+    public OrderedSpecification(Status status, Boolean notForDeliveryFile) {
+        this.status = status;
+        this.notForDeliveryFile = notForDeliveryFile;
+    }
 
     public OrderedSpecification(String model, String ttn, String phoneOrName, boolean withoutTTN) {
         this.model = model;
@@ -84,6 +90,16 @@ public class OrderedSpecification implements Specification<Ordered> {
             Predicate excludeDeletedPredicate = criteriaBuilder.notEqual(root.get("status"), Status.ВИДАЛЕНО);
             predicateList.add(excludeDeletedPredicate);
         }
+        if (notForDeliveryFile != null) {
+            Predicate notForDeliveryFilePredicate;
+            if (notForDeliveryFile) {
+                notForDeliveryFilePredicate = criteriaBuilder.isTrue(root.get("notForDeliveryFile"));
+            } else {
+                notForDeliveryFilePredicate = criteriaBuilder.isFalse(root.get("notForDeliveryFile"));
+            }
+            predicateList.add(notForDeliveryFilePredicate);
+        }
+
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }
 

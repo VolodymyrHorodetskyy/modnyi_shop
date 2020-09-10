@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.service;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -56,33 +57,46 @@ public class StatisticService {
         if (updateStatuses) {
             orderService.updateOrderStatusesNovaPosta();
         }
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndNotForDeliveryFileFalseAndStatusOrderByDateCreated(Status.СТВОРЕНО);
+        List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(Status.СТВОРЕНО, false), Sort.by("dateCreated"));
         stringBuilder.append(countNeedDelivery(orderedList));
         stringBuilder.append("Кількість : " + orderedList.size());
         return new StringResponse(stringBuilder.toString());
     }
 
     private String countNeedDelivery(List<Ordered> orderedList) {
-        DateTimeFormatter formatters = DateTimeFormatter.ofPattern("d.MM");
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("d.MM");
         StringBuilder result = new StringBuilder();
-        LocalDate current = null;
+        Map<LocalDate, List<Ordered>> localDateOrderedMap = new TreeMap<>();
         for (Ordered ordered : orderedList) {
-            if (current == null || !ordered.getCreatedDate().toLocalDate().isEqual(current)) {
-                current = ordered.getCreatedDate().toLocalDate();
-                result.append(current.format(formatters)).append("\n\n");
-            }
-            if (!StringUtils.isEmpty(ordered.getTtn())) {
-                result.append(ordered.getTtn() + "\n" + ordered.getPostComment() + "\n\n");
-            } else {
-                result.append("без накладноЇ\n");
-                for (Shoe shoe : ordered.getOrderedShoes()) {
-                    result.append(shoe.getModel()).append(" ").append(shoe.getColor());
+            addOrderToMap(localDateOrderedMap, ordered);
+        }
+        for (Map.Entry<LocalDate, List<Ordered>> entry : localDateOrderedMap.entrySet()) {
+            result.append(entry.getKey().format(timeFormatter)).append("\n\n");
+            for (Ordered ordered : entry.getValue()) {
+                if (!StringUtils.isEmpty(ordered.getTtn())) {
+                    result.append(ordered.getTtn() + "\n" + ordered.getPostComment() + "\n\n");
+                } else {
+                    result.append("без накладноЇ\n");
+                    for (Shoe shoe : ordered.getOrderedShoes()) {
+                        result.append(shoe.getModel()).append(" ").append(shoe.getColor());
+                    }
+                    result.append(", ").append(ordered.getSize()).append("\n\n");
                 }
-                result.append(", ").append(ordered.getSize()).append("\n\n");
             }
-
         }
         return result.toString();
+    }
+
+    private void addOrderToMap(Map<LocalDate, List<Ordered>> localDateListMap, Ordered ordered) {
+        LocalDate date = ordered.getCreatedDate().toLocalDate();
+        List<Ordered> orderedList = localDateListMap.get(date);
+        if (orderedList == null) {
+            orderedList = new ArrayList<>();
+            orderedList.add(ordered);
+            localDateListMap.put(date, orderedList);
+        } else {
+            orderedList.add(ordered);
+        }
     }
 
 
