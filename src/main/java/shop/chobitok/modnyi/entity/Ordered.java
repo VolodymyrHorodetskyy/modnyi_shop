@@ -35,7 +35,7 @@ public class Ordered extends Audit {
     private Double prePayment;
 
     @Column
-    private Double price;
+    private Double price = 0d;
 
     @Column
     private String address;
