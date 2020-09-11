@@ -16,6 +16,9 @@ public class Ordered extends Audit {
     @ManyToOne(cascade = CascadeType.ALL)
     private Client client;
 
+    @ManyToOne(cascade = CascadeType.ALL)
+    private User user;
+
     @Column
     private Integer size;
 
@@ -305,5 +308,13 @@ public class Ordered extends Audit {
 
     public void setPayed(boolean payed) {
         this.payed = payed;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

@@ -8,6 +8,7 @@ public class ChangeAppOrderRequest {
     private String comment;
     private AppOrderStatus status;
     private String ttn;
+    private Long userId;
 
     public Long getId() {
         return id;
@@ -39,5 +40,13 @@ public class ChangeAppOrderRequest {
 
     public void setTtn(String ttn) {
         this.ttn = ttn;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 }

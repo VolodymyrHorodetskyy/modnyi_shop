@@ -26,6 +26,7 @@ public class CreateOrderRequest {
     private String notes;
     private String orderBy;
     private boolean fullpayment;
+    private Long userId;
 
 
     public String getTtn() {
@@ -154,5 +155,13 @@ public class CreateOrderRequest {
 
     public void setMail(String mail) {
         this.mail = mail;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 }

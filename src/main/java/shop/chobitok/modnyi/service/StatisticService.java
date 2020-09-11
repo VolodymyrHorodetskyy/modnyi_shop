@@ -17,6 +17,7 @@ import shop.chobitok.modnyi.repository.AppOrderRepository;
 import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.service.entity.StatShoe;
+import shop.chobitok.modnyi.specification.AppOrderSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
 
@@ -359,6 +360,40 @@ public class StatisticService {
         int newAppOrdersSize = appOrderRepository.findByStatusIn(Arrays.asList(AppOrderStatus.Новий)).size();
         int canceledWithoutReasonSize = canceledOrderReasonRepository.findByReasonIn(Arrays.asList(CancelReason.НЕ_ВИЗНАЧЕНО)).size();
         return new AmountsInfoResponse(newAppOrdersSize, canceledWithoutReasonSize);
+    }
+
+    public StringResponse getOrdersAndAppordersByPhone(Long id) {
+        AppOrder appOrderFromDb = appOrderRepository.findById(id).orElse(null);
+        if (appOrderFromDb != null) {
+            StringBuilder result = new StringBuilder();
+            List<Ordered> orderedFromDB = orderRepository.findAll(new OrderedSpecification(appOrderFromDb.getPhone(), appOrderFromDb.getTtn()));
+            List<AppOrder> appOrders = appOrderRepository.findAll(new AppOrderSpecification(appOrderFromDb.getPhone(), appOrderFromDb.getId()));
+            Map<Client, List<Ordered>> clientOrderedMap = new HashMap<>();
+            for (Ordered ordered : orderedFromDB) {
+                List<Ordered> orderedList1 = clientOrderedMap.get(ordered.getClient());
+                if (orderedList1 == null) {
+                    orderedList1 = new ArrayList<>();
+                    orderedList1.add(ordered);
+                    clientOrderedMap.put(ordered.getClient(), orderedList1);
+                } else {
+                    orderedList1.add(ordered);
+                }
+            }
+            result.append("Замовлення \n\n");
+            for (Map.Entry<Client, List<Ordered>> entry : clientOrderedMap.entrySet()) {
+                Client client = entry.getKey();
+                result.append(client.getName() + " " + client.getLastName() + " " + client.getPhone() + "\n");
+                for (Ordered ordered : entry.getValue()) {
+                    result.append(ordered.getTtn() + "\n");
+                }
+            }
+            result.append("\n Заявки\n");
+            for (AppOrder appOrder : appOrders) {
+                result.append(appOrder.getId() + ", ");
+            }
+            return new StringResponse(result.toString());
+        }
+        return new StringResponse();
     }
 
     private Map<Shoe, Integer> countShoesAmount(List<Ordered> ordereds) {

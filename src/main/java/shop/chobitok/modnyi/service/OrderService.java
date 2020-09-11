@@ -18,6 +18,7 @@ import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
+import shop.chobitok.modnyi.repository.UserRepository;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 
 import javax.transaction.Transactional;
@@ -40,12 +41,13 @@ public class OrderService {
     private NotificationService notificationService;
     private MailService mailService;
     private CanceledOrderReasonService canceledOrderReasonService;
+    private UserRepository userRepository;
 
 
     @Value("${novaposta.phoneNumber}")
     private String phone;
 
-    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, StorageService storageService, NovaPostaService novaPostaService, CanceledOrderReasonRepository canceledOrderReasonRepository, NotificationService notificationService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService) {
+    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, StorageService storageService, NovaPostaService novaPostaService, CanceledOrderReasonRepository canceledOrderReasonRepository, NotificationService notificationService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository) {
         this.orderRepository = orderRepository;
         this.shoeRepository = shoeRepository;
         this.clientService = clientService;
@@ -55,6 +57,7 @@ public class OrderService {
         this.notificationService = notificationService;
         this.mailService = mailService;
         this.canceledOrderReasonService = canceledOrderReasonService;
+        this.userRepository = userRepository;
     }
 
     public Ordered findByTTN(String ttn) {
@@ -100,6 +103,7 @@ public class OrderService {
         } else {
             throw new ConflictException("Взуття не може бути пусте");
         }
+        setUser(ordered, createOrderRequest.getUserId());
         ordered.setClient(clientService.createClient(createOrderRequest));
         ordered.setTtn(createOrderRequest.getTtn());
         ordered.setStatus(createOrderRequest.getStatus());
@@ -116,10 +120,11 @@ public class OrderService {
     }
 
     public Ordered updateOrder(Long id, UpdateOrderRequest updateOrderRequest) {
-        Ordered ordered = orderRepository.getOne(id);
+        Ordered ordered = orderRepository.findById(id).orElse(null);
         if (ordered == null) {
             throw new ConflictException("Замовлення не знайдено");
         }
+        setUser(ordered, updateOrderRequest.getUserId());
         ordered.setFullPayment(updateOrderRequest.isFull_payment());
         ordered.setNotes(updateOrderRequest.getNotes());
         updateShoeAndSize(ordered, updateOrderRequest);
@@ -128,6 +133,14 @@ public class OrderService {
         ordered.setPrice(updateOrderRequest.getPrice());
         ordered.setStatus(updateOrderRequest.getStatus());
         return orderRepository.save(ordered);
+    }
+
+    private void setUser(Ordered ordered, Long userId) {
+        User user = null;
+        if (userId != null) {
+            user = userRepository.findById(userId).orElse(null);
+        }
+        ordered.setUser(user);
     }
 
     public StringResponse importOrdersByTTNString(ImportOrdersFromStringRequest request) {

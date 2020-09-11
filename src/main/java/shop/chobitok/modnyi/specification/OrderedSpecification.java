@@ -22,6 +22,13 @@ public class OrderedSpecification implements Specification<Ordered> {
     private Status status;
     private boolean excludeDeleted;
     private Boolean notForDeliveryFile;
+    private String phone;
+    private String isNotTtn;
+
+    public OrderedSpecification(String phone, String isNotTtn) {
+        this.phone = phone;
+        this.isNotTtn = isNotTtn;
+    }
 
     public OrderedSpecification(Status status, Boolean notForDeliveryFile) {
         this.status = status;
@@ -70,6 +77,11 @@ public class OrderedSpecification implements Specification<Ordered> {
             Predicate lastNamePredicate = criteriaBuilder.like(clientJoin.get("lastName"), "%" + phoneOrName + "%");
             predicateList.add(criteriaBuilder.or(phonePredicate, namePredicate, lastNamePredicate));
         }
+        if (StringUtils.isEmpty(phoneOrName) && !StringUtils.isEmpty(phone)) {
+            Join<Ordered, Client> clientJoin = root.join("client");
+            Predicate phonePredicate = criteriaBuilder.like(clientJoin.get("phone"), "%" + phone + "%");
+            predicateList.add(phonePredicate);
+        }
         if (withoutTTN) {
             Predicate withoutTTN = criteriaBuilder.isTrue(root.get("withoutTTN"));
             predicateList.add(withoutTTN);
@@ -99,7 +111,10 @@ public class OrderedSpecification implements Specification<Ordered> {
             }
             predicateList.add(notForDeliveryFilePredicate);
         }
-
+        if (!StringUtils.isEmpty(isNotTtn)) {
+            Predicate isNotTtnPredicate = criteriaBuilder.notEqual(root.get("ttn"), isNotTtn);
+            predicateList.add(isNotTtnPredicate);
+        }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }
 

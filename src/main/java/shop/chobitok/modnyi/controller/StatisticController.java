@@ -77,8 +77,14 @@ public class StatisticController {
     }
 
     @GetMapping("/getAmountsInfo")
-    public AmountsInfoResponse amountsInfoResponse(){
+    public AmountsInfoResponse amountsInfoResponse() {
         return statisticService.countAmounts();
     }
+
+    @GetMapping("/getOrdersAndAppOrdersByPhone")
+    public StringResponse getOrdersAndAppOrdersByPhone(@RequestParam Long id) {
+        return statisticService.getOrdersAndAppordersByPhone(id);
+    }
+
 
 }

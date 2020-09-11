@@ -5,16 +5,14 @@ import org.json.JSONObject;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import shop.chobitok.modnyi.entity.AppOrder;
-import shop.chobitok.modnyi.entity.AppOrderStatus;
-import shop.chobitok.modnyi.entity.Client;
-import shop.chobitok.modnyi.entity.Ordered;
+import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.request.ChangeAppOrderRequest;
 import shop.chobitok.modnyi.entity.response.ChangeAppOrderResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.repository.AppOrderRepository;
 import shop.chobitok.modnyi.repository.ClientRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
+import shop.chobitok.modnyi.repository.UserRepository;
 import shop.chobitok.modnyi.specification.AppOrderSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
 
@@ -32,12 +30,14 @@ public class AppOrderService {
     private OrderService orderService;
     private ClientRepository clientRepository;
     private OrderRepository orderRepository;
+    private UserRepository userRepository;
 
-    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository) {
+    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository) {
         this.appOrderRepository = appOrderRepository;
         this.orderService = orderService;
         this.clientRepository = clientRepository;
         this.orderRepository = orderRepository;
+        this.userRepository = userRepository;
     }
 
     public AppOrder catchOrder(String s) {
@@ -49,7 +49,7 @@ public class AppOrderService {
             appOrder.setName(splitted[0].substring(splitted[0].indexOf("=") + 1));
             for (String s1 : splitted) {
                 if (s1.contains("phone")) {
-                    appOrder.setPhone(s1.substring(s1.indexOf("=") + 1).replaceAll("[^0-9]",""));
+                    appOrder.setPhone(s1.substring(s1.indexOf("=") + 1).replaceAll("[^0-9]", ""));
                 } else if (s1.contains("Email")) {
                     appOrder.setMail(s1.substring(s1.indexOf("=") + 1));
                 } else if (s1.contains("dont_call")) {
@@ -98,11 +98,16 @@ public class AppOrderService {
     }
 
     public ChangeAppOrderResponse changeAppOrder(ChangeAppOrderRequest request) {
-        AppOrder appOrder = appOrderRepository.getOne(request.getId());
+        AppOrder appOrder = appOrderRepository.findById(request.getId()).orElse(null);
         String message = null;
         if (appOrder == null) {
             throw new ConflictException("AppOrder not found");
         }
+        User user = null;
+        if (request.getId() != null) {
+            user = userRepository.findById(request.getUserId()).orElse(null);
+        }
+        appOrder.setUser(user);
         changeStatus(appOrder, request.getStatus());
         String ttn = request.getTtn();
         if (!StringUtils.isEmpty(ttn)) {
@@ -122,7 +127,8 @@ public class AppOrderService {
                     orderRepository.save(ordered);
                 }
             }
-
+            ordered.setUser(user);
+            orderRepository.save(ordered);
         }
         appOrder.setComment(request.getComment());
         return new ChangeAppOrderResponse(message, appOrderRepository.save(appOrder));
