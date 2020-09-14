@@ -39,7 +39,9 @@ public class FinanceService {
                     cost += shoePriceService.getShoePrice(shoe, ordered).getCost();
                     ++received;
                 }
-                sum += ordered.getPrice() - cost;
+                if (ordered.getPrice() != null) {
+                    sum += ordered.getPrice() - cost;
+                }
             } else if (ordered.getStatus() == Status.ВІДМОВА) {
                 ++denied;
             } else if (ordered.getStatus() == Status.СТВОРЕНО || ordered.getStatus() == Status.ВІДПРАВЛЕНО || ordered.getStatus() == Status.ДОСТАВЛЕНО) {
