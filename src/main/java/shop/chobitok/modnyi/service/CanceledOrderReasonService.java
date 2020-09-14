@@ -57,11 +57,12 @@ public class CanceledOrderReasonService {
         CanceledOrderReason canceledOrderReason = canceledOrderReasonRepository.findFirstByOrderedId(cancelOrderRequest.getOrderId());
         if (canceledOrderReason == null) {
             canceledOrderReason = new CanceledOrderReason(ordered, cancelOrderRequest.getReason(), cancelOrderRequest.getComment(),
-                    cancelOrderRequest.getNewTTN());
+                    cancelOrderRequest.getNewTTN(), cancelOrderRequest.getReturnTTN());
         } else {
             canceledOrderReason.setComment(cancelOrderRequest.getComment());
             canceledOrderReason.setReason(cancelOrderRequest.getReason());
             canceledOrderReason.setNewTtn(cancelOrderRequest.getNewTTN());
+            canceledOrderReason.setReturnTtn(cancelOrderRequest.getReturnTTN());
         }
         canceledOrderReason.setManual(true);
         orderRepository.save(ordered);
@@ -154,7 +155,7 @@ public class CanceledOrderReasonService {
         return canceledOrderReasonRepository.findFirstByOrderedId(orderedId);
     }
 
-    public CanceledOrderReason getById(Long id){
+    public CanceledOrderReason getById(Long id) {
         return canceledOrderReasonRepository.findById(id).orElse(null);
     }
 

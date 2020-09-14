@@ -32,6 +32,14 @@ public class CanceledOrderReason extends Audit {
         this.newTtn = newTtn;
     }
 
+    public CanceledOrderReason(Ordered ordered, CancelReason reason, String comment, String newTtn, String returnTtn) {
+        this.ordered = ordered;
+        this.reason = reason;
+        this.comment = comment;
+        this.returnTtn = returnTtn;
+        this.newTtn = newTtn;
+    }
+
     public Ordered getOrdered() {
         return ordered;
     }
