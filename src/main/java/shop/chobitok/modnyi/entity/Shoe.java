@@ -140,4 +140,20 @@ public class Shoe extends Audit {
         this.patterns = patterns;
     }
 
+    @Override
+    public boolean equals(Object o) {
+
+
+        Shoe shoe = (Shoe) o;
+
+        if (!model.equals(shoe.model)) return false;
+        return color.equals(shoe.color);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = model.hashCode();
+        result = 31 * result + color.hashCode();
+        return result;
+    }
 }

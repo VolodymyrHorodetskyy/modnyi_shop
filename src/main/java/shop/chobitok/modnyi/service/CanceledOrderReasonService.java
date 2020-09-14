@@ -98,7 +98,7 @@ public class CanceledOrderReasonService {
         List<CanceledOrderReason> updated = new ArrayList<>();
         for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
             if (StringUtils.isEmpty(canceledOrderReason.getReturnTtn()) && canceledOrderReason.getOrdered() != null
-                    && !StringUtils.isEmpty(canceledOrderReason.getOrdered().getTtn())) {
+                    && !StringUtils.isEmpty(canceledOrderReason.getOrdered().getTtn()) && !canceledOrderReason.isManual()) {
                 Data returned = getReturnedEntity(canceledOrderReason.getOrdered().getTtn());
                 if (returned != null) {
                     canceledOrderReason.setReturnTtn(returned.getNumber());
@@ -118,9 +118,7 @@ public class CanceledOrderReasonService {
         Data returned = null;
         if (trackingEntity != null && trackingEntity.getData().size() > 0) {
             Data data = trackingEntity.getData().get(0);
-            if (StringUtils.isEmpty(data.getLastCreatedOnTheBasisNumber())) {
-                //TODO: Make not returned
-            } else {
+            if (!StringUtils.isEmpty(data.getLastCreatedOnTheBasisNumber())) {
                 returned = postaRepository.getTracking(npHelper.formGetTrackingRequest(data.getLastCreatedOnTheBasisNumber())).getData().get(0);
                 if (convertToStatus(returned.getStatusCode()) == Status.ЗМІНА_АДРЕСУ) {
                     returned = postaRepository.getTracking(npHelper.formGetTrackingRequest(returned.getLastCreatedOnTheBasisNumber())).getData().get(0);

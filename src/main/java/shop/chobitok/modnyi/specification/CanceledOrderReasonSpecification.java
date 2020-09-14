@@ -18,6 +18,7 @@ public class CanceledOrderReasonSpecification implements Specification<CanceledO
     private String phoneOrName;
     private Boolean manual;
     private Boolean withoutReason;
+    private boolean hasReturnTtn;
 
     public CanceledOrderReasonSpecification(LocalDateTime from, boolean statusNotReceived, String ttn, String phoneOrName, Boolean manual, Boolean withoutReason) {
         this.from = from;
@@ -37,6 +38,11 @@ public class CanceledOrderReasonSpecification implements Specification<CanceledO
     public CanceledOrderReasonSpecification(LocalDateTime from, boolean statusNotReceived) {
         this.from = from;
         this.statusNotReceived = statusNotReceived;
+    }
+
+    public CanceledOrderReasonSpecification(boolean statusNotReceived, boolean hasReturnTtn) {
+        this.statusNotReceived = statusNotReceived;
+        this.hasReturnTtn = hasReturnTtn;
     }
 
     @Override
@@ -76,6 +82,11 @@ public class CanceledOrderReasonSpecification implements Specification<CanceledO
         if (withoutReason != null && withoutReason == true) {
             Predicate withoutReasonPredicate = criteriaBuilder.equal(root.get("reason"), CancelReason.НЕ_ВИЗНАЧЕНО);
             predicates.add(withoutReasonPredicate);
+        }
+        if (hasReturnTtn) {
+            Predicate notNullTtnPredicate = criteriaBuilder.isNotNull(root.get("returnTtn"));
+            Predicate isNotEmpty = criteriaBuilder.notEqual(root.get("returnTtn"), "");
+            predicates.add(criteriaBuilder.and(notNullTtnPredicate, isNotEmpty));
         }
         return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
     }

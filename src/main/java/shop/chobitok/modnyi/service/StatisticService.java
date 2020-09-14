@@ -17,6 +17,7 @@ import shop.chobitok.modnyi.repository.AppOrderRepository;
 import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.service.entity.StatShoe;
+import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
 
@@ -118,55 +119,68 @@ public class StatisticService {
 
     //TODO refactor, split
     public StringResponse getReturned(boolean excludeFromDeliveryFile) {
+        List<Ordered> toSave = new ArrayList<>();
+        StringBuilder result = new StringBuilder();
+        List<CanceledOrderReason> canceledOrderReasons = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(true, true));
         List<Ordered> orderedList = orderRepository.findByNotForDeliveryFileTrue();
         for (Ordered order : orderedList) {
             order.setNotForDeliveryFile(false);
+            toSave.add(order);
         }
-        orderRepository.saveAll(orderedList);
-        StringBuilder result = new StringBuilder();
-        StringBuilder coincidence = new StringBuilder();
-        List<Ordered> deniedList = orderRepository.findAllByAvailableTrueAndReturnedFalseAndCanceledAfterFalseAndStatus(Status.ВІДМОВА);
         List<Ordered> createdList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.СТВОРЕНО));
-        List<Long> usedInCoincidence = new ArrayList<>();
-        for (Ordered deniedOrder : deniedList) {
-            TrackingEntity trackingEntity = postaRepository.getTracking(npHelper.formGetTrackingRequest(deniedOrder.getTtn()));
-            Data data = trackingEntity.getData().get(0);
-            if (StringUtils.isEmpty(data.getLastCreatedOnTheBasisNumber())) {
-                //TODO: Make not returned
-            } else {
-                Data returned = postaRepository.getTracking(npHelper.formGetTrackingRequest(data.getLastCreatedOnTheBasisNumber())).getData().get(0);
-                if (convertToStatus(returned.getStatusCode()) == Status.ЗМІНА_АДРЕСУ) {
-                    returned = postaRepository.getTracking(npHelper.formGetTrackingRequest(returned.getLastCreatedOnTheBasisNumber())).getData().get(0);
-                }
-                Status returnedStatus = convertToStatus(returned.getStatusCode());
-                if (returnedStatus != Status.ОТРИМАНО && returnedStatus != Status.НЕ_ЗНАЙДЕНО) {
-                    result.append(returned.getNumber() + "\n" + data.getCargoDescriptionString() + " "
-                            + convertToStatus(returned.getStatusCode()) + "\n\n");
-                    for (Ordered created : createdList) {
-                        if (!usedInCoincidence.contains(deniedOrder.getId()) && deniedOrder.getOrderedShoes().equals(created.getOrderedShoes()) && deniedOrder.getSize().equals(created.getSize())) {
-                            coincidence.append(created.getTtn() + "\n" + returned.getNumber() + "\n" + data.getCargoDescriptionString() + " " + convertToStatus(returned.getStatusCode()) + "\n\n");
-                            usedInCoincidence.add(deniedOrder.getId());
-                            if (excludeFromDeliveryFile) {
-                                created.setNotForDeliveryFile(true);
-                                orderRepository.save(created);
-                            }
-                        }
+        Set<CanceledOrderReason> used = new HashSet<>();
+        for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
+            result.append(canceledOrderReason.getOrdered().getPostComment()).append("\n").
+                    append(canceledOrderReason.getOrdered().getTtn()).append("\n").append(canceledOrderReason.getReturnTtn()).append(" ")
+                    .append(canceledOrderReason.getStatus()).append(" ").append(canceledOrderReason.getReason())
+                    .append("\n\n");
+            if (canceledOrderReason.getReason() == CancelReason.БРАК || canceledOrderReason.getReason() == CancelReason.ЯКІСТЬ) {
+                used.add(canceledOrderReason);
+            }
+        }
+        result.append("Звернути увагу\n\n");
+        for (CanceledOrderReason canceledOrderReason : used) {
+            result.append(canceledOrderReason.getOrdered().getTtn()).append("\n")
+                    .append(canceledOrderReason.getReturnTtn()).append(" ").append(canceledOrderReason.getStatus()).append("\n")
+                    .append(canceledOrderReason.getReason()).append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
+                    .append("\n\n");
+        }
+        result.append("Співпадіння\n\n");
+        for (Ordered ordered : createdList) {
+            for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
+                if (compareShoeArrays(canceledOrderReason.getOrdered().getOrderedShoes(), ordered.getOrderedShoes()) &&
+                        ordered.getSize().equals(canceledOrderReason.getOrdered().getSize()) &&
+                        used.add(canceledOrderReason)) {
+                    result.append(ordered.getTtn() + " " + ordered.getPostComment() + "\n");
+                    result.append(canceledOrderReason.getReturnTtn() + " " + canceledOrderReason.getStatus() + " " + canceledOrderReason.getReason() + "\n\n");
+                    if (excludeFromDeliveryFile) {
+                        ordered.setNotForDeliveryFile(true);
+                        toSave.add(ordered);
                     }
-                } else {
-                    //set denied order as returned
-                    deniedOrder.setReturned(true);
-                    orderRepository.save(deniedOrder);
                 }
             }
         }
-        result.append("Співпадіння \n\n");
-        result.append(coincidence.toString());
+        if (toSave.size() > 0) {
+            orderRepository.saveAll(toSave);
+        }
         return new StringResponse(result.toString());
     }
 
-  /*  private String compareShoeArrays(List<Shoe> shoes, List<Shoe> shoes2) {
-        shoes.equals(shoes2);
-    }*/
+
+    private boolean compareShoeArrays(List<Shoe> shoes, List<Shoe> shoes2) {
+        Set<Shoe> shoesSet = new HashSet<>();
+        if (shoes.size() != shoes2.size()) {
+            return false;
+        }
+        for (Shoe shoe : shoes) {
+            for (Shoe shoe1 : shoes2) {
+                if (!(shoe.equals(shoe1) && shoesSet.add(shoe1))) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 
     private Set<String> readFileToTTNSet(String path) {
         List<String> allTTNList = ShoeUtil.readTXTFile(path);
@@ -359,6 +373,41 @@ public class StatisticService {
         int newAppOrdersSize = appOrderRepository.findByStatusIn(Arrays.asList(AppOrderStatus.Новий)).size();
         int canceledWithoutReasonSize = canceledOrderReasonRepository.findByReasonIn(Arrays.asList(CancelReason.НЕ_ВИЗНАЧЕНО)).size();
         return new AmountsInfoResponse(newAppOrdersSize, canceledWithoutReasonSize);
+    }
+
+    public StringResponse getOrdersAndAppordersByPhone(Long id) {
+/*        AppOrder appOrderFromDb = appOrderRepository.findById(id).orElse(null);
+        if (appOrderFromDb != null) {
+            StringBuilder result = new StringBuilder();
+            List<Ordered> orderedFromDB = orderRepository.findAll(new OrderedSpecification(appOrderFromDb.getPhone(), appOrderFromDb.getTtn()));
+            List<AppOrder> appOrders = appOrderRepository.findAll(new AppOrderSpecification(appOrderFromDb.getPhone(), appOrderFromDb.getId()));
+            Map<Client, List<Ordered>> clientOrderedMap = new HashMap<>();
+            for (Ordered ordered : orderedFromDB) {
+                List<Ordered> orderedList1 = clientOrderedMap.get(ordered.getClient());
+                if (orderedList1 == null) {
+                    orderedList1 = new ArrayList<>();
+                    orderedList1.add(ordered);
+                    clientOrderedMap.put(ordered.getClient(), orderedList1);
+                } else {
+                    orderedList1.add(ordered);
+                }
+            }
+            result.append("Замовлення \n\n");
+            for (Map.Entry<Client, List<Ordered>> entry : clientOrderedMap.entrySet()) {
+                Client client = entry.getKey();
+                result.append(client.getName() + " " + client.getLastName() + " " + client.getPhone() + "\n");
+                for (Ordered ordered : entry.getValue()) {
+                    result.append(ordered.getTtn() + "\n");
+                }
+            }
+            result.append("\n Заявки\n");
+            for (AppOrder appOrder : appOrders) {
+                result.append(appOrder.getId() + ", ");
+            }
+            return new StringResponse(result.toString());
+        }
+        return new StringResponse();*/
+        return null;
     }
 
     private Map<Shoe, Integer> countShoesAmount(List<Ordered> ordereds) {
