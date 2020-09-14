@@ -20,6 +20,13 @@ public class AppOrderSpecification implements Specification<AppOrder> {
     private String comment;
     private LocalDateTime from;
     private List<AppOrderStatus> statuses;
+    private String phone;
+    private Long isNotEqualId;
+
+    public AppOrderSpecification(String phone, Long isNotEqualId) {
+        this.phone = phone;
+        this.isNotEqualId = isNotEqualId;
+    }
 
     public AppOrderSpecification(Long id, String phoneAndName, String comment, LocalDateTime from, List<AppOrderStatus> statuses) {
         this.id = id;
@@ -51,6 +58,14 @@ public class AppOrderSpecification implements Specification<AppOrder> {
         if (!StringUtils.isEmpty(comment)) {
             Predicate commentPredicate = criteriaBuilder.like(root.get("comment"), "%" + comment + "%");
             predicateList.add(commentPredicate);
+        }
+        if (!StringUtils.isEmpty(phone)) {
+            Predicate phonePredicate = criteriaBuilder.like(root.get("phone"), "%" + phone + "%");
+            predicateList.add(phonePredicate);
+        }
+        if (isNotEqualId != null) {
+            Predicate isNotEqualsId = criteriaBuilder.notEqual(root.get("id"), isNotEqualId);
+            predicateList.add(isNotEqualsId);
         }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }

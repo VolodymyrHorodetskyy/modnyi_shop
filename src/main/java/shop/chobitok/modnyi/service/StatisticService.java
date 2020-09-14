@@ -17,6 +17,7 @@ import shop.chobitok.modnyi.repository.AppOrderRepository;
 import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.service.entity.StatShoe;
+import shop.chobitok.modnyi.specification.AppOrderSpecification;
 import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
@@ -376,7 +377,7 @@ public class StatisticService {
     }
 
     public StringResponse getOrdersAndAppordersByPhone(Long id) {
-/*        AppOrder appOrderFromDb = appOrderRepository.findById(id).orElse(null);
+        AppOrder appOrderFromDb = appOrderRepository.findById(id).orElse(null);
         if (appOrderFromDb != null) {
             StringBuilder result = new StringBuilder();
             List<Ordered> orderedFromDB = orderRepository.findAll(new OrderedSpecification(appOrderFromDb.getPhone(), appOrderFromDb.getTtn()));
@@ -406,8 +407,7 @@ public class StatisticService {
             }
             return new StringResponse(result.toString());
         }
-        return new StringResponse();*/
-        return null;
+        return new StringResponse();
     }
 
     private Map<Shoe, Integer> countShoesAmount(List<Ordered> ordereds) {

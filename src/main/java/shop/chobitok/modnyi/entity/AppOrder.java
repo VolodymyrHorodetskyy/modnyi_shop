@@ -3,9 +3,7 @@ package shop.chobitok.modnyi.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
+import javax.persistence.*;
 import java.util.List;
 
 @Entity
@@ -35,6 +33,8 @@ public class AppOrder extends Audit {
     private String comment;
     @Column
     private String ttn;
+    @ManyToOne(cascade = CascadeType.ALL)
+    private User user;
 
 
     public AppOrder() {
@@ -131,5 +131,13 @@ public class AppOrder extends Audit {
 
     public void setTtn(String ttn) {
         this.ttn = ttn;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

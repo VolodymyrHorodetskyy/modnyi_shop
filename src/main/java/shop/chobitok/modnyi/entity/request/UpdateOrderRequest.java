@@ -21,6 +21,7 @@ public class UpdateOrderRequest {
     private Double price;
     private Double prepayment;
     private boolean full_payment;
+    private Long userId;
 
     public String getName() {
         return name;
@@ -124,5 +125,13 @@ public class UpdateOrderRequest {
 
     public void setMail(String mail) {
         this.mail = mail;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 }

@@ -2,7 +2,6 @@ package shop.chobitok.modnyi.controller;
 
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.CancelReason;
-import shop.chobitok.modnyi.entity.CanceledOrderReason;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.dto.StatusDto;
 import shop.chobitok.modnyi.entity.request.*;

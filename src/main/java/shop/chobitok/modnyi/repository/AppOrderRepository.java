@@ -12,6 +12,8 @@ public interface AppOrderRepository extends JpaRepository<AppOrder, Long> {
 
     List<AppOrder> findAll(Specification specification, Sort sort);
 
+    List<AppOrder> findAll(Specification specification);
+
     List<AppOrder> findByStatusIn(List<AppOrderStatus> statuses);
 
 }
