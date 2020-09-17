@@ -135,6 +135,7 @@ public class StatisticService {
             result.append(canceledOrderReason.getOrdered().getPostComment()).append("\n").
                     append(canceledOrderReason.getOrdered().getTtn()).append("\n").append(canceledOrderReason.getReturnTtn()).append(" ")
                     .append(canceledOrderReason.getStatus()).append(" ").append(canceledOrderReason.getReason())
+                    .append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
                     .append("\n\n");
             if (canceledOrderReason.getReason() == CancelReason.БРАК) {
                 used.add(canceledOrderReason);
