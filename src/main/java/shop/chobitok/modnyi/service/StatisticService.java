@@ -131,18 +131,24 @@ public class StatisticService {
         List<Ordered> createdList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.СТВОРЕНО));
         Set<CanceledOrderReason> used = new HashSet<>();
         Set<CanceledOrderReason> toFind = new HashSet<>();
+        int countArrived = 0;
         for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
             result.append(canceledOrderReason.getOrdered().getPostComment()).append("\n").
                     append(canceledOrderReason.getOrdered().getTtn()).append("\n").append(canceledOrderReason.getReturnTtn()).append(" ")
                     .append(canceledOrderReason.getStatus()).append(" ").append(canceledOrderReason.getReason())
                     .append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
                     .append("\n\n");
+            if (canceledOrderReason.getStatus() == Status.ДОСТАВЛЕНО) {
+                ++countArrived;
+            }
             if (canceledOrderReason.getReason() == CancelReason.БРАК) {
                 used.add(canceledOrderReason);
             } else {
                 toFind.add(canceledOrderReason);
             }
         }
+        result.append("Кількість доставлених: ").append(countArrived).append("\n\n");
+
         result.append("Звернути увагу\n\n");
         for (CanceledOrderReason canceledOrderReason : used) {
             result.append(canceledOrderReason.getOrdered().getTtn()).append("\n")
@@ -162,6 +168,7 @@ public class StatisticService {
                         ordered.setNotForDeliveryFile(true);
                         toSave.add(ordered);
                     }
+                    break;
                 }
             }
         }
