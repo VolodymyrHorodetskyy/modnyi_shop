@@ -39,13 +39,15 @@ public class CanceledOrderReasonService {
     private CanceledOrderReasonRepository canceledOrderReasonRepository;
     private NovaPostaRepository postaRepository;
     private NPHelper npHelper;
+    private MailService mailService;
 
-    public CanceledOrderReasonService(NovaPostaService novaPostaService, OrderRepository orderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, NovaPostaRepository postaRepository, NPHelper npHelper) {
+    public CanceledOrderReasonService(NovaPostaService novaPostaService, OrderRepository orderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, NovaPostaRepository postaRepository, NPHelper npHelper, MailService mailService) {
         this.novaPostaService = novaPostaService;
         this.orderRepository = orderRepository;
         this.canceledOrderReasonRepository = canceledOrderReasonRepository;
         this.postaRepository = postaRepository;
         this.npHelper = npHelper;
+        this.mailService = mailService;
     }
 
     public Ordered cancelOrder(CancelOrderWithOrderRequest cancelOrderRequest) {
@@ -54,6 +56,9 @@ public class CanceledOrderReasonService {
             throw new ConflictException("Немає такого замовлення");
         }
         ordered.setStatus(Status.ВІДМОВА);
+        if (ordered.isPayed()) {
+            mailService.sendEmail("Було оплачено", ordered.getTtn(), "horodetskyyv@gmail.com");
+        }
         CanceledOrderReason canceledOrderReason = canceledOrderReasonRepository.findFirstByOrderedId(cancelOrderRequest.getOrderId());
         if (canceledOrderReason == null) {
             canceledOrderReason = new CanceledOrderReason(ordered, cancelOrderRequest.getReason(), cancelOrderRequest.getComment(),
@@ -105,7 +110,7 @@ public class CanceledOrderReasonService {
                     canceledOrderReason.setStatus(convertToStatus(returned.getStatusCode()));
                     updated.add(canceledOrderReason);
                 }
-            } else {
+            } else if (!StringUtils.isEmpty(canceledOrderReason.getReturnTtn())) {
                 canceledOrderReason.setStatus(novaPostaService.getStatus(canceledOrderReason.getReturnTtn()));
                 updated.add(canceledOrderReason);
             }

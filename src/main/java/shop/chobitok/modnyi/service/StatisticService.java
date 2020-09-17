@@ -130,13 +130,16 @@ public class StatisticService {
         }
         List<Ordered> createdList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.СТВОРЕНО));
         Set<CanceledOrderReason> used = new HashSet<>();
+        Set<CanceledOrderReason> toFind = new HashSet<>();
         for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
             result.append(canceledOrderReason.getOrdered().getPostComment()).append("\n").
                     append(canceledOrderReason.getOrdered().getTtn()).append("\n").append(canceledOrderReason.getReturnTtn()).append(" ")
                     .append(canceledOrderReason.getStatus()).append(" ").append(canceledOrderReason.getReason())
                     .append("\n\n");
-            if (canceledOrderReason.getReason() == CancelReason.БРАК || canceledOrderReason.getReason() == CancelReason.ЯКІСТЬ) {
+            if (canceledOrderReason.getReason() == CancelReason.БРАК) {
                 used.add(canceledOrderReason);
+            } else {
+                toFind.add(canceledOrderReason);
             }
         }
         result.append("Звернути увагу\n\n");
@@ -148,7 +151,7 @@ public class StatisticService {
         }
         result.append("Співпадіння\n\n");
         for (Ordered ordered : createdList) {
-            for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
+            for (CanceledOrderReason canceledOrderReason : toFind) {
                 if (compareShoeArrays(canceledOrderReason.getOrdered().getOrderedShoes(), ordered.getOrderedShoes()) &&
                         ordered.getSize().equals(canceledOrderReason.getOrdered().getSize()) &&
                         used.add(canceledOrderReason)) {
