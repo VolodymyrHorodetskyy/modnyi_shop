@@ -59,7 +59,7 @@ public class ShoePriceService {
             if (ordered.getCreatedDate() == null) {
                 return getActualShoePrice(shoe);
             }
-            if (shoePrice.getFromDate().isBefore(ordered.getDateCreated()) || shoePrice.getFromDate().isEqual(ordered.getDateCreated())) {
+            if (shoePrice.getFromDate().isBefore(ordered.getCreatedDate()) || shoePrice.getFromDate().isEqual(ordered.getCreatedDate())) {
                 return shoePrice;
             }
         }
