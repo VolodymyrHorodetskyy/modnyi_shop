@@ -57,7 +57,7 @@ public class StatisticService {
     public StringResponse countNeedDeliveryFromDB(boolean updateStatuses) {
         StringBuilder stringBuilder = new StringBuilder();
         if (updateStatuses) {
-            orderService.updateOrderStatusesNovaPosta();
+            orderService.updateOrderStatusesNovaPosta(Arrays.asList(Status.СТВОРЕНО));
         }
         List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(Status.СТВОРЕНО, false), Sort.by("dateCreated"));
         stringBuilder.append(countNeedDelivery(orderedList));

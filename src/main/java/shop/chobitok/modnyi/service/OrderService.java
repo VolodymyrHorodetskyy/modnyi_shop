@@ -174,8 +174,8 @@ public class OrderService {
         return result.toString();
     }
 
-    public String updateOrderStatusesNovaPosta() {
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.СТВОРЕНО, Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО));
+    public String updateOrderStatusesNovaPosta(List<Status> statuses) {
+        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(statuses);
         StringBuilder result = new StringBuilder();
         for (Ordered ordered : orderedList) {
             if (updateStatusByNovaPosta(ordered)) {
@@ -184,6 +184,10 @@ public class OrderService {
         }
         updateAllCanceled();
         return result.toString();
+    }
+
+    public String updateOrderStatusesNovaPosta() {
+        return updateOrderStatusesNovaPosta(Arrays.asList(Status.СТВОРЕНО, Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО));
     }
 
     public void updateAllCanceled() {
@@ -225,7 +229,7 @@ public class OrderService {
                     Client client = ordered.getClient();
                     if (client != null) {
                         if (!StringUtils.isEmpty(client.getMail())) {
-                            mailService.sendStatusNotificationEmail(client.getMail(), newStatus);
+                          mailService.sendStatusNotificationEmail(client.getMail(), newStatus);
                         }
                     }
                 }
