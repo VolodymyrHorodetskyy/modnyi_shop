@@ -387,12 +387,14 @@ public class StatisticService {
         return new AmountsInfoResponse(newAppOrdersSize, canceledWithoutReasonSize);
     }
 
+
     public StringResponse getOrdersAndAppordersByPhone(Long id) {
         AppOrder appOrderFromDb = appOrderRepository.findById(id).orElse(null);
         if (appOrderFromDb != null) {
             StringBuilder result = new StringBuilder();
-            List<Ordered> orderedFromDB = orderRepository.findAll(new OrderedSpecification(appOrderFromDb.getPhone(), appOrderFromDb.getTtn()));
-            List<AppOrder> appOrders = appOrderRepository.findAll(new AppOrderSpecification(appOrderFromDb.getPhone(), appOrderFromDb.getId()));
+            String phone = appOrderFromDb.getPhone().substring(appOrderFromDb.getPhone().indexOf("0"));
+            List<Ordered> orderedFromDB = orderRepository.findAll(new OrderedSpecification(phone, appOrderFromDb.getTtn()));
+            List<AppOrder> appOrders = appOrderRepository.findAll(new AppOrderSpecification(phone, appOrderFromDb.getId()));
             if (orderedFromDB.size() > 0 || appOrders.size() > 0) {
                 Map<Client, List<Ordered>> clientOrderedMap = new HashMap<>();
                 for (Ordered ordered : orderedFromDB) {

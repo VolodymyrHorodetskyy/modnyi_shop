@@ -8,6 +8,9 @@ import shop.chobitok.modnyi.entity.request.CancelOrderWithOrderRequest;
 import shop.chobitok.modnyi.entity.response.GetCanceledResponse;
 import shop.chobitok.modnyi.service.CanceledOrderReasonService;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @RestController
 @CrossOrigin
 @RequestMapping("/CancelOrder")
@@ -40,9 +43,16 @@ public class CanceledOrderController {
     public CanceledOrderReason getCancelOrderById(@RequestParam Long id) {
         return canceledOrderReasonService.getCanceledOrderReasonByOrderId(id);
     }
-   @GetMapping("/getCanceledOrder")
+
+    @GetMapping("/getCanceledOrder")
     public CanceledOrderReason getCancelOrder(@RequestParam Long id) {
         return canceledOrderReasonService.getById(id);
+    }
+
+    @PutMapping("/updateCanceled")
+    public List<CanceledOrderReason> updateCanceled() {
+        canceledOrderReasonService.checkIfWithoutCancelReasonExistsAndCreateDefaultReason(LocalDateTime.now().minusDays(10));
+        return canceledOrderReasonService.setReturnTtnAndUpdateStatus();
     }
 
 }
