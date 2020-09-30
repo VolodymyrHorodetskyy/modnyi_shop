@@ -39,6 +39,7 @@ public class CronJob {
     public void every2Hours() {
         canceledOrderReasonService.checkIfWithoutCancelReasonExistsAndCreateDefaultReason(LocalDateTime.now().minusDays(10));
         canceledOrderReasonService.setReturnTtnAndUpdateStatus();
+        orderService.updateOrderStatusesNovaPosta();
     }
 
 }
