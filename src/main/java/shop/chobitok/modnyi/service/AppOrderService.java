@@ -104,7 +104,7 @@ public class AppOrderService {
             throw new ConflictException("AppOrder not found");
         }
         User user = null;
-        if (request.getId() != null) {
+        if (request.getUserId() != null) {
             user = userRepository.findById(request.getUserId()).orElse(null);
         }
         appOrder.setUser(user);
