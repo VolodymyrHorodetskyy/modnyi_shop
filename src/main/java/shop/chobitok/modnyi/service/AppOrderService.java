@@ -113,7 +113,7 @@ public class AppOrderService {
         if (!StringUtils.isEmpty(ttn)) {
             ttn = ttn.replaceAll("\\s+", "");
             appOrder.setTtn(ttn);
-            message = orderService.importOrderFromTTNString(ttn);
+            message = orderService.importOrderFromTTNString(ttn, request.getUserId());
             String mail = appOrder.getMail();
             Ordered ordered = orderService.findByTTN(ttn);
             if (!StringUtils.isEmpty(mail)) {

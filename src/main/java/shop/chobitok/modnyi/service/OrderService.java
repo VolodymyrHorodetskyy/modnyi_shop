@@ -147,19 +147,25 @@ public class OrderService {
         List<String> splitted = splitTTNString(request.getTtns());
         StringBuilder result = new StringBuilder();
         for (String ttn : splitted) {
-            result.append(importOrderFromTTNString(ttn));
+            result.append(importOrderFromTTNString(ttn, request.getUserId()));
         }
         return new StringResponse(result.toString());
     }
 
-    public String importOrderFromTTNString(String ttn) {
+    public String importOrderFromTTNString(String ttn, Long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            throw new ConflictException("User not found");
+        }
         StringBuilder result = new StringBuilder();
         if (orderRepository.findOneByAvailableTrueAndTtn(ttn) == null) {
             FromNPToOrderRequest fromNPToOrderRequest = new FromNPToOrderRequest();
             fromNPToOrderRequest.setPhone(phone);
             fromNPToOrderRequest.setTtn(ttn);
             try {
-                Ordered ordered = orderRepository.save(novaPostaService.createOrderFromNP(fromNPToOrderRequest));
+                Ordered ordered = novaPostaService.createOrderFromNP(fromNPToOrderRequest);
+                ordered.setUser(user);
+                orderRepository.save(ordered);
                 if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
                     result.append(ttn + "  ... взуття або розмір не визначено \n");
                 } else {
