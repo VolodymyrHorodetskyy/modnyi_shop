@@ -5,6 +5,7 @@ import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Client;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Status;
+import shop.chobitok.modnyi.entity.User;
 
 import javax.persistence.criteria.*;
 import java.time.LocalDateTime;
@@ -24,6 +25,7 @@ public class OrderedSpecification implements Specification<Ordered> {
     private Boolean notForDeliveryFile;
     private String phone;
     private String isNotTtn;
+    private String userId;
 
     public OrderedSpecification(String phone, String isNotTtn) {
         this.phone = phone;
@@ -35,11 +37,12 @@ public class OrderedSpecification implements Specification<Ordered> {
         this.notForDeliveryFile = notForDeliveryFile;
     }
 
-    public OrderedSpecification(String model, String ttn, String phoneOrName, boolean withoutTTN) {
+    public OrderedSpecification(String model, String ttn, String phoneOrName, boolean withoutTTN, String userId) {
         this.model = model;
         this.ttn = ttn;
         this.phoneOrName = phoneOrName;
         this.withoutTTN = withoutTTN;
+        this.userId = userId;
     }
 
     public OrderedSpecification(LocalDateTime from, LocalDateTime to) {
@@ -114,6 +117,11 @@ public class OrderedSpecification implements Specification<Ordered> {
         if (!StringUtils.isEmpty(isNotTtn)) {
             Predicate isNotTtnPredicate = criteriaBuilder.notEqual(root.get("ttn"), isNotTtn);
             predicateList.add(isNotTtnPredicate);
+        }
+        if (!StringUtils.isEmpty(userId)) {
+            Join<Ordered, User> orderedUserJoin = root.join("user");
+            Predicate userPredicate = criteriaBuilder.equal(orderedUserJoin.get("id"), userId);
+            predicateList.add(userPredicate);
         }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }

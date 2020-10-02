@@ -47,6 +47,9 @@ public class OrderService {
     @Value("${novaposta.phoneNumber}")
     private String phone;
 
+    @Value("${spring.datasource.username}")
+    private String username;
+
     public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, StorageService storageService, NovaPostaService novaPostaService, CanceledOrderReasonRepository canceledOrderReasonRepository, NotificationService notificationService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository) {
         this.orderRepository = orderRepository;
         this.shoeRepository = shoeRepository;
@@ -64,10 +67,11 @@ public class OrderService {
         return orderRepository.findOneByAvailableTrueAndTtn(ttn);
     }
 
-    public GetAllOrderedResponse getAll(int page, int size, String TTN, String phoneOrName, String model, boolean withoutTTN, String orderBy) {
+    public GetAllOrderedResponse getAll(int page, int size, String TTN, String phoneOrName, String model, boolean withoutTTN, String orderBy,
+                                        String userId) {
         PageRequest pageRequest = PageRequest.of(page, size, createSort(orderBy));
         GetAllOrderedResponse getAllOrderedResponse = new GetAllOrderedResponse();
-        Page orderedPage = orderRepository.findAll(new OrderedSpecification(model, removeSpaces(TTN), phoneOrName, withoutTTN), pageRequest);
+        Page orderedPage = orderRepository.findAll(new OrderedSpecification(model, removeSpaces(TTN), phoneOrName, withoutTTN, userId), pageRequest);
         getAllOrderedResponse.setOrderedList(orderedPage.getContent());
         PaginationInfo paginationInfo = new PaginationInfo(orderedPage.getPageable().getPageNumber(), orderedPage.getPageable().getPageSize(), orderedPage.getTotalPages(), orderedPage.getTotalElements());
         getAllOrderedResponse.setPaginationInfo(paginationInfo);
@@ -92,7 +96,7 @@ public class OrderService {
     public Ordered createOrder(CreateOrderRequest createOrderRequest) {
         Ordered ordered = new Ordered();
         if (!StringUtils.isEmpty(createOrderRequest.getTtn())) {
-            if (getAll(0, 1, createOrderRequest.getTtn(), null, null, false, null).getOrderedList().size() > 0) {
+            if (getAll(0, 1, createOrderRequest.getTtn(), null, null, false, null, null).getOrderedList().size() > 0) {
                 throw new ConflictException("Замовлення з такою накладною вже існує");
             }
         } else {
@@ -234,8 +238,8 @@ public class OrderService {
                 } else {
                     Client client = ordered.getClient();
                     if (client != null) {
-                        if (!StringUtils.isEmpty(client.getMail())) {
-                          mailService.sendStatusNotificationEmail(client.getMail(), newStatus);
+                        if (!StringUtils.isEmpty(client.getMail()) && !username.equals("root")) {
+                            mailService.sendStatusNotificationEmail(client.getMail(), newStatus);
                         }
                     }
                 }

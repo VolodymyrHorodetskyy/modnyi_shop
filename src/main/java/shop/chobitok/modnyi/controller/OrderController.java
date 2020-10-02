@@ -34,8 +34,8 @@ public class OrderController {
     @GetMapping
     public GetAllOrderedResponse getAll(@RequestParam int page, @RequestParam int size, @RequestParam(required = false) String ttn,
                                         @RequestParam(required = false) String phoneOrName, @RequestParam(required = false) String model, @RequestParam(required = false) boolean withoutTTN,
-                                        @RequestParam(required = false) String orderBy) {
-        return orderService.getAll(page, size, ttn, phoneOrName, model, withoutTTN, orderBy);
+                                        @RequestParam(required = false) String orderBy, @RequestParam(required = false) String userId) {
+        return orderService.getAll(page, size, ttn, phoneOrName, model, withoutTTN, orderBy, userId);
     }
 
     @PostMapping("/fromNP")

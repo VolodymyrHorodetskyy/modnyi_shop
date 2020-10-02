@@ -4,11 +4,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.AppOrder;
 import shop.chobitok.modnyi.entity.AppOrderStatus;
+import shop.chobitok.modnyi.entity.User;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import javax.persistence.criteria.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,18 +20,21 @@ public class AppOrderSpecification implements Specification<AppOrder> {
     private List<AppOrderStatus> statuses;
     private String phone;
     private Long isNotEqualId;
+    private String userId;
+
 
     public AppOrderSpecification(String phone, Long isNotEqualId) {
         this.phone = phone;
         this.isNotEqualId = isNotEqualId;
     }
 
-    public AppOrderSpecification(Long id, String phoneAndName, String comment, LocalDateTime from, List<AppOrderStatus> statuses) {
+    public AppOrderSpecification(Long id, String phoneAndName, String comment, LocalDateTime from, List<AppOrderStatus> statuses, String userId) {
         this.id = id;
         this.phoneAndName = phoneAndName;
         this.comment = comment;
         this.from = from;
         this.statuses = statuses;
+        this.userId = userId;
     }
 
     @Override
@@ -66,6 +67,11 @@ public class AppOrderSpecification implements Specification<AppOrder> {
         if (isNotEqualId != null) {
             Predicate isNotEqualsId = criteriaBuilder.notEqual(root.get("id"), isNotEqualId);
             predicateList.add(isNotEqualsId);
+        }
+        if (!StringUtils.isEmpty(userId)) {
+            Join<AppOrder, User> appOrderUserJoin = root.join("user");
+            Predicate userPredicate = criteriaBuilder.equal(appOrderUserJoin.get("id"), userId);
+            predicateList.add(userPredicate);
         }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }
