@@ -73,6 +73,11 @@ public class OrderController {
         return orderService.updateOrderStatusesNovaPosta();
     }
 
+    @PatchMapping("/updateStatusesWithoutResponse")
+    public void updateStatusesWithoutResponse() {
+        orderService.updateOrderStatusesNovaPosta();
+    }
+
     @GetMapping("/getCanceled")
     public List<Ordered> getCanceledOrders(@RequestParam(required = false) boolean updateStatuses) {
         return orderService.getCanceled(updateStatuses);
@@ -89,7 +94,7 @@ public class OrderController {
     }
 
     @PatchMapping("/makeAllPayed")
-    public boolean makeAllPayed(){
+    public boolean makeAllPayed() {
         return orderService.makeAllPayed();
     }
 
