@@ -38,4 +38,7 @@ public interface OrderRepository extends JpaRepository<Ordered, Long> {
 
     List<Ordered> findByClientId(Long id);
 
+    List<Ordered> findAllByAvailableTrueAndUserId(Long id);
+
+
 }

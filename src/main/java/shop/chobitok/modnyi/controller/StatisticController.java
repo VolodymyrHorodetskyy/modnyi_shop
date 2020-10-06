@@ -86,5 +86,10 @@ public class StatisticController {
         return statisticService.getOrdersAndAppordersByPhone(id);
     }
 
+    @GetMapping("/getAllOrdersByUser")
+    public StringResponse getAllORdersByUser(@RequestParam Long userId) {
+        return statisticService.getAllOrdersByUser(userId);
+    }
+
 
 }

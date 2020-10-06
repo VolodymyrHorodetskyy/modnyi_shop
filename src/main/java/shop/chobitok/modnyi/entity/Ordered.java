@@ -94,6 +94,9 @@ public class Ordered extends Audit {
     @Column
     private boolean payed = false;
 
+    @Column
+    private boolean payedForUser = false;
+
     public boolean isNotForDeliveryFile() {
         return notForDeliveryFile;
     }
@@ -316,5 +319,13 @@ public class Ordered extends Audit {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public boolean isPayedForUser() {
+        return payedForUser;
+    }
+
+    public void setPayedForUser(boolean payedForUser) {
+        this.payedForUser = payedForUser;
     }
 }

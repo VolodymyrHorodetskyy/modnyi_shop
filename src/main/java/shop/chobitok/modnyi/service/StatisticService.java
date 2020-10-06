@@ -74,16 +74,18 @@ public class StatisticService {
         }
         for (Map.Entry<LocalDate, List<Ordered>> entry : localDateOrderedMap.entrySet()) {
             result.append(entry.getKey().format(timeFormatter)).append("\n\n");
+            int count = 1;
             for (Ordered ordered : entry.getValue()) {
                 if (!StringUtils.isEmpty(ordered.getTtn())) {
-                    result.append(ordered.getTtn() + "\n" + ordered.getPostComment() + "\n\n");
+                    result.append(count).append(". ").append(ordered.getTtn()).append("\n").append(ordered.getPostComment()).append("\n\n");
                 } else {
-                    result.append("без накладноЇ\n");
+                    result.append(count).append(". ").append("без накладноЇ\n");
                     for (Shoe shoe : ordered.getOrderedShoes()) {
                         result.append(shoe.getModel()).append(" ").append(shoe.getColor());
                     }
                     result.append(", ").append(ordered.getSize()).append("\n\n");
                 }
+                ++count;
             }
         }
         return result.toString();
@@ -423,6 +425,35 @@ public class StatisticService {
             }
         }
         return new StringResponse();
+    }
+
+    public StringResponse getAllOrdersByUser(Long id) {
+        StringBuilder builder = new StringBuilder();
+        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndUserId(id);
+        Map<Status, List<Ordered>> statusListMap = new HashMap<>();
+        for (Ordered ordered : orderedList) {
+            List<Ordered> ordereds = statusListMap.get(ordered.getStatus());
+            if (ordereds == null) {
+                ordereds = new ArrayList<>();
+                ordereds.add(ordered);
+                statusListMap.put(ordered.getStatus(), ordereds);
+            } else {
+                ordereds.add(ordered);
+            }
+        }
+        for (Map.Entry<Status, List<Ordered>> entry : statusListMap.entrySet()) {
+            builder.append(entry.getKey()).append(" = ").append(entry.getValue()).append("\n");
+        }
+        builder.append("\n");
+        int notPayed = 0;
+        List<Ordered> received = statusListMap.get(Status.ОТРИМАНО);
+        for (Ordered ordered : received) {
+            if (!ordered.isPayedForUser()) {
+                ++notPayed;
+            }
+        }
+        builder.append("Не оплаченно = " + notPayed);
+        return new StringResponse(builder.toString());
     }
 
     private Map<Shoe, Integer> countShoesAmount(List<Ordered> ordereds) {
