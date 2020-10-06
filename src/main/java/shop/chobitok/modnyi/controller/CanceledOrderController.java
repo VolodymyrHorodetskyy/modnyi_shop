@@ -35,8 +35,8 @@ public class CanceledOrderController {
     @GetMapping
     public GetCanceledResponse getAll(@RequestParam int page, @RequestParam int size, @RequestParam(required = false) String ttn,
                                       @RequestParam(required = false) String phoneOrName, @RequestParam(required = false) Boolean manual,
-                                      @RequestParam(required = false) Boolean withoutReason) {
-        return canceledOrderReasonService.getAll(page, size, ttn, phoneOrName, manual, withoutReason);
+                                      @RequestParam(required = false) Boolean withoutReason, @RequestParam(required = false) String userId) {
+        return canceledOrderReasonService.getAll(page, size, ttn, phoneOrName, manual, withoutReason, userId);
     }
 
     @GetMapping("/getCanceledOrderByOrderId")
