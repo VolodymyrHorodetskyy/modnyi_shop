@@ -69,25 +69,38 @@ public class StatisticService {
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("d.MM");
         StringBuilder result = new StringBuilder();
         Map<LocalDate, List<Ordered>> localDateOrderedMap = new TreeMap<>();
+        List<Ordered> toSave = new ArrayList<>();
         for (Ordered ordered : orderedList) {
             addOrderToMap(localDateOrderedMap, ordered);
         }
         for (Map.Entry<LocalDate, List<Ordered>> entry : localDateOrderedMap.entrySet()) {
             result.append(entry.getKey().format(timeFormatter)).append("\n\n");
             int count = 1;
-            for (Ordered ordered : entry.getValue()) {
-                if (!StringUtils.isEmpty(ordered.getTtn())) {
-                    result.append(count).append(". ").append(ordered.getTtn()).append("\n").append(ordered.getPostComment()).append("\n\n");
+            List<Ordered> ordereds = entry.getValue();
+            for (Ordered ordered : ordereds) {
+                if (ordered.getSequenceNumber() != null && ordered.getSequenceNumber() >= count) {
+                    count = ordered.getSequenceNumber();
                 } else {
-                    result.append(count).append(". ").append("без накладноЇ\n");
+                    count = 0;
+                }
+            }
+            for (Ordered ordered : entry.getValue()) {
+                if (ordered.getSequenceNumber() == null) {
+                    ordered.setSequenceNumber(++count);
+                    toSave.add(ordered);
+                }
+                if (!StringUtils.isEmpty(ordered.getTtn())) {
+                    result.append(ordered.getSequenceNumber()).append(". ").append(ordered.getTtn()).append("\n").append(ordered.getPostComment()).append("\n\n");
+                } else {
+                    result.append(ordered.getSequenceNumber()).append(". ").append("без накладноЇ\n");
                     for (Shoe shoe : ordered.getOrderedShoes()) {
                         result.append(shoe.getModel()).append(" ").append(shoe.getColor());
                     }
                     result.append(", ").append(ordered.getSize()).append("\n\n");
                 }
-                ++count;
             }
         }
+        orderRepository.saveAll(toSave);
         return result.toString();
     }
 
