@@ -75,13 +75,11 @@ public class StatisticService {
         }
         for (Map.Entry<LocalDate, List<Ordered>> entry : localDateOrderedMap.entrySet()) {
             result.append(entry.getKey().format(timeFormatter)).append("\n\n");
-            int count = 1;
+            int count = 0;
             List<Ordered> ordereds = entry.getValue();
             for (Ordered ordered : ordereds) {
                 if (ordered.getSequenceNumber() != null && ordered.getSequenceNumber() >= count) {
                     count = ordered.getSequenceNumber();
-                } else {
-                    count = 0;
                 }
             }
             for (Ordered ordered : entry.getValue()) {
