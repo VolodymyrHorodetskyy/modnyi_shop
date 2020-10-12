@@ -91,5 +91,10 @@ public class StatisticController {
         return statisticService.getAllOrdersByUser(userId);
     }
 
+    @PatchMapping
+    public void payAllForOperator(@RequestParam Long userId){
+        statisticService.payAllForOperator(userId);
+    }
+
 
 }

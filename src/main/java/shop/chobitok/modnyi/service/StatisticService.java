@@ -467,6 +467,14 @@ public class StatisticService {
         return new StringResponse(builder.toString());
     }
 
+    public void payAllForOperator(Long userId) {
+        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndUserIdAndStatus(userId, Status.ОТРИМАНО);
+        for (Ordered ordered : orderedList) {
+            ordered.setPayedForUser(true);
+        }
+        orderRepository.saveAll(orderedList);
+    }
+
     private Map<Shoe, Integer> countShoesAmount(List<Ordered> ordereds) {
         final Map<Shoe, Integer> map = new HashMap<>();
         for (Ordered ordered : ordereds) {
