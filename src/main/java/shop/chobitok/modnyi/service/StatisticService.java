@@ -453,7 +453,7 @@ public class StatisticService {
             }
         }
         for (Map.Entry<Status, List<Ordered>> entry : statusListMap.entrySet()) {
-            builder.append(entry.getKey()).append(" = ").append(entry.getValue()).append("\n");
+            builder.append(entry.getKey()).append(" = ").append(entry.getValue().size()).append("\n");
         }
         builder.append("\n");
         int notPayed = 0;
