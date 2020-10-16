@@ -59,7 +59,7 @@ public class NPOrderMapper {
                 if (ordered.getOrderedShoes() == null || ordered.getOrderedShoes().size() == 0) {
                     setShoeAndSizeFromDescriptionNP(ordered, data.getCargoDescriptionString());
                 }
-                if (ordered.getPrice() == null) {
+                if (ordered.getPrice() == null || ordered.getPrice() == 0d) {
                     setPriceAndPrepayment(ordered, data);
                 }
             }
@@ -91,7 +91,7 @@ public class NPOrderMapper {
                 if (ordered.getOrderedShoes() == null || ordered.getOrderedShoes().size() == 0) {
                     setShoeAndSizeFromDescriptionNP(ordered, filteredData.getDescription());
                 }
-                if (ordered.getPrice() == null) {
+                if (ordered.getPrice() == null || ordered.getPrice() == 0d) {
                     setPriceAndPrepayment(ordered, filteredData.getCost());
                 }
             }
@@ -153,7 +153,7 @@ public class NPOrderMapper {
         setPriceAndPrepayment(ordered, data.getRedeliverySum());
     }
 
-    private void setPriceAndPrepayment(Ordered ordered, Double redeliverySum) {
+    public void setPriceAndPrepayment(Ordered ordered, Double redeliverySum) {
         if (ordered.getOrderedShoes() != null && ordered.getOrderedShoes().size() > 0) {
             Shoe shoe = ordered.getOrderedShoes().get(0);
             if (shoe != null) {

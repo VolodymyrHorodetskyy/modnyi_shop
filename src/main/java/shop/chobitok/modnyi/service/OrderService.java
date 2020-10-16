@@ -226,9 +226,6 @@ public class OrderService {
             Status newStatus = convertToStatus(data.getStatusCode());
             Status oldStatus = ordered.getStatus();
             if (oldStatus != newStatus) {
-                if (oldStatus == Status.СТВОРЕНО && newStatus != Status.ВИДАЛЕНО) {
-                    novaPostaService.createOrUpdateOrderFromNP(ordered);
-                }
                 ordered.setStatus(newStatus);
                 ordered.setStatusNP(data.getStatusCode());
                 orderRepository.save(ordered);
