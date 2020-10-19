@@ -154,6 +154,9 @@ public class NPOrderMapper {
     }
 
     public void setPriceAndPrepayment(Ordered ordered, Double redeliverySum) {
+        if (redeliverySum == 0) {
+            ordered.setFullPayment(true);
+        }
         if (ordered.getOrderedShoes() != null && ordered.getOrderedShoes().size() > 0) {
             Shoe shoe = ordered.getOrderedShoes().get(0);
             if (shoe != null) {
@@ -167,6 +170,7 @@ public class NPOrderMapper {
                 }
                 ordered.setPrePayment(prepayment);
             }
+
         }
     }
 
