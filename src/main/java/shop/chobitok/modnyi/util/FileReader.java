@@ -4,17 +4,14 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.FileCopyUtils;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 public class FileReader {
 
     public static String getHtmlTemplate() {
-        Resource resource = new ClassPathResource("mail_template.html");
+        Resource resource = new ClassPathResource("mail_template_tilda.html");
         String data = null;
         try {
             InputStream inputStream = resource.getInputStream();
