@@ -42,6 +42,7 @@ public class OrderService {
     private MailService mailService;
     private CanceledOrderReasonService canceledOrderReasonService;
     private UserRepository userRepository;
+    private StatusChangeService statusChangeService;
 
 
     @Value("${novaposta.phoneNumber}")
@@ -50,7 +51,7 @@ public class OrderService {
     @Value("${spring.datasource.username}")
     private String username;
 
-    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, StorageService storageService, NovaPostaService novaPostaService, CanceledOrderReasonRepository canceledOrderReasonRepository, NotificationService notificationService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository) {
+    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, StorageService storageService, NovaPostaService novaPostaService, CanceledOrderReasonRepository canceledOrderReasonRepository, NotificationService notificationService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService) {
         this.orderRepository = orderRepository;
         this.shoeRepository = shoeRepository;
         this.clientService = clientService;
@@ -61,6 +62,7 @@ public class OrderService {
         this.mailService = mailService;
         this.canceledOrderReasonService = canceledOrderReasonService;
         this.userRepository = userRepository;
+        this.statusChangeService = statusChangeService;
     }
 
     public Ordered findByTTN(String ttn) {
@@ -110,6 +112,7 @@ public class OrderService {
         setUser(ordered, createOrderRequest.getUserId());
         ordered.setClient(clientService.createClient(createOrderRequest));
         ordered.setTtn(createOrderRequest.getTtn());
+        statusChangeService.createRecord(ordered, ordered.getStatus(), createOrderRequest.getStatus());
         ordered.setStatus(createOrderRequest.getStatus());
         ordered.setSize(createOrderRequest.getSize());
         ordered.setAddress(createOrderRequest.getAddress());
@@ -135,6 +138,7 @@ public class OrderService {
         clientService.updateOrCreateClient(ordered.getClient(), updateOrderRequest);
         ordered.setPrePayment(updateOrderRequest.getPrepayment());
         ordered.setPrice(updateOrderRequest.getPrice());
+        statusChangeService.createRecord(ordered, ordered.getStatus(), updateOrderRequest.getStatus());
         ordered.setStatus(updateOrderRequest.getStatus());
         return orderRepository.save(ordered);
     }
@@ -226,6 +230,7 @@ public class OrderService {
             Status newStatus = convertToStatus(data.getStatusCode());
             Status oldStatus = ordered.getStatus();
             if (oldStatus != newStatus) {
+                statusChangeService.createRecord(ordered, oldStatus, newStatus);
                 ordered.setStatus(newStatus);
                 ordered.setStatusNP(data.getStatusCode());
                 orderRepository.save(ordered);

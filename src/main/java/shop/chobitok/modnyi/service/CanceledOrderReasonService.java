@@ -9,7 +9,6 @@ import shop.chobitok.modnyi.entity.CancelReason;
 import shop.chobitok.modnyi.entity.CanceledOrderReason;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Status;
-import shop.chobitok.modnyi.entity.request.CancelOrderRequest;
 import shop.chobitok.modnyi.entity.request.CancelOrderWithIdRequest;
 import shop.chobitok.modnyi.entity.request.CancelOrderWithOrderRequest;
 import shop.chobitok.modnyi.entity.response.GetCanceledResponse;
@@ -40,14 +39,16 @@ public class CanceledOrderReasonService {
     private NovaPostaRepository postaRepository;
     private NPHelper npHelper;
     private MailService mailService;
+    private StatusChangeService statusChangeService;
 
-    public CanceledOrderReasonService(NovaPostaService novaPostaService, OrderRepository orderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, NovaPostaRepository postaRepository, NPHelper npHelper, MailService mailService) {
+    public CanceledOrderReasonService(NovaPostaService novaPostaService, OrderRepository orderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, NovaPostaRepository postaRepository, NPHelper npHelper, MailService mailService, StatusChangeService statusChangeService) {
         this.novaPostaService = novaPostaService;
         this.orderRepository = orderRepository;
         this.canceledOrderReasonRepository = canceledOrderReasonRepository;
         this.postaRepository = postaRepository;
         this.npHelper = npHelper;
         this.mailService = mailService;
+        this.statusChangeService = statusChangeService;
     }
 
     public Ordered cancelOrder(CancelOrderWithOrderRequest cancelOrderRequest) {
@@ -55,6 +56,7 @@ public class CanceledOrderReasonService {
         if (ordered == null) {
             throw new ConflictException("Немає такого замовлення");
         }
+        statusChangeService.createRecord(ordered, ordered.getStatus(), Status.ВІДМОВА);
         ordered.setStatus(Status.ВІДМОВА);
         if (ordered.isPayed()) {
             mailService.sendEmail("Було оплачено", ordered.getTtn(), "horodetskyyv@gmail.com");
