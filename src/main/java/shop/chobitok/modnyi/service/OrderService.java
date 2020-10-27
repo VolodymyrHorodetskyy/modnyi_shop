@@ -132,6 +132,9 @@ public class OrderService {
             throw new ConflictException("Замовлення не знайдено");
         }
         setUser(ordered, updateOrderRequest.getUserId());
+        if(!StringUtils.isEmpty(updateOrderRequest.getPostComment())){
+            ordered.setPostComment(updateOrderRequest.getPostComment());
+        }
         ordered.setFullPayment(updateOrderRequest.isFull_payment());
         ordered.setNotes(updateOrderRequest.getNotes());
         updateShoeAndSize(ordered, updateOrderRequest);
