@@ -40,12 +40,6 @@ public class NovaPostaService {
     }
 
     public Ordered createOrUpdateOrderFromNP(Ordered ordered, FromNPToOrderRequest fromNPToOrderRequest) {
-        if (StringUtils.isEmpty(fromNPToOrderRequest.getTtn())) {
-            throw new ConflictException("Заповніть ТТН");
-        }
-        if (StringUtils.isEmpty(fromNPToOrderRequest.getPhone())) {
-            fromNPToOrderRequest.setPhone(phoneFromProps);
-        }
         TrackingEntity trackingEntity = postaRepository.getTracking(createTrackingRequest(fromNPToOrderRequest));
         if (trackingEntity.getData().size() > 0) {
             Data data = trackingEntity.getData().get(0);
@@ -76,6 +70,15 @@ public class NovaPostaService {
         return createOrUpdateOrderFromNP(null, fromNPToOrderRequest);
     }
 
+
+    public Ordered updateDatePayedKeeping(Ordered ordered) {
+        TrackingEntity trackingEntity = postaRepository.getTracking(createTrackingRequest(ordered.getTtn()));
+        Data data = trackingEntity.getData().get(0);
+        if (data != null) {
+            ordered.setDatePayedKeepingNP(ShoeUtil.toLocalDateTime(trackingEntity.getData().get(0).getDatePayedKeeping()));
+        }
+        return ordered;
+    }
 
     public String returnCargo(String ttn) {
         CheckPossibilityCreateReturnResponse checkPossibilityCreateReturnResponse = postaRepository.checkPossibilitReturn(ttn);
@@ -109,7 +112,17 @@ public class NovaPostaService {
         return null;
     }
 
+    private GetTrackingRequest createTrackingRequest(String ttn) {
+        return createTrackingRequest(new FromNPToOrderRequest(ttn));
+    }
+
     private GetTrackingRequest createTrackingRequest(FromNPToOrderRequest fromNPToOrderRequest) {
+        if (StringUtils.isEmpty(fromNPToOrderRequest.getTtn())) {
+            throw new ConflictException("Заповніть ТТН");
+        }
+        if (StringUtils.isEmpty(fromNPToOrderRequest.getPhone())) {
+            fromNPToOrderRequest.setPhone(phoneFromProps);
+        }
         GetTrackingRequest getTrackingRequest = new GetTrackingRequest();
         MethodProperties methodProperties = new MethodProperties();
         List<Document> documentList = new ArrayList<>();

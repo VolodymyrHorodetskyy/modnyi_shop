@@ -132,7 +132,7 @@ public class OrderService {
             throw new ConflictException("Замовлення не знайдено");
         }
         setUser(ordered, updateOrderRequest.getUserId());
-        if(!StringUtils.isEmpty(updateOrderRequest.getPostComment())){
+        if (!StringUtils.isEmpty(updateOrderRequest.getPostComment())) {
             ordered.setPostComment(updateOrderRequest.getPostComment());
         }
         ordered.setFullPayment(updateOrderRequest.isFull_payment());
@@ -241,6 +241,9 @@ public class OrderService {
                     notificationService.createNotification("Клієнт відмовився", "", MessageType.ORDER_BECOME_CANCELED, ordered.getTtn());
                     canceledOrderReasonService.createDefaultReasonOnCancel(ordered);
                 } else {
+                    if (newStatus == Status.ДОСТАВЛЕНО) {
+                        orderRepository.save(novaPostaService.updateDatePayedKeeping(ordered));
+                    }
                     Client client = ordered.getClient();
                     if (client != null) {
                         if (!StringUtils.isEmpty(client.getMail()) && !username.equals("root")) {

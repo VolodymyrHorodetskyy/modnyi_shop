@@ -32,7 +32,6 @@ public class CronJob {
         orderService.updateOrderStatusesNovaPosta();
         checkerService.checkPayedKeepingOrders();
         checkerService.makeAppOrderNewAgain();
-        notificationService.createNotification("Чекер спрацював", "", MessageType.CHECKER_WORKED);
     }
 
     @Scheduled(cron = "0 0 */2 * * *")

@@ -43,7 +43,7 @@ public class CheckerService {
         for (Ordered ordered : arrivedOrders) {
             LocalDateTime datePayedKeeping = ordered.getDatePayedKeepingNP();
             if (datePayedKeeping != null) {
-                if (datePayedKeeping.plusDays(3).isAfter(LocalDateTime.now())) {
+                if (LocalDateTime.now().plusDays(3).isAfter(datePayedKeeping)) {
                     notifications.add(notificationService.createNotification("Платне зберігання з " + datePayedKeeping.format(formatter),
                             "Платне зберігання з " + datePayedKeeping.format(formatter), MessageType.PAYED_KEEPING, ordered.getTtn()));
                 }
@@ -52,7 +52,7 @@ public class CheckerService {
         return notifications;
     }
 
-    public Notification makeAppOrderNewAgain() {
+    public void makeAppOrderNewAgain() {
         List<AppOrder> appOrders = appOrderRepository.findByStatusIn(Arrays.asList(AppOrderStatus.Чекаємо_оплату, AppOrderStatus.Не_Відповідає, AppOrderStatus.В_обробці));
         if (appOrders.size() > 0) {
             List<AppOrder> updated = new ArrayList<>();
@@ -63,9 +63,7 @@ public class CheckerService {
             }
 
             appOrderRepository.saveAll(updated);
-            return notificationService.createNotification("Заявки обновлено", phones.toString(), MessageType.APPORDERS_UPDATED);
         }
-        return null;
     }
 
 }
