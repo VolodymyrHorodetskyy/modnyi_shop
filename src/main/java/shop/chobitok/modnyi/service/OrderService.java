@@ -238,7 +238,6 @@ public class OrderService {
                 ordered.setStatusNP(data.getStatusCode());
                 orderRepository.save(ordered);
                 if (newStatus == Status.ВІДМОВА) {
-                    notificationService.createNotification("Клієнт відмовився", "", MessageType.ORDER_BECOME_CANCELED, ordered.getTtn());
                     canceledOrderReasonService.createDefaultReasonOnCancel(ordered);
                 } else {
                     if (newStatus == Status.ДОСТАВЛЕНО) {

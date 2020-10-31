@@ -45,7 +45,7 @@ public class CheckerService {
             if (datePayedKeeping != null) {
                 if (LocalDateTime.now().plusDays(3).isAfter(datePayedKeeping)) {
                     notifications.add(notificationService.createNotification("Платне зберігання з " + datePayedKeeping.format(formatter),
-                            "Платне зберігання з " + datePayedKeeping.format(formatter), MessageType.PAYED_KEEPING, ordered.getTtn()));
+                            ordered.getUser().getName(), MessageType.PAYED_KEEPING, ordered.getTtn()));
                 }
             }
         }
