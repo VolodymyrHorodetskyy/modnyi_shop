@@ -245,7 +245,7 @@ public class StatisticService {
         Double sum = 0d;
         for (String s : allTTNSet) {
             if (!payedTTNSet.contains(s)) {
-                TrackingEntity trackingEntity = postaRepository.getTracking(npHelper.formGetTrackingRequest(s));
+                TrackingEntity trackingEntity = postaRepository.getTracking(s);
                 Data data = trackingEntity.getData().get(0);
                 if (convertToStatus(data.getStatusCode()) == Status.ОТРИМАНО) {
                     stringBuilder.append(data.getNumber());
@@ -318,7 +318,7 @@ public class StatisticService {
         int received = 0;
         int denied = 0;
         for (String s : allTTNList) {
-            TrackingEntity trackingEntity = postaRepository.getTracking(npHelper.formGetTrackingRequest(s));
+            TrackingEntity trackingEntity = postaRepository.getTracking(s);
             Status status = convertToStatus(trackingEntity.getData().get(0).getStatusCode());
             if (status == Status.ОТРИМАНО) {
                 ++received;
@@ -344,7 +344,7 @@ public class StatisticService {
         stringBuilderWithDesc.append("З описом \n");
         stringBuilderWithoutDesc.append("ТТН \n");
         for (String s : allTTNList) {
-            TrackingEntity trackingEntity = postaRepository.getTracking(npHelper.formGetTrackingRequest(s));
+            TrackingEntity trackingEntity = postaRepository.getTracking(s);
             Data data = trackingEntity.getData().get(0);
             if (data.getStatusCode().equals(103)) {
                 stringBuilderWithDesc.append(data.getNumber() + " " + data.getCargoDescriptionString() + "\n");

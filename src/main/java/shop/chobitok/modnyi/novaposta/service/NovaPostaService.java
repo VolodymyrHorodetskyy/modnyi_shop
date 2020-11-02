@@ -1,24 +1,17 @@
 package shop.chobitok.modnyi.novaposta.service;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Status;
-import shop.chobitok.modnyi.entity.request.FromNPToOrderRequest;
-import shop.chobitok.modnyi.entity.request.FromTTNFileRequest;
-import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.novaposta.entity.*;
 import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
-import shop.chobitok.modnyi.novaposta.request.Document;
-import shop.chobitok.modnyi.novaposta.request.GetTrackingRequest;
-import shop.chobitok.modnyi.novaposta.request.MethodProperties;
 import shop.chobitok.modnyi.novaposta.util.NPHelper;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
+import shop.chobitok.modnyi.repository.OrderRepository;
+import shop.chobitok.modnyi.service.PropsService;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
@@ -29,26 +22,35 @@ public class NovaPostaService {
     private NovaPostaRepository postaRepository;
     private NPOrderMapper npOrderMapper;
     private NPHelper npHelper;
+    private PropsService propsService;
+    private OrderRepository orderRepository;
 
-    @Value("${novaposta.phoneNumber}")
-    private String phoneFromProps;
 
-    public NovaPostaService(NovaPostaRepository postaRepository, NPOrderMapper npOrderMapper, NPHelper npHelper) {
+    public NovaPostaService(NovaPostaRepository postaRepository, NPOrderMapper npOrderMapper, NPHelper npHelper, PropsService propsService, OrderRepository orderRepository) {
         this.postaRepository = postaRepository;
         this.npOrderMapper = npOrderMapper;
         this.npHelper = npHelper;
+        this.propsService = propsService;
+        this.orderRepository = orderRepository;
     }
 
-    public Ordered createOrUpdateOrderFromNP(Ordered ordered, FromNPToOrderRequest fromNPToOrderRequest) {
-        TrackingEntity trackingEntity = postaRepository.getTracking(createTrackingRequest(fromNPToOrderRequest));
+    public Ordered createOrUpdateOrderFromNP(String ttn) {
+        return formOrderedFromNPEntity(null, ttn, postaRepository.getTracking(ttn));
+    }
+
+    public Ordered createOrUpdateOrderFromNP(Ordered ordered, String ttn) {
+        return formOrderedFromNPEntity(ordered, ttn, postaRepository.getTracking(ordered));
+    }
+
+    public Ordered formOrderedFromNPEntity(Ordered ordered, String ttn, TrackingEntity trackingEntity) {
         if (trackingEntity.getData().size() > 0) {
             Data data = trackingEntity.getData().get(0);
             //if status created
             if (data.getStatusCode().equals(3) || ShoeUtil.convertToStatus(data.getStatusCode()) == Status.СТВОРЕНО) {
-                ListTrackingEntity entity = postaRepository.getTrackingEntityList(LocalDateTime.now().minusDays(5), LocalDateTime.now());
+                ListTrackingEntity entity = postaRepository.getTrackingEntityList(ordered, LocalDateTime.now().minusDays(5), LocalDateTime.now());
                 List<DataForList> list = entity.getData();
                 if (list.size() > 0) {
-                    Ordered ordered1 = npOrderMapper.toOrdered(entity, fromNPToOrderRequest.getTtn());
+                    Ordered ordered1 = npOrderMapper.toOrdered(entity, ttn);
                     if (ordered1 != null) {
                         return ordered1;
                     } else {
@@ -62,17 +64,8 @@ public class NovaPostaService {
         return null;
     }
 
-    public Ordered createOrUpdateOrderFromNP(Ordered ordered) {
-        return createOrUpdateOrderFromNP(ordered, new FromNPToOrderRequest(ordered.getTtn()));
-    }
-
-    public Ordered createOrderFromNP(FromNPToOrderRequest fromNPToOrderRequest) {
-        return createOrUpdateOrderFromNP(null, fromNPToOrderRequest);
-    }
-
-
     public Ordered updateDatePayedKeeping(Ordered ordered) {
-        TrackingEntity trackingEntity = postaRepository.getTracking(createTrackingRequest(ordered.getTtn()));
+        TrackingEntity trackingEntity = postaRepository.getTracking(ordered);
         Data data = trackingEntity.getData().get(0);
         if (data != null) {
             ordered.setDatePayedKeepingNP(ShoeUtil.toLocalDateTime(trackingEntity.getData().get(0).getDatePayedKeeping()));
@@ -80,59 +73,56 @@ public class NovaPostaService {
         return ordered;
     }
 
-    public String returnCargo(String ttn) {
-        CheckPossibilityCreateReturnResponse checkPossibilityCreateReturnResponse = postaRepository.checkPossibilitReturn(ttn);
+    public String returnCargo(Ordered ordered) {
+        CheckPossibilityCreateReturnResponse checkPossibilityCreateReturnResponse = postaRepository.checkPossibilitReturn(ordered);
         if (checkPossibilityCreateReturnResponse.isSuccess()) {
             if (postaRepository.returnCargo(
-                    npHelper.createReturnCargoRequest(ttn, checkPossibilityCreateReturnResponse.getData().get(0).getRef()))) {
-                return ttn + "  ... заявку на повернення оформлено";
+                    npHelper.createReturnCargoRequest(ordered, checkPossibilityCreateReturnResponse.getData().get(0).getRef()))) {
+                return ordered.getTtn() + "  ... заявку на повернення оформлено";
             }
         } else {
-            return ttn + "  ...  " + checkPossibilityCreateReturnResponse.getErrors().get(0);
+            return ordered.getTtn() + "  ...  " + checkPossibilityCreateReturnResponse.getErrors().get(0);
         }
-        return ttn + "  ... заявку на повернення неможливо оформити";
+        return ordered.getTtn() + "  ... заявку на повернення неможливо оформити";
     }
 
-    public TrackingEntity getTrackingEntity(String phone, String ttn) {
-        if (StringUtils.isEmpty(phone)) {
-            phone = phoneFromProps;
-        }
-        if (!StringUtils.isEmpty(ttn)) {
-            return postaRepository.getTracking(createTrackingRequest(new FromNPToOrderRequest(phone, ttn)));
+/*    public TrackingEntity getTrackingEntity(Ordered ordered) {
+        String phone = propsService.getByOrder(ordered).getPhone();
+        if (!StringUtils.isEmpty(ordered.getTtn())) {
+            return postaRepository.getTracking(ordered);
         } else {
             return null;
         }
-    }
+    }*/
 
-    public Status getStatus(String ttn) {
-        TrackingEntity trackingEntity = getTrackingEntity(null, ttn);
+    public Status getStatus(Ordered ordered) {
+        TrackingEntity trackingEntity = postaRepository.getTracking(ordered);
         if (trackingEntity != null && trackingEntity.getData().size() > 0) {
             return convertToStatus(trackingEntity.getData().get(0).getStatusCode());
         }
         return null;
     }
 
-    private GetTrackingRequest createTrackingRequest(String ttn) {
-        return createTrackingRequest(new FromNPToOrderRequest(ttn));
+    public Status getStatusByTTN(String ttn) {
+        return ShoeUtil.convertToStatus(postaRepository.getTracking(ttn).getData().get(0).getStatusCode());
     }
 
-    private GetTrackingRequest createTrackingRequest(FromNPToOrderRequest fromNPToOrderRequest) {
-        if (StringUtils.isEmpty(fromNPToOrderRequest.getTtn())) {
-            throw new ConflictException("Заповніть ТТН");
+    public void updateAllCanceled() {
+        List<Ordered> canceled = orderRepository.findBystatusNP(103);
+        for (Ordered ordered : canceled) {
+            updateCanceled(ordered);
         }
-        if (StringUtils.isEmpty(fromNPToOrderRequest.getPhone())) {
-            fromNPToOrderRequest.setPhone(phoneFromProps);
+    }
+
+    private void updateCanceled(Ordered ordered) {
+        TrackingEntity trackingEntity = postaRepository.getTracking(ordered);
+        if (trackingEntity != null && trackingEntity.getData().size() > 0) {
+            Data data = trackingEntity.getData().get(0);
+            if (!ordered.getStatusNP().equals(data.getStatusCode())) {
+                ordered.setStatusNP(data.getStatusCode());
+                orderRepository.save(ordered);
+            }
         }
-        GetTrackingRequest getTrackingRequest = new GetTrackingRequest();
-        MethodProperties methodProperties = new MethodProperties();
-        List<Document> documentList = new ArrayList<>();
-        Document document = new Document();
-        document.setDocumentNumber(fromNPToOrderRequest.getTtn());
-        document.setPhone(fromNPToOrderRequest.getPhone());
-        documentList.add(document);
-        methodProperties.setDocuments(documentList);
-        getTrackingRequest.setMethodProperties(methodProperties);
-        return getTrackingRequest;
     }
 
 

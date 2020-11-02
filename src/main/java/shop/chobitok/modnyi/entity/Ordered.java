@@ -100,6 +100,9 @@ public class Ordered extends Audit {
     @Column
     private Integer sequenceNumber;
 
+    @Column
+    private Long npAccountId;
+
     public boolean isNotForDeliveryFile() {
         return notForDeliveryFile;
     }
@@ -338,5 +341,13 @@ public class Ordered extends Audit {
 
     public void setSequenceNumber(Integer sequenceNumber) {
         this.sequenceNumber = sequenceNumber;
+    }
+
+    public Long getNpAccountId() {
+        return npAccountId;
+    }
+
+    public void setNpAccountId(Long npAccountId) {
+        this.npAccountId = npAccountId;
     }
 }

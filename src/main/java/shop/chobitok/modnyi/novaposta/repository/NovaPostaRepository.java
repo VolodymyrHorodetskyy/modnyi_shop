@@ -2,25 +2,28 @@ package shop.chobitok.modnyi.novaposta.repository;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
-import shop.chobitok.modnyi.exception.ConflictException;
-import shop.chobitok.modnyi.novaposta.entity.*;
+import shop.chobitok.modnyi.entity.NpAccount;
+import shop.chobitok.modnyi.entity.Ordered;
+import shop.chobitok.modnyi.novaposta.entity.CargoReturnResponse;
+import shop.chobitok.modnyi.novaposta.entity.CheckPossibilityCreateReturnResponse;
+import shop.chobitok.modnyi.novaposta.entity.ListTrackingEntity;
+import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.request.*;
+import shop.chobitok.modnyi.novaposta.util.NPHelper;
+import shop.chobitok.modnyi.repository.OrderRepository;
+import shop.chobitok.modnyi.service.PropsService;
 
 import javax.annotation.PostConstruct;
-import java.net.SocketException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 @Service
 public class NovaPostaRepository {
@@ -33,11 +36,15 @@ public class NovaPostaRepository {
     private RestTemplate restTemplate;
     private HttpHeaders httpHeaders;
 
-    @Value("${novaposta.apikey}")
-    private String apiKey;
+    private PropsService propsService;
+    private NPHelper npHelper;
+    private OrderRepository orderRepository;
 
-    @Value("${novaposta.phoneNumber}")
-    private String phoneNumber;
+    public NovaPostaRepository(PropsService propsService, NPHelper npHelper, OrderRepository orderRepository) {
+        this.propsService = propsService;
+        this.npHelper = npHelper;
+        this.orderRepository = orderRepository;
+    }
 
     @PostConstruct
     public void init() {
@@ -47,8 +54,15 @@ public class NovaPostaRepository {
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
     }
 
-    public TrackingEntity getTracking(GetTrackingRequest getTrackingRequest) {
-        getTrackingRequest.setApiKey(apiKey);
+    public TrackingEntity getTracking(Ordered ordered) {
+        return receiveTracking(npHelper.formGetTrackingRequest(ordered));
+    }
+
+    public TrackingEntity getTracking(String ttn) {
+        return receiveTracking(npHelper.formGetTrackingRequest(ttn));
+    }
+
+    private TrackingEntity receiveTracking(GetTrackingRequest getTrackingRequest) {
         HttpEntity httpEntity = new HttpEntity(getTrackingRequest, httpHeaders);
         ResponseEntity<TrackingEntity> responseEntity = null;
         //TODO: refactoring
@@ -64,9 +78,14 @@ public class NovaPostaRepository {
         return trackingEntity;
     }
 
-    public ListTrackingEntity getTrackingEntityList(LocalDateTime from, LocalDateTime to) {
+    public TrackingEntity getTrackingByTtn(String ttn) {
+        return getTracking(orderRepository.findOneByAvailableTrueAndTtn(ttn));
+    }
+
+    public ListTrackingEntity getTrackingEntityList(Ordered ordered, LocalDateTime from, LocalDateTime to) {
+        NpAccount npAccount = propsService.getByOrder(ordered);
         GetDocumentListRequest getDocumentListRequest = new GetDocumentListRequest();
-        getDocumentListRequest.setApiKey(apiKey);
+        getDocumentListRequest.setApiKey(npAccount.getToken());
         MethodPropertiesForList methodPropertiesForList = new MethodPropertiesForList();
         String fromString = formatDate(from);
         String toString = formatDate(to);
@@ -78,17 +97,18 @@ public class NovaPostaRepository {
         return responseEntity.getBody();
     }
 
-    public CheckPossibilityCreateReturnResponse checkPossibilitReturn(String ttn) {
+
+    public CheckPossibilityCreateReturnResponse checkPossibilitReturn(Ordered ordered) {
+        NpAccount npAccount = propsService.getByOrder(ordered);
         CheckPossibilityReturnCargoRequest checkPossibilityReturnCargoRequest = new CheckPossibilityReturnCargoRequest();
-        checkPossibilityReturnCargoRequest.setApiKey(apiKey);
-        checkPossibilityReturnCargoRequest.setMethodProperties(new MethodPropertiesForCheckReturn(ttn));
+        checkPossibilityReturnCargoRequest.setApiKey(npAccount.getToken());
+        checkPossibilityReturnCargoRequest.setMethodProperties(new MethodPropertiesForCheckReturn(ordered.getTtn()));
         HttpEntity httpEntity = new HttpEntity(checkPossibilityReturnCargoRequest, httpHeaders);
         ResponseEntity<CheckPossibilityCreateReturnResponse> responseEntity = restTemplate.postForEntity(checkPossibilityReturnCargoURL, httpEntity, CheckPossibilityCreateReturnResponse.class);
         return responseEntity.getBody();
     }
 
     public boolean returnCargo(ReturnCargoRequest returnCargoRequest) {
-        returnCargoRequest.setApiKey(apiKey);
         HttpEntity httpEntity = new HttpEntity(returnCargoRequest, httpHeaders);
         ResponseEntity<CargoReturnResponse> responseEntity = restTemplate.postForEntity(cargoReturnURL, httpEntity, CargoReturnResponse.class);
         return responseEntity.getBody().isSuccess();

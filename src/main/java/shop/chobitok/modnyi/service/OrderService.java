@@ -14,6 +14,7 @@ import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
+import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
@@ -43,15 +44,12 @@ public class OrderService {
     private CanceledOrderReasonService canceledOrderReasonService;
     private UserRepository userRepository;
     private StatusChangeService statusChangeService;
-
-
-    @Value("${novaposta.phoneNumber}")
-    private String phone;
+    private NovaPostaRepository postaRepository;
 
     @Value("${spring.datasource.username}")
     private String username;
 
-    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, StorageService storageService, NovaPostaService novaPostaService, CanceledOrderReasonRepository canceledOrderReasonRepository, NotificationService notificationService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService) {
+    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, StorageService storageService, NovaPostaService novaPostaService, CanceledOrderReasonRepository canceledOrderReasonRepository, NotificationService notificationService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository) {
         this.orderRepository = orderRepository;
         this.shoeRepository = shoeRepository;
         this.clientService = clientService;
@@ -63,6 +61,7 @@ public class OrderService {
         this.canceledOrderReasonService = canceledOrderReasonService;
         this.userRepository = userRepository;
         this.statusChangeService = statusChangeService;
+        this.postaRepository = postaRepository;
     }
 
     public Ordered findByTTN(String ttn) {
@@ -170,11 +169,8 @@ public class OrderService {
         }
         StringBuilder result = new StringBuilder();
         if (orderRepository.findOneByAvailableTrueAndTtn(ttn) == null) {
-            FromNPToOrderRequest fromNPToOrderRequest = new FromNPToOrderRequest();
-            fromNPToOrderRequest.setPhone(phone);
-            fromNPToOrderRequest.setTtn(ttn);
             try {
-                Ordered ordered = novaPostaService.createOrderFromNP(fromNPToOrderRequest);
+                Ordered ordered = novaPostaService.createOrUpdateOrderFromNP(ttn);
                 ordered.setUser(user);
                 orderRepository.save(ordered);
                 if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
@@ -199,7 +195,7 @@ public class OrderService {
                 result.append(ordered.getTtn() + " ... статус змінено на " + ordered.getStatus() + "\n");
             }
         }
-        updateAllCanceled();
+        novaPostaService.updateAllCanceled();
         return result.toString();
     }
 
@@ -207,27 +203,10 @@ public class OrderService {
         return updateOrderStatusesNovaPosta(Arrays.asList(Status.СТВОРЕНО, Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО));
     }
 
-    public void updateAllCanceled() {
-        List<Ordered> canceled = orderRepository.findBystatusNP(103);
-        for (Ordered ordered : canceled) {
-            updateCanceled(ordered);
-        }
-    }
-
-    private void updateCanceled(Ordered ordered) {
-        TrackingEntity trackingEntity = novaPostaService.getTrackingEntity(null, ordered.getTtn());
-        if (trackingEntity != null && trackingEntity.getData().size() > 0) {
-            Data data = trackingEntity.getData().get(0);
-            if (!ordered.getStatusNP().equals(data.getStatusCode())) {
-                ordered.setStatusNP(data.getStatusCode());
-                orderRepository.save(ordered);
-            }
-        }
-    }
 
     @Transactional
     private boolean updateStatusByNovaPosta(Ordered ordered) {
-        TrackingEntity trackingEntity = novaPostaService.getTrackingEntity(null, ordered.getTtn());
+        TrackingEntity trackingEntity = postaRepository.getTracking(ordered);
         if (trackingEntity != null && trackingEntity.getData().size() > 0) {
             Data data = trackingEntity.getData().get(0);
             Status newStatus = convertToStatus(data.getStatusCode());
@@ -236,6 +215,9 @@ public class OrderService {
                 statusChangeService.createRecord(ordered, oldStatus, newStatus);
                 ordered.setStatus(newStatus);
                 ordered.setStatusNP(data.getStatusCode());
+                if(oldStatus == Status.СТВОРЕНО){
+                    ordered.setAddress(data.getRecipientAddress());
+                }
                 orderRepository.save(ordered);
                 if (newStatus == Status.ВІДМОВА) {
                     canceledOrderReasonService.createDefaultReasonOnCancel(ordered);
@@ -277,7 +259,7 @@ public class OrderService {
         StringBuilder result = new StringBuilder();
         List<Ordered> canceledOrdereds = getCanceled(updateStatuses);
         for (Ordered ordered : canceledOrdereds) {
-            result.append(novaPostaService.returnCargo(ordered.getTtn()) + "\n");
+            result.append(novaPostaService.returnCargo(ordered) + "\n");
         }
         return new StringResponse(result.toString());
     }

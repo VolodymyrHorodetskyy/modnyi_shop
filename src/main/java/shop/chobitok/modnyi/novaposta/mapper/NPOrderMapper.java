@@ -11,6 +11,7 @@ import shop.chobitok.modnyi.novaposta.entity.ListTrackingEntity;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.service.ClientService;
+import shop.chobitok.modnyi.service.PropsService;
 import shop.chobitok.modnyi.service.ShoePriceService;
 import shop.chobitok.modnyi.service.ShoeService;
 
@@ -28,10 +29,13 @@ public class NPOrderMapper {
 
     private List<Integer> sizes = Arrays.asList(36, 37, 38, 39, 40, 41);
 
-    public NPOrderMapper(ShoeService shoeService, ClientService clientService, ShoePriceService shoePriceService) {
+    private PropsService propsService;
+
+    public NPOrderMapper(ShoeService shoeService, ClientService clientService, ShoePriceService shoePriceService, PropsService propsService) {
         this.shoeService = shoeService;
         this.clientService = clientService;
         this.shoePriceService = shoePriceService;
+        this.propsService = propsService;
     }
 
     public Ordered toOrdered(Ordered ordered, TrackingEntity trackingEntity) {
@@ -61,6 +65,9 @@ public class NPOrderMapper {
                 }
                 if (ordered.getPrice() == null || ordered.getPrice() == 0d) {
                     setPriceAndPrepayment(ordered, data);
+                }
+                if(ordered.getNpAccountId() == null){
+                    ordered.setNpAccountId(propsService.getActual().getId());
                 }
             }
         }
@@ -93,6 +100,9 @@ public class NPOrderMapper {
                 }
                 if (ordered.getPrice() == null || ordered.getPrice() == 0d) {
                     setPriceAndPrepayment(ordered, filteredData.getCost());
+                }
+                if(ordered.getNpAccountId() == null){
+                    ordered.setNpAccountId(propsService.getActual().getId());
                 }
             }
         }

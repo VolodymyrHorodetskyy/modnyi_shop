@@ -113,7 +113,7 @@ public class CanceledOrderReasonService {
                     updated.add(canceledOrderReason);
                 }
             } else if (!StringUtils.isEmpty(canceledOrderReason.getReturnTtn())) {
-                canceledOrderReason.setStatus(novaPostaService.getStatus(canceledOrderReason.getReturnTtn()));
+                canceledOrderReason.setStatus(novaPostaService.getStatusByTTN(canceledOrderReason.getReturnTtn()));
                 updated.add(canceledOrderReason);
             }
         }
@@ -121,14 +121,14 @@ public class CanceledOrderReasonService {
     }
 
     public Data getReturnedEntity(String ttn) {
-        TrackingEntity trackingEntity = postaRepository.getTracking(npHelper.formGetTrackingRequest(ttn));
+        TrackingEntity trackingEntity = postaRepository.getTrackingByTtn(ttn);
         Data returned = null;
         if (trackingEntity != null && trackingEntity.getData().size() > 0) {
             Data data = trackingEntity.getData().get(0);
             if (!StringUtils.isEmpty(data.getLastCreatedOnTheBasisNumber())) {
-                returned = postaRepository.getTracking(npHelper.formGetTrackingRequest(data.getLastCreatedOnTheBasisNumber())).getData().get(0);
+                returned = postaRepository.getTracking(data.getLastCreatedOnTheBasisNumber()).getData().get(0);
                 if (convertToStatus(returned.getStatusCode()) == Status.ЗМІНА_АДРЕСУ) {
-                    returned = postaRepository.getTracking(npHelper.formGetTrackingRequest(returned.getLastCreatedOnTheBasisNumber())).getData().get(0);
+                    returned = postaRepository.getTrackingByTtn(returned.getLastCreatedOnTheBasisNumber()).getData().get(0);
                 }
             }
         }
