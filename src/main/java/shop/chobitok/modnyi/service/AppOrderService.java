@@ -83,7 +83,14 @@ public class AppOrderService {
                 new AppOrderSpecification(id, phoneAndName, comment, DateHelper.formDate(fromForReady),
                         Arrays.asList(AppOrderStatus.Передплачено, AppOrderStatus.Повна_оплата, AppOrderStatus.Скасовано), userId),
                 Sort.by(Sort.Direction.DESC, "createdDate"));
-        List<AppOrder> combinedAppOrders = Stream.concat(appOrdersNotReady.stream(), appOrdersReady.stream()).collect(Collectors.toList());
+        List<AppOrder> combinedAppOrders;
+        if (!StringUtils.isEmpty(userId)) {
+            List<AppOrder> newAppOrders = appOrderRepository.findByPreviousStatus(null);
+            combinedAppOrders = Stream.concat(appOrdersNotReady.stream(), appOrdersReady.stream()).collect(Collectors.toList());
+            combinedAppOrders = Stream.concat(newAppOrders.stream(), combinedAppOrders.stream()).collect(Collectors.toList());
+        } else {
+            combinedAppOrders = Stream.concat(appOrdersNotReady.stream(), appOrdersReady.stream()).collect(Collectors.toList());
+        }
         Map<AppOrderStatus, List<AppOrder>> appOrderMap = new HashMap<>();
         for (AppOrder appOrder : combinedAppOrders) {
             List<AppOrder> appOrders1 = appOrderMap.get(appOrder.getStatus());

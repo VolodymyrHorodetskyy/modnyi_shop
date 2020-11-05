@@ -16,4 +16,6 @@ public interface AppOrderRepository extends JpaRepository<AppOrder, Long> {
 
     List<AppOrder> findByStatusIn(List<AppOrderStatus> statuses);
 
+    List<AppOrder> findByPreviousStatus(AppOrderStatus status);
+
 }
