@@ -172,7 +172,8 @@ public class StatisticService {
         result.append("Співпадіння\n\n");
         for (Ordered ordered : createdList) {
             for (CanceledOrderReason canceledOrderReason : toFind) {
-                if (compareShoeArrays(canceledOrderReason.getOrdered().getOrderedShoes(), ordered.getOrderedShoes()) &&
+                if (formInside(canceledOrderReason.getOrdered().getPostComment()) == formInside(ordered.getPostComment()) &&
+                        compareShoeArrays(canceledOrderReason.getOrdered().getOrderedShoes(), ordered.getOrderedShoes()) &&
                         ordered.getSize().equals(canceledOrderReason.getOrdered().getSize()) &&
                         used.add(canceledOrderReason)) {
                     result.append(ordered.getTtn() + " " + ordered.getPostComment() + "\n");
@@ -191,6 +192,18 @@ public class StatisticService {
         return new StringResponse(result.toString());
     }
 
+
+    public Inside formInside(String description) {
+        description = description.toLowerCase();
+        if (description.contains("хут") || description.contains("мех")) {
+            return Inside.fur;
+        }
+        return Inside.fable;
+    }
+
+    enum Inside {
+        fable, fur
+    }
 
     private boolean compareShoeArrays(List<Shoe> shoes, List<Shoe> shoes2) {
         Set<Shoe> shoesSet = new HashSet<>();
