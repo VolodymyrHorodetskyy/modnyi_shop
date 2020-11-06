@@ -85,13 +85,14 @@ public class AppOrderService {
                 Sort.by(Sort.Direction.DESC, "createdDate"));
         List<AppOrder> combinedAppOrders;
         if (!StringUtils.isEmpty(userId)) {
-            List<AppOrder> newAppOrders = appOrderRepository.findByPreviousStatus(null);
+            List<AppOrder> newAppOrders = appOrderRepository.findAll(new AppOrderSpecification(phoneAndName, comment, Arrays.asList(AppOrderStatus.Новий), true));
             combinedAppOrders = Stream.concat(appOrdersNotReady.stream(), appOrdersReady.stream()).collect(Collectors.toList());
             combinedAppOrders = Stream.concat(newAppOrders.stream(), combinedAppOrders.stream()).collect(Collectors.toList());
         } else {
             combinedAppOrders = Stream.concat(appOrdersNotReady.stream(), appOrdersReady.stream()).collect(Collectors.toList());
         }
-        Map<AppOrderStatus, List<AppOrder>> appOrderMap = new HashMap<>();
+        combinedAppOrders.sort(Comparator.comparing(AppOrder::getCreatedDate).reversed());
+        Map<AppOrderStatus, List<AppOrder>> appOrderMap = new LinkedHashMap<>();
         for (AppOrder appOrder : combinedAppOrders) {
             List<AppOrder> appOrders1 = appOrderMap.get(appOrder.getStatus());
             if (appOrders1 == null) {

@@ -21,6 +21,7 @@ public class AppOrderSpecification implements Specification<AppOrder> {
     private String phone;
     private Long isNotEqualId;
     private String userId;
+    private boolean previousStatusNull;
 
 
     public AppOrderSpecification(String phone, Long isNotEqualId) {
@@ -35,6 +36,13 @@ public class AppOrderSpecification implements Specification<AppOrder> {
         this.from = from;
         this.statuses = statuses;
         this.userId = userId;
+    }
+
+    public AppOrderSpecification(String phoneAndName, String comment, List<AppOrderStatus> statuses, boolean previousStatusNull) {
+        this.phoneAndName = phoneAndName;
+        this.comment = comment;
+        this.statuses = statuses;
+        this.previousStatusNull = previousStatusNull;
     }
 
     @Override
@@ -72,6 +80,10 @@ public class AppOrderSpecification implements Specification<AppOrder> {
             Join<AppOrder, User> appOrderUserJoin = root.join("user");
             Predicate userPredicate = criteriaBuilder.equal(appOrderUserJoin.get("id"), userId);
             predicateList.add(userPredicate);
+        }
+        if (previousStatusNull) {
+            Predicate previousStatusIsNullPredicate = criteriaBuilder.isNull(root.get("previousStatus"));
+            predicateList.add(previousStatusIsNullPredicate);
         }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }
