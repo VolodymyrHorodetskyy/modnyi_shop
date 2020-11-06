@@ -68,10 +68,17 @@ public class StatisticService {
     private String countNeedDelivery(List<Ordered> orderedList) {
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("d.MM");
         StringBuilder result = new StringBuilder();
-        Map<LocalDate, List<Ordered>> localDateOrderedMap = new TreeMap<>();
+        Map<LocalDate, List<Ordered>> localDateOrderedMap = new LinkedHashMap<>();
         List<Ordered> toSave = new ArrayList<>();
+        List<Ordered> urgent = new ArrayList<>();
         for (Ordered ordered : orderedList) {
-            addOrderToMap(localDateOrderedMap, ordered);
+            if (!addOrderToMap(localDateOrderedMap, ordered)) {
+                urgent.add(ordered);
+            }
+        }
+        result.append("Терміново").append("\n\n");
+        for (Ordered ordered : urgent) {
+            result.append(ordered.getTtn()).append("\n").append(ordered.getPostComment()).append("\n\n");
         }
         for (Map.Entry<LocalDate, List<Ordered>> entry : localDateOrderedMap.entrySet()) {
             result.append(entry.getKey().format(timeFormatter)).append("\n\n");
@@ -102,7 +109,10 @@ public class StatisticService {
         return result.toString();
     }
 
-    private void addOrderToMap(Map<LocalDate, List<Ordered>> localDateListMap, Ordered ordered) {
+    private boolean addOrderToMap(Map<LocalDate, List<Ordered>> localDateListMap, Ordered ordered) {
+        if (ordered.getUrgent() != null && ordered.getUrgent()) {
+            return false;
+        }
         LocalDate date = ordered.getCreatedDate().toLocalDate();
         List<Ordered> orderedList = localDateListMap.get(date);
         if (orderedList == null) {
@@ -112,6 +122,7 @@ public class StatisticService {
         } else {
             orderedList.add(ordered);
         }
+        return true;
     }
 
 

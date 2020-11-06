@@ -23,6 +23,7 @@ public class UpdateOrderRequest {
     private boolean full_payment;
     private Long userId;
     private String postComment;
+    private Boolean urgent;
 
     public String getName() {
         return name;
@@ -142,5 +143,13 @@ public class UpdateOrderRequest {
 
     public void setPostComment(String postComment) {
         this.postComment = postComment;
+    }
+
+    public Boolean getUrgent() {
+        return urgent;
+    }
+
+    public void setUrgent(Boolean urgent) {
+        this.urgent = urgent;
     }
 }

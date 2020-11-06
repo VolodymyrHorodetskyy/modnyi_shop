@@ -103,6 +103,9 @@ public class Ordered extends Audit {
     @Column
     private Long npAccountId;
 
+    @Column
+    private Boolean urgent;
+
     public boolean isNotForDeliveryFile() {
         return notForDeliveryFile;
     }
@@ -349,5 +352,13 @@ public class Ordered extends Audit {
 
     public void setNpAccountId(Long npAccountId) {
         this.npAccountId = npAccountId;
+    }
+
+    public Boolean getUrgent() {
+        return urgent;
+    }
+
+    public void setUrgent(Boolean urgent) {
+        this.urgent = urgent;
     }
 }

@@ -134,6 +134,7 @@ public class OrderService {
         if (!StringUtils.isEmpty(updateOrderRequest.getPostComment())) {
             ordered.setPostComment(updateOrderRequest.getPostComment());
         }
+        ordered.setUrgent(updateOrderRequest.getUrgent());
         ordered.setFullPayment(updateOrderRequest.isFull_payment());
         ordered.setNotes(updateOrderRequest.getNotes());
         updateShoeAndSize(ordered, updateOrderRequest);

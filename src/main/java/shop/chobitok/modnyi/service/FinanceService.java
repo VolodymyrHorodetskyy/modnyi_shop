@@ -41,7 +41,7 @@ public class FinanceService {
 
         Double sum = 0d;
         Double predictedSum = 0d;
-        Double realisticSum = 0d;
+        Double realisticSum;
         int all = 0;
         Map<Status, Integer> amountByStatus = new HashMap<>();
         for (Map.Entry<Status, List<Ordered>> statusListEntry : statusListMap.entrySet()) {
