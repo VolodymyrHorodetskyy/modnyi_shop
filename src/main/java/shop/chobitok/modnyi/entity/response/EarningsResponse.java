@@ -1,6 +1,9 @@
 package shop.chobitok.modnyi.entity.response;
 
+import shop.chobitok.modnyi.entity.Status;
+
 import java.time.LocalDateTime;
+import java.util.Map;
 
 public class EarningsResponse {
 
@@ -8,24 +11,24 @@ public class EarningsResponse {
     private LocalDateTime to;
     private Double sum;
     private Double predictedSum;
-    private int received;
-    private int denied;
-    private int all;
+    private Double realisticSum;
+    private Map<Status, Integer> amountByStatus;
     private int receivedPercentage;
+    private int all;
 
     public EarningsResponse() {
     }
 
 
-    public EarningsResponse(LocalDateTime from, LocalDateTime to, Double sum, Double predictedSum, int received, int denied, int all, int receivedPercentage) {
+    public EarningsResponse(LocalDateTime from, LocalDateTime to, Double sum, Double predictedSum, Double realisticSum, Map<Status, Integer> amountByStatus, int receivedPercentage, int all) {
         this.from = from;
         this.to = to;
         this.sum = sum;
         this.predictedSum = predictedSum;
-        this.received = received;
-        this.denied = denied;
-        this.all = all;
+        this.realisticSum = realisticSum;
+        this.amountByStatus = amountByStatus;
         this.receivedPercentage = receivedPercentage;
+        this.all = all;
     }
 
     public LocalDateTime getFrom() {
@@ -60,20 +63,20 @@ public class EarningsResponse {
         this.predictedSum = predictedSum;
     }
 
-    public int getReceived() {
-        return received;
+    public Double getRealisticSum() {
+        return realisticSum;
     }
 
-    public void setReceived(int received) {
-        this.received = received;
+    public void setRealisticSum(Double realisticSum) {
+        this.realisticSum = realisticSum;
     }
 
-    public int getDenied() {
-        return denied;
+    public Map<Status, Integer> getAmountByStatus() {
+        return amountByStatus;
     }
 
-    public void setDenied(int denied) {
-        this.denied = denied;
+    public void setAmountByStatus(Map<Status, Integer> amountByStatus) {
+        this.amountByStatus = amountByStatus;
     }
 
     public int getReceivedPercentage() {
