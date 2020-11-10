@@ -152,7 +152,7 @@ public class StatisticService {
             order.setNotForDeliveryFile(false);
             toSave.add(order);
         }
-        List<Ordered> createdList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.СТВОРЕНО));
+        List<Ordered> createdList = orderRepository.findAllByAvailableTrueAndStatusInOrderByUrgentDesc(Arrays.asList(Status.СТВОРЕНО));
         Set<CanceledOrderReason> used = new HashSet<>();
         Set<CanceledOrderReason> toFind = new HashSet<>();
         int countArrived = 0;
