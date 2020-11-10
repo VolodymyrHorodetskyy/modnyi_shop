@@ -5,10 +5,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import shop.chobitok.modnyi.entity.CancelReason;
-import shop.chobitok.modnyi.entity.CanceledOrderReason;
-import shop.chobitok.modnyi.entity.Ordered;
-import shop.chobitok.modnyi.entity.Status;
+import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.request.CancelOrderWithIdRequest;
 import shop.chobitok.modnyi.entity.request.CancelOrderWithOrderRequest;
 import shop.chobitok.modnyi.entity.response.GetCanceledResponse;
@@ -40,8 +37,9 @@ public class CanceledOrderReasonService {
     private NPHelper npHelper;
     private MailService mailService;
     private StatusChangeService statusChangeService;
+    private ShoePriceService shoePriceService;
 
-    public CanceledOrderReasonService(NovaPostaService novaPostaService, OrderRepository orderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, NovaPostaRepository postaRepository, NPHelper npHelper, MailService mailService, StatusChangeService statusChangeService) {
+    public CanceledOrderReasonService(NovaPostaService novaPostaService, OrderRepository orderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, NovaPostaRepository postaRepository, NPHelper npHelper, MailService mailService, StatusChangeService statusChangeService, ShoePriceService shoePriceService) {
         this.novaPostaService = novaPostaService;
         this.orderRepository = orderRepository;
         this.canceledOrderReasonRepository = canceledOrderReasonRepository;
@@ -49,6 +47,7 @@ public class CanceledOrderReasonService {
         this.npHelper = npHelper;
         this.mailService = mailService;
         this.statusChangeService = statusChangeService;
+        this.shoePriceService = shoePriceService;
     }
 
     public Ordered cancelOrder(CancelOrderWithOrderRequest cancelOrderRequest) {
@@ -57,10 +56,8 @@ public class CanceledOrderReasonService {
             throw new ConflictException("Немає такого замовлення");
         }
         statusChangeService.createRecord(ordered, ordered.getStatus(), Status.ВІДМОВА);
+        sendMailIfPayed(ordered);
         ordered.setStatus(Status.ВІДМОВА);
-        if (ordered.isPayed()) {
-            mailService.sendEmail("Було оплачено", ordered.getTtn(), "horodetskyyv@gmail.com");
-        }
         CanceledOrderReason canceledOrderReason = canceledOrderReasonRepository.findFirstByOrderedId(cancelOrderRequest.getOrderId());
         if (canceledOrderReason == null) {
             canceledOrderReason = new CanceledOrderReason(ordered, cancelOrderRequest.getReason(), cancelOrderRequest.getComment(),
@@ -75,6 +72,19 @@ public class CanceledOrderReasonService {
         orderRepository.save(ordered);
         canceledOrderReasonRepository.save(canceledOrderReason);
         return ordered;
+    }
+
+    private void sendMailIfPayed(Ordered ordered) {
+        if (ordered.getStatus() != Status.ВІДМОВА && ordered.isPayed()) {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(ordered.getTtn());
+            Double generalSum = 0d;
+            for (Shoe shoe : ordered.getOrderedShoes()) {
+                generalSum += shoePriceService.getShoePrice(shoe, ordered).getCost();
+            }
+            stringBuilder.append("\n").append("Сума : ").append(generalSum);
+            mailService.sendEmail("Було оплачено", stringBuilder.toString(), "horodetskyyv@gmail.com");
+        }
     }
 
     public CanceledOrderReason createDefaultReasonOnCancel(Ordered ordered) {
