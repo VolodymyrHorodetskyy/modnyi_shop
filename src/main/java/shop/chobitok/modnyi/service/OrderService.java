@@ -343,7 +343,7 @@ public class OrderService {
     private String countNeedDelivery(List<Ordered> orderedList) {
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("d.MM");
         StringBuilder result = new StringBuilder();
-        Map<LocalDate, List<Ordered>> localDateOrderedMap = new LinkedHashMap<>();
+        Map<LocalDate, List<Ordered>> localDateOrderedMap = new TreeMap<>();
         List<Ordered> toSave = new ArrayList<>();
         List<Ordered> urgent = new ArrayList<>();
         for (Ordered ordered : orderedList) {
