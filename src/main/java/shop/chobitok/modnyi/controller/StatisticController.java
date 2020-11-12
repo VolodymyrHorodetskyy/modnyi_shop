@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.response.AmountsInfoResponse;
 import shop.chobitok.modnyi.entity.response.StringResponse;
+import shop.chobitok.modnyi.service.CanceledOrderReasonService;
 import shop.chobitok.modnyi.service.OrderService;
 import shop.chobitok.modnyi.service.StatisticService;
 import shop.chobitok.modnyi.service.entity.StatShoe;
@@ -18,6 +19,7 @@ public class StatisticController {
 
     private StatisticService statisticService;
     private OrderService orderService;
+    private CanceledOrderReasonService canceledOrderReasonService;
 
 
     public StatisticController(StatisticService statisticService, OrderService orderService) {
@@ -42,7 +44,7 @@ public class StatisticController {
 
     @GetMapping("/needDeliveryFromDB")
     public StringResponse needDelivery(@RequestParam(required = false) boolean updateStatuses) {
-        return statisticService.countNeedDeliveryFromDB(updateStatuses);
+        return orderService.countNeedDeliveryFromDB(updateStatuses);
     }
 
     @GetMapping("/getIssueOrdered")
@@ -57,7 +59,7 @@ public class StatisticController {
 
     @GetMapping("/returned")
     public StringResponse returned(@RequestParam(required = false) boolean setNotForDelivery) {
-        return statisticService.getReturned(setNotForDelivery);
+        return canceledOrderReasonService.getReturned(setNotForDelivery);
     }
 
     @GetMapping("/canceled")

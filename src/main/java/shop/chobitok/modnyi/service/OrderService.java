@@ -12,6 +12,7 @@ import shop.chobitok.modnyi.entity.response.GetAllOrderedResponse;
 import shop.chobitok.modnyi.entity.response.PaginationInfo;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
+import shop.chobitok.modnyi.google.docs.service.GoogleDocsService;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
@@ -23,9 +24,9 @@ import shop.chobitok.modnyi.repository.UserRepository;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 
 import javax.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
 import static shop.chobitok.modnyi.util.StringHelper.removeSpaces;
@@ -36,32 +37,28 @@ public class OrderService {
     private OrderRepository orderRepository;
     private ShoeRepository shoeRepository;
     private ClientService clientService;
-    private StorageService storageService;
     private NovaPostaService novaPostaService;
-    private CanceledOrderReasonRepository canceledOrderReasonRepository;
-    private NotificationService notificationService;
     private MailService mailService;
     private CanceledOrderReasonService canceledOrderReasonService;
     private UserRepository userRepository;
     private StatusChangeService statusChangeService;
     private NovaPostaRepository postaRepository;
+    private GoogleDocsService googleDocsService;
 
     @Value("${spring.datasource.username}")
     private String username;
 
-    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, StorageService storageService, NovaPostaService novaPostaService, CanceledOrderReasonRepository canceledOrderReasonRepository, NotificationService notificationService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository) {
+    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService) {
         this.orderRepository = orderRepository;
         this.shoeRepository = shoeRepository;
         this.clientService = clientService;
-        this.storageService = storageService;
         this.novaPostaService = novaPostaService;
-        this.canceledOrderReasonRepository = canceledOrderReasonRepository;
-        this.notificationService = notificationService;
         this.mailService = mailService;
         this.canceledOrderReasonService = canceledOrderReasonService;
         this.userRepository = userRepository;
         this.statusChangeService = statusChangeService;
         this.postaRepository = postaRepository;
+        this.googleDocsService = googleDocsService;
     }
 
     public Ordered findByTTN(String ttn) {
@@ -197,7 +194,9 @@ public class OrderService {
             }
         }
         novaPostaService.updateAllCanceled();
-        return result.toString();
+        String resultString = result.toString();
+        updateGoogleDocsDeliveryFile();
+        return resultString;
     }
 
     public String updateOrderStatusesNovaPosta() {
@@ -216,7 +215,7 @@ public class OrderService {
                 statusChangeService.createRecord(ordered, oldStatus, newStatus);
                 ordered.setStatus(newStatus);
                 ordered.setStatusNP(data.getStatusCode());
-                if(oldStatus == Status.СТВОРЕНО){
+                if (oldStatus == Status.СТВОРЕНО) {
                     ordered.setAddress(data.getRecipientAddress());
                 }
                 orderRepository.save(ordered);
@@ -325,5 +324,81 @@ public class OrderService {
         return ttnsList;
     }
 
+    public void updateGoogleDocsDeliveryFile() {
+        googleDocsService.updateDeliveryFile(countNeedDeliveryFromDB(false).getResult());
+    }
+
+    public StringResponse countNeedDeliveryFromDB(boolean updateStatuses) {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (updateStatuses) {
+            updateOrderStatusesNovaPosta(Arrays.asList(Status.СТВОРЕНО));
+        }
+        List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(Status.СТВОРЕНО, false), Sort.by("dateCreated"));
+        stringBuilder.append(countNeedDelivery(orderedList));
+        stringBuilder.append("Кількість : " + orderedList.size());
+        return new StringResponse(stringBuilder.toString());
+    }
+
+
+    private String countNeedDelivery(List<Ordered> orderedList) {
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("d.MM");
+        StringBuilder result = new StringBuilder();
+        Map<LocalDate, List<Ordered>> localDateOrderedMap = new LinkedHashMap<>();
+        List<Ordered> toSave = new ArrayList<>();
+        List<Ordered> urgent = new ArrayList<>();
+        for (Ordered ordered : orderedList) {
+            if (!addOrderToMap(localDateOrderedMap, ordered)) {
+                urgent.add(ordered);
+            }
+        }
+        result.append("Терміново").append("\n\n");
+        for (Ordered ordered : urgent) {
+            result.append(ordered.getTtn()).append("\n").append(ordered.getPostComment()).append("\n\n");
+        }
+        for (Map.Entry<LocalDate, List<Ordered>> entry : localDateOrderedMap.entrySet()) {
+            result.append(entry.getKey().format(timeFormatter)).append("\n\n");
+            int count = 0;
+            List<Ordered> ordereds = entry.getValue();
+            for (Ordered ordered : ordereds) {
+                if (ordered.getSequenceNumber() != null && ordered.getSequenceNumber() >= count) {
+                    count = ordered.getSequenceNumber();
+                }
+            }
+            for (Ordered ordered : entry.getValue()) {
+                if (ordered.getSequenceNumber() == null) {
+                    ordered.setSequenceNumber(++count);
+                    toSave.add(ordered);
+                }
+                if (!StringUtils.isEmpty(ordered.getTtn())) {
+                    result.append(ordered.getSequenceNumber()).append(". ").append(ordered.getTtn()).append("\n").append(ordered.getPostComment()).append("\n\n");
+                } else {
+                    result.append(ordered.getSequenceNumber()).append(". ").append("без накладноЇ\n");
+                    for (Shoe shoe : ordered.getOrderedShoes()) {
+                        result.append(shoe.getModel()).append(" ").append(shoe.getColor());
+                    }
+                    result.append(", ").append(ordered.getSize()).append("\n\n");
+                }
+            }
+        }
+        orderRepository.saveAll(toSave);
+        return result.toString();
+    }
+
+
+    private boolean addOrderToMap(Map<LocalDate, List<Ordered>> localDateListMap, Ordered ordered) {
+        if (ordered.getUrgent() != null && ordered.getUrgent()) {
+            return false;
+        }
+        LocalDate date = ordered.getCreatedDate().toLocalDate();
+        List<Ordered> orderedList = localDateListMap.get(date);
+        if (orderedList == null) {
+            orderedList = new ArrayList<>();
+            orderedList.add(ordered);
+            localDateListMap.put(date, orderedList);
+        } else {
+            orderedList.add(ordered);
+        }
+        return true;
+    }
 
 }

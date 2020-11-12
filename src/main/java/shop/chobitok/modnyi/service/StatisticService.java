@@ -1,12 +1,12 @@
 package shop.chobitok.modnyi.service;
 
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.response.AmountsInfoResponse;
 import shop.chobitok.modnyi.entity.response.StringResponse;
+import shop.chobitok.modnyi.google.docs.service.GoogleDocsService;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
@@ -22,9 +22,7 @@ import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static java.util.stream.Collectors.toList;
@@ -37,94 +35,20 @@ public class StatisticService {
     private NovaPostaRepository postaRepository;
     private OrderRepository orderRepository;
     private NPOrderMapper npOrderMapper;
-    private NPHelper npHelper;
     private OrderService orderService;
     private ShoePriceService shoePriceService;
     private AppOrderRepository appOrderRepository;
     private CanceledOrderReasonRepository canceledOrderReasonRepository;
 
-    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, NPOrderMapper npOrderMapper, NPHelper npHelper, OrderService orderService, ShoePriceService shoePriceService, AppOrderRepository appOrderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository) {
+    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, NPOrderMapper npOrderMapper, OrderService orderService, ShoePriceService shoePriceService, AppOrderRepository appOrderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository) {
         this.postaRepository = postaRepository;
         this.orderRepository = orderRepository;
         this.npOrderMapper = npOrderMapper;
-        this.npHelper = npHelper;
         this.orderService = orderService;
         this.shoePriceService = shoePriceService;
         this.appOrderRepository = appOrderRepository;
         this.canceledOrderReasonRepository = canceledOrderReasonRepository;
     }
-
-    public StringResponse countNeedDeliveryFromDB(boolean updateStatuses) {
-        StringBuilder stringBuilder = new StringBuilder();
-        if (updateStatuses) {
-            orderService.updateOrderStatusesNovaPosta(Arrays.asList(Status.СТВОРЕНО));
-        }
-        List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(Status.СТВОРЕНО, false), Sort.by("dateCreated"));
-        stringBuilder.append(countNeedDelivery(orderedList));
-        stringBuilder.append("Кількість : " + orderedList.size());
-        return new StringResponse(stringBuilder.toString());
-    }
-
-    private String countNeedDelivery(List<Ordered> orderedList) {
-        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("d.MM");
-        StringBuilder result = new StringBuilder();
-        Map<LocalDate, List<Ordered>> localDateOrderedMap = new LinkedHashMap<>();
-        List<Ordered> toSave = new ArrayList<>();
-        List<Ordered> urgent = new ArrayList<>();
-        for (Ordered ordered : orderedList) {
-            if (!addOrderToMap(localDateOrderedMap, ordered)) {
-                urgent.add(ordered);
-            }
-        }
-        result.append("Терміново").append("\n\n");
-        for (Ordered ordered : urgent) {
-            result.append(ordered.getTtn()).append("\n").append(ordered.getPostComment()).append("\n\n");
-        }
-        for (Map.Entry<LocalDate, List<Ordered>> entry : localDateOrderedMap.entrySet()) {
-            result.append(entry.getKey().format(timeFormatter)).append("\n\n");
-            int count = 0;
-            List<Ordered> ordereds = entry.getValue();
-            for (Ordered ordered : ordereds) {
-                if (ordered.getSequenceNumber() != null && ordered.getSequenceNumber() >= count) {
-                    count = ordered.getSequenceNumber();
-                }
-            }
-            for (Ordered ordered : entry.getValue()) {
-                if (ordered.getSequenceNumber() == null) {
-                    ordered.setSequenceNumber(++count);
-                    toSave.add(ordered);
-                }
-                if (!StringUtils.isEmpty(ordered.getTtn())) {
-                    result.append(ordered.getSequenceNumber()).append(". ").append(ordered.getTtn()).append("\n").append(ordered.getPostComment()).append("\n\n");
-                } else {
-                    result.append(ordered.getSequenceNumber()).append(". ").append("без накладноЇ\n");
-                    for (Shoe shoe : ordered.getOrderedShoes()) {
-                        result.append(shoe.getModel()).append(" ").append(shoe.getColor());
-                    }
-                    result.append(", ").append(ordered.getSize()).append("\n\n");
-                }
-            }
-        }
-        orderRepository.saveAll(toSave);
-        return result.toString();
-    }
-
-    private boolean addOrderToMap(Map<LocalDate, List<Ordered>> localDateListMap, Ordered ordered) {
-        if (ordered.getUrgent() != null && ordered.getUrgent()) {
-            return false;
-        }
-        LocalDate date = ordered.getCreatedDate().toLocalDate();
-        List<Ordered> orderedList = localDateListMap.get(date);
-        if (orderedList == null) {
-            orderedList = new ArrayList<>();
-            orderedList.add(ordered);
-            localDateListMap.put(date, orderedList);
-        } else {
-            orderedList.add(ordered);
-        }
-        return true;
-    }
-
 
     public StringResponse getIssueOrders() {
         //TODO: optimisation
@@ -139,96 +63,6 @@ public class StatisticService {
             result.append("Помилок немає");
         }
         return new StringResponse(result.toString());
-    }
-
-
-    //TODO refactor, split
-    public StringResponse getReturned(boolean excludeFromDeliveryFile) {
-        List<Ordered> toSave = new ArrayList<>();
-        StringBuilder result = new StringBuilder();
-        List<CanceledOrderReason> canceledOrderReasons = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(true, true));
-        List<Ordered> orderedList = orderRepository.findByNotForDeliveryFileTrue();
-        for (Ordered order : orderedList) {
-            order.setNotForDeliveryFile(false);
-            toSave.add(order);
-        }
-        List<Ordered> createdList = orderRepository.findAllByAvailableTrueAndStatusInOrderByUrgentDesc(Arrays.asList(Status.СТВОРЕНО));
-        Set<CanceledOrderReason> used = new HashSet<>();
-        Set<CanceledOrderReason> toFind = new HashSet<>();
-        int countArrived = 0;
-        for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
-            result.append(canceledOrderReason.getOrdered().getPostComment()).append("\n").
-                    append(canceledOrderReason.getOrdered().getTtn()).append("\n").append(canceledOrderReason.getReturnTtn()).append(" ")
-                    .append(canceledOrderReason.getStatus()).append(" ").append(canceledOrderReason.getReason())
-                    .append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
-                    .append("\n\n");
-            if (canceledOrderReason.getStatus() == Status.ДОСТАВЛЕНО) {
-                ++countArrived;
-            }
-            if (canceledOrderReason.getReason() == CancelReason.БРАК) {
-                used.add(canceledOrderReason);
-            } else {
-                toFind.add(canceledOrderReason);
-            }
-        }
-        result.append("Кількість доставлених: ").append(countArrived).append("\n\n");
-
-        result.append("Звернути увагу\n\n");
-        for (CanceledOrderReason canceledOrderReason : used) {
-            result.append(canceledOrderReason.getOrdered().getTtn()).append("\n")
-                    .append(canceledOrderReason.getReturnTtn()).append(" ").append(canceledOrderReason.getStatus()).append("\n")
-                    .append(canceledOrderReason.getReason()).append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
-                    .append("\n\n");
-        }
-        result.append("Співпадіння\n\n");
-        for (Ordered ordered : createdList) {
-            for (CanceledOrderReason canceledOrderReason : toFind) {
-                if (formInside(canceledOrderReason.getOrdered().getPostComment()) == formInside(ordered.getPostComment()) &&
-                        compareShoeArrays(canceledOrderReason.getOrdered().getOrderedShoes(), ordered.getOrderedShoes()) &&
-                        ordered.getSize().equals(canceledOrderReason.getOrdered().getSize()) &&
-                        used.add(canceledOrderReason)) {
-                    result.append(ordered.getTtn() + " " + ordered.getPostComment() + "\n");
-                    result.append(canceledOrderReason.getReturnTtn() + " " + canceledOrderReason.getStatus() + " " + canceledOrderReason.getReason() + "\n\n");
-                    if (excludeFromDeliveryFile) {
-                        ordered.setNotForDeliveryFile(true);
-                        toSave.add(ordered);
-                    }
-                    break;
-                }
-            }
-        }
-        if (toSave.size() > 0) {
-            orderRepository.saveAll(toSave);
-        }
-        return new StringResponse(result.toString());
-    }
-
-
-    public Inside formInside(String description) {
-        description = description.toLowerCase();
-        if (description.contains("хут") || description.contains("мех")) {
-            return Inside.fur;
-        }
-        return Inside.fable;
-    }
-
-    enum Inside {
-        fable, fur
-    }
-
-    private boolean compareShoeArrays(List<Shoe> shoes, List<Shoe> shoes2) {
-        Set<Shoe> shoesSet = new HashSet<>();
-        if (shoes.size() != shoes2.size()) {
-            return false;
-        }
-        for (Shoe shoe : shoes) {
-            for (Shoe shoe1 : shoes2) {
-                if (!(shoe.equals(shoe1) && shoesSet.add(shoe1))) {
-                    return false;
-                }
-            }
-        }
-        return true;
     }
 
     private Set<String> readFileToTTNSet(String path) {
