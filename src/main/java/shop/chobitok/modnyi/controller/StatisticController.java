@@ -21,10 +21,10 @@ public class StatisticController {
     private OrderService orderService;
     private CanceledOrderReasonService canceledOrderReasonService;
 
-
-    public StatisticController(StatisticService statisticService, OrderService orderService) {
+    public StatisticController(StatisticService statisticService, OrderService orderService, CanceledOrderReasonService canceledOrderReasonService) {
         this.statisticService = statisticService;
         this.orderService = orderService;
+        this.canceledOrderReasonService = canceledOrderReasonService;
     }
 
     @GetMapping("/needToPayed")
