@@ -347,7 +347,8 @@ public class OrderService {
         List<Ordered> toSave = new ArrayList<>();
         List<Ordered> urgent = new ArrayList<>();
         for (Ordered ordered : orderedList) {
-            if (!addOrderToMap(localDateOrderedMap, ordered)) {
+            addOrderToMap(localDateOrderedMap, ordered);
+            if (ordered.getUrgent() != null && ordered.getUrgent()) {
                 urgent.add(ordered);
             }
         }
