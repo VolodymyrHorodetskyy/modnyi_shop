@@ -387,9 +387,6 @@ public class OrderService {
 
 
     private boolean addOrderToMap(Map<LocalDate, List<Ordered>> localDateListMap, Ordered ordered) {
-        if (ordered.getUrgent() != null && ordered.getUrgent()) {
-            return false;
-        }
         LocalDate date = ordered.getCreatedDate().toLocalDate();
         List<Ordered> orderedList = localDateListMap.get(date);
         if (orderedList == null) {
