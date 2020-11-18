@@ -17,6 +17,7 @@ import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.novaposta.util.NPHelper;
+import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
@@ -123,10 +124,17 @@ public class CanceledOrderReasonService {
                 if (returned != null) {
                     canceledOrderReason.setReturnTtn(returned.getNumber());
                     canceledOrderReason.setStatus(convertToStatus(returned.getStatusCode()));
+                    if (returned.getDatePayedKeeping() != null && canceledOrderReason.getDatePayedKeeping() == null) {
+                        canceledOrderReason.setDatePayedKeeping(ShoeUtil.toLocalDateTime(returned.getDatePayedKeeping()));
+                    }
                     updated.add(canceledOrderReason);
                 }
             } else if (!StringUtils.isEmpty(canceledOrderReason.getReturnTtn())) {
-                canceledOrderReason.setStatus(novaPostaService.getStatusByTTN(canceledOrderReason.getReturnTtn()));
+                Data returned = postaRepository.getTracking(canceledOrderReason.getReturnTtn()).getData().get(0);
+                canceledOrderReason.setStatus(convertToStatus(returned.getStatusCode()));
+                if (returned.getDatePayedKeeping() != null && canceledOrderReason.getDatePayedKeeping() == null) {
+                    canceledOrderReason.setDatePayedKeeping(ShoeUtil.toLocalDateTime(returned.getDatePayedKeeping()));
+                }
                 updated.add(canceledOrderReason);
             }
         }

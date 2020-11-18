@@ -3,6 +3,7 @@ package shop.chobitok.modnyi.entity;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
+import java.time.LocalDateTime;
 
 @Entity
 public class CanceledOrderReason extends Audit {
@@ -21,6 +22,8 @@ public class CanceledOrderReason extends Audit {
     private Status status;
     @Column
     private boolean manual = false;
+    @Column
+    private LocalDateTime datePayedKeeping;
 
     public CanceledOrderReason() {
     }
@@ -94,5 +97,13 @@ public class CanceledOrderReason extends Audit {
 
     public void setManual(boolean manual) {
         this.manual = manual;
+    }
+
+    public LocalDateTime getDatePayedKeeping() {
+        return datePayedKeeping;
+    }
+
+    public void setDatePayedKeeping(LocalDateTime datePayedKeeping) {
+        this.datePayedKeeping = datePayedKeeping;
     }
 }
