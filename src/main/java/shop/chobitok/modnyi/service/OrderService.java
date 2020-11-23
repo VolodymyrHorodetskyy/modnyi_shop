@@ -17,14 +17,15 @@ import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
-import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.repository.UserRepository;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
+import shop.chobitok.modnyi.util.DateHelper;
 
 import javax.transaction.Transactional;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -193,10 +194,37 @@ public class OrderService {
                 result.append(ordered.getTtn() + " ... статус змінено на " + ordered.getStatus() + "\n");
             }
         }
-        novaPostaService.updateAllCanceled();
+        updateStatus103();
         String resultString = result.toString();
         updateGoogleDocsDeliveryFile();
         return resultString;
+    }
+
+    public void updateCanceled() {
+        List<Ordered> canceledAndDeniedOrders = orderRepository
+                .findAllByStatusInAndLastModifiedDateGreaterThan(Arrays.asList(Status.ВИДАЛЕНО, Status.ВІДМОВА, Status.ЗМІНА_АДРЕСУ),
+                        DateHelper.formLocalDateTimeStartOfTheDay(LocalDateTime.now().minusDays(5)));
+        for (Ordered ordered : canceledAndDeniedOrders) {
+            updateStatusByNovaPosta(ordered);
+        }
+    }
+
+    public void updateStatus103() {
+        List<Ordered> canceled = orderRepository.findBystatusNP(103);
+        for (Ordered ordered : canceled) {
+            updateCanceled(ordered);
+        }
+    }
+
+    private void updateCanceled(Ordered ordered) {
+        TrackingEntity trackingEntity = postaRepository.getTracking(ordered);
+        if (trackingEntity != null && trackingEntity.getData().size() > 0) {
+            Data data = trackingEntity.getData().get(0);
+            if (!ordered.getStatusNP().equals(data.getStatusCode())) {
+                ordered.setStatusNP(data.getStatusCode());
+                orderRepository.save(ordered);
+            }
+        }
     }
 
     public String updateOrderStatusesNovaPosta() {

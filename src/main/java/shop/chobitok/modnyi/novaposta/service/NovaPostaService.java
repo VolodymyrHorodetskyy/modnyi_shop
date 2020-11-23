@@ -86,15 +86,6 @@ public class NovaPostaService {
         return ordered.getTtn() + "  ... заявку на повернення неможливо оформити";
     }
 
-/*    public TrackingEntity getTrackingEntity(Ordered ordered) {
-        String phone = propsService.getByOrder(ordered).getPhone();
-        if (!StringUtils.isEmpty(ordered.getTtn())) {
-            return postaRepository.getTracking(ordered);
-        } else {
-            return null;
-        }
-    }*/
-
     public Status getStatus(Ordered ordered) {
         TrackingEntity trackingEntity = postaRepository.getTracking(ordered);
         if (trackingEntity != null && trackingEntity.getData().size() > 0) {
@@ -107,23 +98,7 @@ public class NovaPostaService {
         return ShoeUtil.convertToStatus(postaRepository.getTracking(ttn).getData().get(0).getStatusCode());
     }
 
-    public void updateAllCanceled() {
-        List<Ordered> canceled = orderRepository.findBystatusNP(103);
-        for (Ordered ordered : canceled) {
-            updateCanceled(ordered);
-        }
-    }
 
-    private void updateCanceled(Ordered ordered) {
-        TrackingEntity trackingEntity = postaRepository.getTracking(ordered);
-        if (trackingEntity != null && trackingEntity.getData().size() > 0) {
-            Data data = trackingEntity.getData().get(0);
-            if (!ordered.getStatusNP().equals(data.getStatusCode())) {
-                ordered.setStatusNP(data.getStatusCode());
-                orderRepository.save(ordered);
-            }
-        }
-    }
 
 
 }

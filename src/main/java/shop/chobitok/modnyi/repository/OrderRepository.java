@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Status;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -25,6 +26,8 @@ public interface OrderRepository extends JpaRepository<Ordered, Long> {
     List<Ordered> findAllByAvailableTrueAndNotForDeliveryFileFalseAndStatusOrderByDateCreated(Status status);
 
     List<Ordered> findAllByAvailableTrueAndStatusIn(List<Status> statuses);
+
+    List<Ordered> findAllByStatusInAndLastModifiedDateGreaterThan(List<Status> statuses, LocalDateTime dateTime);
 
     List<Ordered> findAllByAvailableTrueAndStatusInOrderByUrgentDesc(List<Status> statuses);
 

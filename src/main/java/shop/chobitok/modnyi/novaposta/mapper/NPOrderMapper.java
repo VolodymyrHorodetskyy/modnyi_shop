@@ -164,7 +164,7 @@ public class NPOrderMapper {
     }
 
     public void setPriceAndPrepayment(Ordered ordered, Double redeliverySum) {
-        if (redeliverySum == 0) {
+        if (redeliverySum != null && redeliverySum == 0) {
             ordered.setFullPayment(true);
         }
         if (ordered.getOrderedShoes() != null && ordered.getOrderedShoes().size() > 0) {
