@@ -205,7 +205,10 @@ public class OrderService {
                 .findAllByStatusInAndLastModifiedDateGreaterThan(Arrays.asList(Status.ВИДАЛЕНО, Status.ВІДМОВА, Status.ЗМІНА_АДРЕСУ),
                         DateHelper.formLocalDateTimeStartOfTheDay(LocalDateTime.now().minusDays(5)));
         for (Ordered ordered : canceledAndDeniedOrders) {
-            updateStatusByNovaPosta(ordered);
+            CanceledOrderReason canceledOrderReason = canceledOrderReasonService.getCanceledOrderReasonByOrderId(ordered.getId());
+            if (canceledOrderReason == null || !canceledOrderReason.isManual()) {
+                updateStatusByNovaPosta(ordered);
+            }
         }
     }
 

@@ -32,7 +32,7 @@ public class CronJob {
         orderService.updateOrderStatusesNovaPosta();
         checkerService.checkPayedKeepingOrders();
         checkerService.makeAppOrderNewAgain();
-   //     orderService.updateCanceled();
+        orderService.updateCanceled();
     }
 
     @Scheduled(cron = "0 0 */2 * * *")
