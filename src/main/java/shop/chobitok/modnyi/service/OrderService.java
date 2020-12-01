@@ -170,12 +170,16 @@ public class OrderService {
         if (orderRepository.findOneByAvailableTrueAndTtn(ttn) == null) {
             try {
                 Ordered ordered = novaPostaService.createOrUpdateOrderFromNP(ttn);
-                ordered.setUser(user);
-                orderRepository.save(ordered);
-                if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
-                    result.append(ttn + "  ... взуття або розмір не визначено \n");
+                if (ordered.getStatus() != Status.НЕ_ЗНАЙДЕНО) {
+                    ordered.setUser(user);
+                    orderRepository.save(ordered);
+                    if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
+                        result.append(ttn + "  ... взуття або розмір не визначено \n");
+                    } else {
+                        result.append(ttn + "  ... імпортовано \n");
+                    }
                 } else {
-                    result.append(ttn + "  ... імпортовано \n");
+                    result.append(ttn).append("  ... не знайдено, спробуйте пізніше \n");
                 }
             } catch (ConflictException e) {
                 result.append(ttn + "  ... неможливо знайти ттн \n");

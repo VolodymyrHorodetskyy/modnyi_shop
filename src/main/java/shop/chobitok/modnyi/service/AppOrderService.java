@@ -19,6 +19,7 @@ import shop.chobitok.modnyi.util.DateHelper;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -151,5 +152,16 @@ public class AppOrderService {
         }
         appOrder.setStatus(status);
         return appOrder;
+    }
+
+    public String importNotImported() {
+        StringBuilder result = new StringBuilder();
+        List<AppOrder> appOrders = appOrderRepository.findByTtnIsNotNullAndLastModifiedDateIsGreaterThan(LocalDateTime.now().minusDays(3));
+        for (AppOrder appOrder : appOrders) {
+            if (!StringUtils.isEmpty(appOrder.getTtn()) && orderRepository.findOneByAvailableTrueAndTtn(appOrder.getTtn()) == null) {
+                result.append(orderService.importOrderFromTTNString(appOrder.getTtn(), appOrder.getUser().getId()));
+            }
+        }
+        return result.toString();
     }
 }
