@@ -3,6 +3,7 @@ package shop.chobitok.modnyi.entity.request;
 public class ImportOrdersFromStringRequest {
 
     private String ttns;
+    private Long discountId;
     private Long userId;
 
     public String getTtns() {
@@ -19,5 +20,13 @@ public class ImportOrdersFromStringRequest {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Long getDiscountId() {
+        return discountId;
+    }
+
+    public void setDiscountId(Long discountId) {
+        this.discountId = discountId;
     }
 }

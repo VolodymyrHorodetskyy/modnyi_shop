@@ -31,13 +31,15 @@ public class AppOrderService {
     private ClientRepository clientRepository;
     private OrderRepository orderRepository;
     private UserRepository userRepository;
+    private DiscountService discountService;
 
-    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository) {
+    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService) {
         this.appOrderRepository = appOrderRepository;
         this.orderService = orderService;
         this.clientRepository = clientRepository;
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
+        this.discountService = discountService;
     }
 
     public AppOrder catchOrder(String s) {
@@ -124,7 +126,7 @@ public class AppOrderService {
         if (!StringUtils.isEmpty(ttn)) {
             ttn = ttn.replaceAll("\\s+", "");
             appOrder.setTtn(ttn);
-            message = orderService.importOrderFromTTNString(ttn, request.getUserId());
+            message = orderService.importOrderFromTTNString(ttn, request.getUserId(), discountService.getById(request.getDiscountId()));
             String mail = appOrder.getMail();
             Ordered ordered = orderService.findByTTN(ttn);
             if (!StringUtils.isEmpty(mail)) {

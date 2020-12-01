@@ -8,7 +8,6 @@ import shop.chobitok.modnyi.entity.request.CreateShoeRequest;
 import shop.chobitok.modnyi.entity.response.ShoeWithPrice;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.repository.CompanyRepository;
-import shop.chobitok.modnyi.service.CompanyService;
 import shop.chobitok.modnyi.service.ShoePriceService;
 
 import java.util.List;

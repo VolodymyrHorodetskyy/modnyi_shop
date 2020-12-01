@@ -87,7 +87,8 @@ public class StatisticService {
     }
 
     public String needToBePayed(String pathToAllTTNFile, String payedTTNFile) {
-        StringBuilder stringBuilder = new StringBuilder();
+        return null;
+/*        StringBuilder stringBuilder = new StringBuilder();
         List<String> allTTNList = ShoeUtil.readTXTFile(pathToAllTTNFile);
         Set<String> allTTNSet = new HashSet();
         for (String s : allTTNList) {
@@ -120,7 +121,7 @@ public class StatisticService {
         }
         stringBuilder.append("\n\n");
         stringBuilder.append("Сума = " + sum);
-        return stringBuilder.toString();
+        return stringBuilder.toString();*/
     }
 
     public StringResponse needToPayed(boolean updateStatuses) {

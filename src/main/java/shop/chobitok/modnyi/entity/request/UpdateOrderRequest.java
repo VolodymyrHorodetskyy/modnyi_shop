@@ -24,6 +24,7 @@ public class UpdateOrderRequest {
     private Long userId;
     private String postComment;
     private Boolean urgent;
+    private Long discountId;
 
     public String getName() {
         return name;
@@ -151,5 +152,13 @@ public class UpdateOrderRequest {
 
     public void setUrgent(Boolean urgent) {
         this.urgent = urgent;
+    }
+
+    public Long getDiscountId() {
+        return discountId;
+    }
+
+    public void setDiscountId(Long discountId) {
+        this.discountId = discountId;
     }
 }

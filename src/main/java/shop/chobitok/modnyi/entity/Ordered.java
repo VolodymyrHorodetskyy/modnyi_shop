@@ -10,7 +10,7 @@ import java.util.List;
 @Entity
 public class Ordered extends Audit {
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Shoe> orderedShoes;
 
     @ManyToOne(cascade = CascadeType.ALL)
@@ -18,6 +18,9 @@ public class Ordered extends Audit {
 
     @ManyToOne(cascade = CascadeType.ALL)
     private User user;
+
+    @ManyToOne(cascade = CascadeType.ALL)
+    private Discount discount;
 
     @Column
     private Integer size;
@@ -360,5 +363,13 @@ public class Ordered extends Audit {
 
     public void setUrgent(Boolean urgent) {
         this.urgent = urgent;
+    }
+
+    public Discount getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(Discount discount) {
+        this.discount = discount;
     }
 }
