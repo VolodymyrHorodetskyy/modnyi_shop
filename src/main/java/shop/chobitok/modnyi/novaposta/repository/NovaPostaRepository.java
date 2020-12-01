@@ -24,6 +24,7 @@ import shop.chobitok.modnyi.service.PropsService;
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Service
 public class NovaPostaRepository {
@@ -82,6 +83,10 @@ public class NovaPostaRepository {
         return getTracking(orderRepository.findOneByAvailableTrueAndTtn(ttn));
     }
 
+    public TrackingEntity getTrackingByTtns(List<String> ttns) {
+        return receiveTracking(npHelper.formGetTrackingRequest(ttns));
+    }
+
     public ListTrackingEntity getTrackingEntityList(Ordered ordered, LocalDateTime from, LocalDateTime to) {
         NpAccount npAccount = propsService.getByOrder(ordered);
         GetDocumentListRequest getDocumentListRequest = new GetDocumentListRequest();
@@ -98,7 +103,7 @@ public class NovaPostaRepository {
     }
 
 
-    public CheckPossibilityCreateReturnResponse checkPossibilitReturn(Ordered ordered) {
+    public CheckPossibilityCreateReturnResponse checkPossibilityReturn(Ordered ordered) {
         NpAccount npAccount = propsService.getByOrder(ordered);
         CheckPossibilityReturnCargoRequest checkPossibilityReturnCargoRequest = new CheckPossibilityReturnCargoRequest();
         checkPossibilityReturnCargoRequest.setApiKey(npAccount.getToken());

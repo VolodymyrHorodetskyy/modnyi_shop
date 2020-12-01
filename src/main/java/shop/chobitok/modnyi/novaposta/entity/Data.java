@@ -76,6 +76,7 @@ public class Data {
     private String RefEW;
     private String DatePayedKeeping;
     private String OnlineCreditStatusCode;
+    private String PhoneSender;
 
 
     // Getter Methods
@@ -343,7 +344,6 @@ public class Data {
     public String getStatus() {
         return Status;
     }
-
 
 
     public String getRefEW() {
@@ -652,6 +652,14 @@ public class Data {
 
     public void setRedeliverySum(Double redeliverySum) {
         RedeliverySum = redeliverySum;
+    }
+
+    public String getPhoneSender() {
+        return PhoneSender;
+    }
+
+    public void setPhoneSender(String phoneSender) {
+        PhoneSender = phoneSender;
     }
 }
 

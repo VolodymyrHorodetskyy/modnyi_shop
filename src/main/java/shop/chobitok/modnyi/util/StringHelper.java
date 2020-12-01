@@ -6,6 +6,8 @@ import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.response.EarningsResponse;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class StringHelper {
@@ -39,5 +41,32 @@ public class StringHelper {
         }
         return s;
     }
+
+
+    public static List<String> splitTTNString(String ttns) {
+        List<String> ttnsList = new ArrayList<>();
+        if (ttns != null) {
+            String[] ttnsArray = ttns.split("\\s+");
+            for (String ttn : ttnsArray) {
+                if (!StringUtils.isEmpty(ttn) && isNumeric(ttn) && ttn.length() == 14) {
+                    ttnsList.add(ttn);
+                }
+            }
+        }
+        return ttnsList;
+    }
+
+    private static boolean isNumeric(String strNum) {
+        if (strNum == null) {
+            return false;
+        }
+        try {
+            double d = Double.parseDouble(strNum);
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
+        return true;
+    }
+
 
 }

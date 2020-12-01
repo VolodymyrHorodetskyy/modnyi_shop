@@ -74,7 +74,7 @@ public class NovaPostaService {
     }
 
     public String returnCargo(Ordered ordered) {
-        CheckPossibilityCreateReturnResponse checkPossibilityCreateReturnResponse = postaRepository.checkPossibilitReturn(ordered);
+        CheckPossibilityCreateReturnResponse checkPossibilityCreateReturnResponse = postaRepository.checkPossibilityReturn(ordered);
         if (checkPossibilityCreateReturnResponse.isSuccess()) {
             if (postaRepository.returnCargo(
                     npHelper.createReturnCargoRequest(ordered, checkPossibilityCreateReturnResponse.getData().get(0).getRef()))) {

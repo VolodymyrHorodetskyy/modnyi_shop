@@ -7,6 +7,7 @@ import shop.chobitok.modnyi.novaposta.request.*;
 import shop.chobitok.modnyi.service.PropsService;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -18,14 +19,16 @@ public class NPHelper {
         this.propsService = propsService;
     }
 
-    public GetTrackingRequest formGetTrackingRequest(NpAccount npAccount, String ttn) {
+    public GetTrackingRequest formGetTrackingRequest(NpAccount npAccount, List<String> ttns) {
         GetTrackingRequest getTrackingRequest = new GetTrackingRequest();
         getTrackingRequest.setApiKey(npAccount.getToken());
         List<Document> documentList = new ArrayList<>();
-        Document document = new Document();
-        document.setDocumentNumber(ttn);
-        document.setPhone(npAccount.getPhone());
-        documentList.add(document);
+        for (String ttn : ttns) {
+            Document document = new Document();
+            document.setDocumentNumber(ttn);
+            document.setPhone(npAccount.getPhone());
+            documentList.add(document);
+        }
         MethodProperties methodProperties = new MethodProperties();
         methodProperties.setDocuments(documentList);
         getTrackingRequest.setMethodProperties(methodProperties);
@@ -34,11 +37,15 @@ public class NPHelper {
 
 
     public GetTrackingRequest formGetTrackingRequest(Ordered ordered) {
-        return formGetTrackingRequest(propsService.getByOrder(ordered), ordered.getTtn());
+        return formGetTrackingRequest(propsService.getByOrder(ordered), Arrays.asList(ordered.getTtn()));
     }
 
     public GetTrackingRequest formGetTrackingRequest(String ttn) {
-        return formGetTrackingRequest(propsService.getActual(), ttn);
+        return formGetTrackingRequest(propsService.getActual(), Arrays.asList(ttn));
+    }
+
+    public GetTrackingRequest formGetTrackingRequest(List<String> ttns) {
+        return formGetTrackingRequest(propsService.getActual(), ttns);
     }
 
 

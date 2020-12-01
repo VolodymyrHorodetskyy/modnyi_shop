@@ -31,6 +31,7 @@ import java.util.*;
 
 import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
 import static shop.chobitok.modnyi.util.StringHelper.removeSpaces;
+import static shop.chobitok.modnyi.util.StringHelper.splitTTNString;
 
 @Service
 public class OrderService {
@@ -334,30 +335,6 @@ public class OrderService {
         return true;
     }
 
-    private boolean isNumeric(String strNum) {
-        if (strNum == null) {
-            return false;
-        }
-        try {
-            double d = Double.parseDouble(strNum);
-        } catch (NumberFormatException nfe) {
-            return false;
-        }
-        return true;
-    }
-
-    private List<String> splitTTNString(String ttns) {
-        List<String> ttnsList = new ArrayList<>();
-        if (ttns != null) {
-            String[] ttnsArray = ttns.split("\\s+");
-            for (String ttn : ttnsArray) {
-                if (!StringUtils.isEmpty(ttn) && isNumeric(ttn) && ttn.length() == 14) {
-                    ttnsList.add(ttn);
-                }
-            }
-        }
-        return ttnsList;
-    }
 
     public void updateGoogleDocsDeliveryFile() {
         googleDocsService.updateDeliveryFile(countNeedDeliveryFromDB(false).getResult());

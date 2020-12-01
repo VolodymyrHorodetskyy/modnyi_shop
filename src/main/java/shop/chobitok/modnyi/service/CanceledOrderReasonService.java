@@ -276,5 +276,9 @@ public class CanceledOrderReasonService {
         return true;
     }
 
+    public CanceledOrderReason getByReturnTtn(String ttn) {
+        return canceledOrderReasonRepository.findFirstByReturnTtn(ttn);
+    }
+
 
 }

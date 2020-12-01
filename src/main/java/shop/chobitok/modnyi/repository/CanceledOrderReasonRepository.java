@@ -21,5 +21,7 @@ public interface CanceledOrderReasonRepository extends JpaRepository<CanceledOrd
 
     List<CanceledOrderReason> findByReasonIn(List<CancelReason> canceledOrderReasons);
 
+    CanceledOrderReason findFirstByReturnTtn(String ttn);
+
 
 }
