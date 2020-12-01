@@ -10,6 +10,7 @@ import shop.chobitok.modnyi.service.AppOrderService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @CrossOrigin
@@ -28,7 +29,7 @@ public class AppOrderController {
     }
 
     @GetMapping
-    public Map<AppOrderStatus, List<AppOrder>> getAll(Long id, String phoneAndName, String comment, String fromForNotReady, String fromForReady, String userId) {
+    public Map<AppOrderStatus, Set<AppOrder>> getAll(Long id, String phoneAndName, String comment, String fromForNotReady, String fromForReady, String userId) {
         return appOrderService.getAll(id, phoneAndName, comment, fromForNotReady, fromForReady, userId);
     }
 

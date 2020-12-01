@@ -73,7 +73,7 @@ public class AppOrderService {
         return appOrderRepository.save(appOrder);
     }
 
-    public Map<AppOrderStatus, List<AppOrder>> getAll(Long id, String phoneAndName, String comment, String fromForNotReady, String fromForReady
+    public Map<AppOrderStatus, Set<AppOrder>> getAll(Long id, String phoneAndName, String comment, String fromForNotReady, String fromForReady
             , String userId) {
         List<AppOrder> appOrdersNotReady = appOrderRepository.findAll(
                 new AppOrderSpecification(id, phoneAndName, comment, DateHelper.formDate(fromForNotReady),
@@ -92,11 +92,11 @@ public class AppOrderService {
             combinedAppOrders = Stream.concat(appOrdersNotReady.stream(), appOrdersReady.stream()).collect(Collectors.toList());
         }
         combinedAppOrders.sort(Comparator.comparing(AppOrder::getCreatedDate).reversed());
-        Map<AppOrderStatus, List<AppOrder>> appOrderMap = new LinkedHashMap<>();
+        Map<AppOrderStatus, Set<AppOrder>> appOrderMap = new LinkedHashMap<>();
         for (AppOrder appOrder : combinedAppOrders) {
-            List<AppOrder> appOrders1 = appOrderMap.get(appOrder.getStatus());
+            Set<AppOrder> appOrders1 = appOrderMap.get(appOrder.getStatus());
             if (appOrders1 == null) {
-                appOrders1 = new ArrayList<>();
+                appOrders1 = new LinkedHashSet<>();
                 appOrders1.add(appOrder);
                 appOrderMap.put(appOrder.getStatus(), appOrders1);
             } else {
@@ -123,7 +123,6 @@ public class AppOrderService {
         String ttn = request.getTtn();
         if (!StringUtils.isEmpty(ttn)) {
             ttn = ttn.replaceAll("\\s+", "");
-            appOrder.setTtn(ttn);
             message = orderService.importOrderFromTTNString(ttn, request.getUserId());
             String mail = appOrder.getMail();
             Ordered ordered = orderService.findByTTN(ttn);
@@ -141,6 +140,7 @@ public class AppOrderService {
             ordered.setUser(user);
             orderRepository.save(ordered);
         }
+        appOrder.setTtn(ttn);
         appOrder.setComment(request.getComment());
         return new ChangeAppOrderResponse(message, appOrderRepository.save(appOrder));
     }
