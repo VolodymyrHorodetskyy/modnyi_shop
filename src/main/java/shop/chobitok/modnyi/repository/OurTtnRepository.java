@@ -1,5 +1,7 @@
 package shop.chobitok.modnyi.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import shop.chobitok.modnyi.entity.OurTTN;
@@ -12,6 +14,10 @@ public interface OurTtnRepository extends JpaRepository<OurTTN, Long> {
 
     OurTTN findFirstByTtn(String ttn);
 
-     List<OurTTN> findAllByStatusNot(Status status);
+    List<OurTTN> findAllByStatusNot(Status status);
+
+    Page<OurTTN> findAll(Pageable pageable);
+
+    Page<OurTTN> findAllByDeletedFalseAndStatusNot(Status status, Pageable pageable);
 
 }

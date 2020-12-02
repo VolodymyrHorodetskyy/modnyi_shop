@@ -17,6 +17,8 @@ public class OurTTN extends Audit {
     private LocalDateTime datePayedKeeping;
     @Column
     private Status status;
+    @Column
+    private boolean deleted = false;
 
 
     public String getTtn() {
@@ -57,5 +59,13 @@ public class OurTTN extends Audit {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 }

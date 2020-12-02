@@ -23,7 +23,7 @@ public class OurTtnMapper {
         if (data != null) {
             ourTTN = new OurTTN();
             ourTTN.setReceiverPhone(data.getPhoneRecipient());
-            ourTTN.setSenderPhone(data.getPhoneSender());
+            ourTTN.setSenderPhone("+" + data.getPhoneSender());
             ourTTN.setTtn(data.getNumber());
             ourTTN.setDatePayedKeeping(ShoeUtil.toLocalDateTime(data.getDatePayedKeeping()));
             ourTTN.setStatus(convertToStatus(data.getStatusCode()));

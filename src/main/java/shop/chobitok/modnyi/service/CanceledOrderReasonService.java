@@ -173,9 +173,7 @@ public class CanceledOrderReasonService {
         canceledOrderReason.setNewTtn(cancelOrderWithIdRequest.getNewTTN());
         canceledOrderReason.setReason(cancelOrderWithIdRequest.getReason());
         canceledOrderReason.setComment(cancelOrderWithIdRequest.getComment());
-        if (canceledOrderReason.isManual()) {
-            canceledOrderReason.setReturnTtn(cancelOrderWithIdRequest.getReturnTTN());
-        }
+        canceledOrderReason.setReturnTtn(cancelOrderWithIdRequest.getReturnTTN());
         return canceledOrderReasonRepository.save(canceledOrderReason);
     }
 
