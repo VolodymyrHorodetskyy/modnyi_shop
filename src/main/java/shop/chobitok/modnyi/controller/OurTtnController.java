@@ -21,4 +21,9 @@ public class OurTtnController {
     public StringResponse getOurTTNS(@RequestBody ImportOrdersFromStringRequest request) {
         return ourTtnService.receive(request.getTtns());
     }
+
+    @PatchMapping("/updateStatuses")
+    public void updateStatuses() {
+        ourTtnService.updateStatusesOurTtns();
+    }
 }
