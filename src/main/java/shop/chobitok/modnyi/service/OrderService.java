@@ -263,7 +263,7 @@ public class OrderService {
                     }
                     Client client = ordered.getClient();
                     if (client != null) {
-                        if (!StringUtils.isEmpty(client.getMail()) && !username.equals("root")) {
+                        if (!StringUtils.isEmpty(client.getMail()) && !username.equals("root") && newStatus != Status.ВИДАЛЕНО) {
                             mailService.sendStatusNotificationEmail(client.getMail(), newStatus);
                         }
                     }
