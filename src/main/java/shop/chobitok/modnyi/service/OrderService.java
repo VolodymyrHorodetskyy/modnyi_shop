@@ -46,11 +46,12 @@ public class OrderService {
     private StatusChangeService statusChangeService;
     private NovaPostaRepository postaRepository;
     private GoogleDocsService googleDocsService;
+    private PayedOrderedService payedOrderedService;
 
     @Value("${spring.datasource.username}")
     private String username;
 
-    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService) {
+    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, PayedOrderedService payedOrderedService) {
         this.orderRepository = orderRepository;
         this.shoeRepository = shoeRepository;
         this.clientService = clientService;
@@ -61,6 +62,7 @@ public class OrderService {
         this.statusChangeService = statusChangeService;
         this.postaRepository = postaRepository;
         this.googleDocsService = googleDocsService;
+        this.payedOrderedService = payedOrderedService;
     }
 
     public Ordered findByTTN(String ttn) {
@@ -327,13 +329,14 @@ public class OrderService {
         return orderRepository.save(ordered);
     }
 
-    public boolean makeAllPayed() {
+    public StringResponse makeAllPayed() {
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndPayedFalseAndStatusIn(Arrays.asList(Status.ОТРИМАНО));
         for (Ordered ordered : orderedList) {
             ordered.setPayed(true);
         }
+        payedOrderedService.makeAllCounted();
         orderRepository.saveAll(orderedList);
-        return true;
+        return new StringResponse("готово");
     }
 
 

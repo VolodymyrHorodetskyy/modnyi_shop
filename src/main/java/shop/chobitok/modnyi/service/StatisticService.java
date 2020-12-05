@@ -1,24 +1,20 @@
 package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.response.AmountsInfoResponse;
 import shop.chobitok.modnyi.entity.response.StringResponse;
-import shop.chobitok.modnyi.google.docs.service.GoogleDocsService;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
-import shop.chobitok.modnyi.novaposta.util.NPHelper;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.AppOrderRepository;
 import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.service.entity.StatShoe;
 import shop.chobitok.modnyi.specification.AppOrderSpecification;
-import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
 
@@ -39,8 +35,9 @@ public class StatisticService {
     private ShoePriceService shoePriceService;
     private AppOrderRepository appOrderRepository;
     private CanceledOrderReasonRepository canceledOrderReasonRepository;
+    private PayedOrderedService payedOrderedService;
 
-    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, NPOrderMapper npOrderMapper, OrderService orderService, ShoePriceService shoePriceService, AppOrderRepository appOrderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository) {
+    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, NPOrderMapper npOrderMapper, OrderService orderService, ShoePriceService shoePriceService, AppOrderRepository appOrderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, PayedOrderedService payedOrderedService) {
         this.postaRepository = postaRepository;
         this.orderRepository = orderRepository;
         this.npOrderMapper = npOrderMapper;
@@ -48,6 +45,7 @@ public class StatisticService {
         this.shoePriceService = shoePriceService;
         this.appOrderRepository = appOrderRepository;
         this.canceledOrderReasonRepository = canceledOrderReasonRepository;
+        this.payedOrderedService = payedOrderedService;
     }
 
     public StringResponse getIssueOrders() {
@@ -126,7 +124,6 @@ public class StatisticService {
     public StringResponse needToPayed(boolean updateStatuses) {
         Map<String, NeedToBePayed> companySumMap = new HashMap<>();
         StringBuilder result = new StringBuilder();
-        Double sum = 0d;
         if (updateStatuses) {
             orderService.updateOrderStatusesNovaPosta();
         }
@@ -156,8 +153,16 @@ public class StatisticService {
             for (String s : entry.getValue().ttns) {
                 result.append(s + "\n");
             }
-            result.append("Сума = " + entry.getValue().sum + "\n\n\n");
+            result.append("Сума = " + entry.getValue().sum + "\n");
         }
+        Double sumNotCounted = payedOrderedService.getSumNotCounted();
+        Double sum = 0d;
+        if (companySumMap.entrySet().size() > 0) {
+            Map.Entry<String, NeedToBePayed> entry = companySumMap.entrySet().iterator().next();
+            sum = entry.getValue().sum;
+        }
+        result.append("Сума відмінених оплачених = ").append(sumNotCounted).append("\n");
+        result.append("Сума до оплати = ").append(sum - sumNotCounted);
         return new StringResponse(result.toString());
     }
 

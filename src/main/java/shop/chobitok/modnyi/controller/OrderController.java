@@ -94,7 +94,7 @@ public class OrderController {
     }
 
     @PatchMapping("/makeAllPayed")
-    public boolean makeAllPayed() {
+    public StringResponse makeAllPayed() {
         return orderService.makeAllPayed();
     }
 

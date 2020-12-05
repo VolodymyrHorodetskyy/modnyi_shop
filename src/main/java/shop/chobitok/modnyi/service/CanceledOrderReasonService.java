@@ -32,26 +32,24 @@ import static shop.chobitok.modnyi.util.StringHelper.removeSpaces;
 @Service
 public class CanceledOrderReasonService {
 
-    private NovaPostaService novaPostaService;
     private OrderRepository orderRepository;
     private CanceledOrderReasonRepository canceledOrderReasonRepository;
     private NovaPostaRepository postaRepository;
-    private NPHelper npHelper;
     private MailService mailService;
     private StatusChangeService statusChangeService;
     private ShoePriceService shoePriceService;
     private GoogleDocsService googleDocsService;
+    private PayedOrderedService payedOrderedService;
 
-    public CanceledOrderReasonService(NovaPostaService novaPostaService, OrderRepository orderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, NovaPostaRepository postaRepository, NPHelper npHelper, MailService mailService, StatusChangeService statusChangeService, ShoePriceService shoePriceService, GoogleDocsService googleDocsService) {
-        this.novaPostaService = novaPostaService;
+    public CanceledOrderReasonService(OrderRepository orderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, NovaPostaRepository postaRepository, MailService mailService, StatusChangeService statusChangeService, ShoePriceService shoePriceService, GoogleDocsService googleDocsService, PayedOrderedService payedOrderedService) {
         this.orderRepository = orderRepository;
         this.canceledOrderReasonRepository = canceledOrderReasonRepository;
         this.postaRepository = postaRepository;
-        this.npHelper = npHelper;
         this.mailService = mailService;
         this.statusChangeService = statusChangeService;
         this.shoePriceService = shoePriceService;
         this.googleDocsService = googleDocsService;
+        this.payedOrderedService = payedOrderedService;
     }
 
     public Ordered cancelOrder(CancelOrderWithOrderRequest cancelOrderRequest) {
@@ -60,7 +58,7 @@ public class CanceledOrderReasonService {
             throw new ConflictException("Немає такого замовлення");
         }
         statusChangeService.createRecord(ordered, ordered.getStatus(), Status.ВІДМОВА);
-        sendMailIfPayed(ordered);
+        payedOrderedService.createPayedOrdered(ordered);
         ordered.setStatus(Status.ВІДМОВА);
         CanceledOrderReason canceledOrderReason = canceledOrderReasonRepository.findFirstByOrderedId(cancelOrderRequest.getOrderId());
         if (canceledOrderReason == null) {
