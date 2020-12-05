@@ -172,7 +172,7 @@ public class OrderService {
         StringBuilder result = new StringBuilder();
         if (orderRepository.findOneByAvailableTrueAndTtn(ttn) == null) {
             try {
-                Ordered ordered = novaPostaService.createOrUpdateOrderFromNP(ttn);
+                Ordered ordered = novaPostaService.createOrUpdateOrderFromNP(ttn, null);
                 if (ordered.getStatus() != Status.НЕ_ЗНАЙДЕНО) {
                     ordered.setUser(user);
                     orderRepository.save(ordered);

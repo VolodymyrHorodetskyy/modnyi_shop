@@ -14,11 +14,11 @@ import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
 @Service
 public class OurTtnMapper {
 
-    public List<OurTTN> toOurTtn(TrackingEntity trackingEntity) {
-        return trackingEntity.getData().stream().map(this::toOurTtn).collect(Collectors.toList());
+    public List<OurTTN> toOurTtn(TrackingEntity trackingEntity, Long npAccountId) {
+        return trackingEntity.getData().stream().map(data -> toOurTtn(data, npAccountId)).collect(Collectors.toList());
     }
 
-    private OurTTN toOurTtn(Data data) {
+    private OurTTN toOurTtn(Data data, Long npAccountId) {
         OurTTN ourTTN = null;
         if (data != null) {
             ourTTN = new OurTTN();
@@ -27,6 +27,7 @@ public class OurTtnMapper {
             ourTTN.setTtn(data.getNumber());
             ourTTN.setDatePayedKeeping(ShoeUtil.toLocalDateTime(data.getDatePayedKeeping()));
             ourTTN.setStatus(convertToStatus(data.getStatusCode()));
+            ourTTN.setNpAccountId(npAccountId);
         }
         return ourTTN;
     }

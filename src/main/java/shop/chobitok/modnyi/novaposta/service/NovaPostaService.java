@@ -34,8 +34,8 @@ public class NovaPostaService {
         this.orderRepository = orderRepository;
     }
 
-    public Ordered createOrUpdateOrderFromNP(String ttn) {
-        return formOrderedFromNPEntity(null, ttn, postaRepository.getTracking(ttn));
+    public Ordered createOrUpdateOrderFromNP(String ttn, Long npAccountId) {
+        return formOrderedFromNPEntity(null, ttn, postaRepository.getTracking(npAccountId, ttn));
     }
 
     public Ordered createOrUpdateOrderFromNP(Ordered ordered, String ttn) {
@@ -94,11 +94,9 @@ public class NovaPostaService {
         return null;
     }
 
-    public Status getStatusByTTN(String ttn) {
-        return ShoeUtil.convertToStatus(postaRepository.getTracking(ttn).getData().get(0).getStatusCode());
+    public Status getStatusByTTN(Long npAccountId, String ttn) {
+        return ShoeUtil.convertToStatus(postaRepository.getTracking(npAccountId, ttn).getData().get(0).getStatusCode());
     }
-
-
 
 
 }

@@ -4,6 +4,7 @@ public class ImportOrdersFromStringRequest {
 
     private String ttns;
     private Long userId;
+    private Long npAccountId;
 
     public String getTtns() {
         return ttns;
@@ -19,5 +20,13 @@ public class ImportOrdersFromStringRequest {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Long getNpAccountId() {
+        return npAccountId;
+    }
+
+    public void setNpAccountId(Long npAccountId) {
+        this.npAccountId = npAccountId;
     }
 }

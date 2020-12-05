@@ -5,6 +5,8 @@ import shop.chobitok.modnyi.entity.NpAccount;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.repository.NpAccountRepository;
 
+import java.util.List;
+
 @Service
 public class PropsService {
 
@@ -33,6 +35,10 @@ public class PropsService {
             return getActual();
         }
         return getById(ordered.getNpAccountId());
+    }
+
+    public List<NpAccount> getAll(){
+        return npAccountRepository.findAll();
     }
 
 }

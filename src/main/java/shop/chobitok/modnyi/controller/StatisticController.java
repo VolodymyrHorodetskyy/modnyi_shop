@@ -98,5 +98,9 @@ public class StatisticController {
         statisticService.payAllForOperator(userId);
     }
 
+    @GetMapping("/getRedeliveryStatsByNpAccount")
+    public StringResponse getByNpAccount(@RequestParam Long npAccountId){
+        return statisticService.getRedeliverySumByNpAccountId(npAccountId);
+    }
 
 }

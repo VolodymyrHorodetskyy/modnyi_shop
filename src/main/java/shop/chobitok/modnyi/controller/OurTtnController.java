@@ -20,7 +20,7 @@ public class OurTtnController {
 
     @PostMapping
     public StringResponse getOurTTNS(@RequestBody ImportOrdersFromStringRequest request) {
-        return ourTtnService.receive(request.getTtns());
+        return ourTtnService.receive(request);
     }
 
     @PatchMapping("/updateStatuses")

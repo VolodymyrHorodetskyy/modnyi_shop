@@ -49,4 +49,6 @@ public interface OrderRepository extends JpaRepository<Ordered, Long> {
 
     List<Ordered> findAllByAvailableTrueAndUserIdAndStatus(Long id, Status status);
 
+    List<Ordered> findByNpAccountId(Long npAccountId);
+
 }

@@ -40,12 +40,12 @@ public class NPHelper {
         return formGetTrackingRequest(propsService.getByOrder(ordered), Arrays.asList(ordered.getTtn()));
     }
 
-    public GetTrackingRequest formGetTrackingRequest(String ttn) {
-        return formGetTrackingRequest(propsService.getActual(), Arrays.asList(ttn));
+    public GetTrackingRequest formGetTrackingRequest(Long npAccountId, String ttn) {
+        return formGetTrackingRequest(propsService.getById(npAccountId), Arrays.asList(ttn));
     }
 
-    public GetTrackingRequest formGetTrackingRequest(List<String> ttns) {
-        return formGetTrackingRequest(propsService.getActual(), ttns);
+    public GetTrackingRequest formGetTrackingRequest(Long npAccountId, List<String> ttns) {
+        return formGetTrackingRequest(propsService.getById(npAccountId), ttns);
     }
 
 

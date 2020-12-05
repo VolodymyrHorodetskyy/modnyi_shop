@@ -19,6 +19,8 @@ public class OurTTN extends Audit {
     private Status status;
     @Column
     private boolean deleted = false;
+    @Column
+    private Long npAccountId;
 
 
     public String getTtn() {
@@ -67,5 +69,13 @@ public class OurTTN extends Audit {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public Long getNpAccountId() {
+        return npAccountId;
+    }
+
+    public void setNpAccountId(Long npAccountId) {
+        this.npAccountId = npAccountId;
     }
 }

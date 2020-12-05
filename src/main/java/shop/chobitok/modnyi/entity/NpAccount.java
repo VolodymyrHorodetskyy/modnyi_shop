@@ -13,6 +13,7 @@ public class NpAccount {
 
     private String token;
     private String phone;
+    private String name;
 
 
     public Long getId() {
@@ -37,5 +38,13 @@ public class NpAccount {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

@@ -55,14 +55,6 @@ public class NovaPostaRepository {
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
     }
 
-    public TrackingEntity getTracking(Ordered ordered) {
-        return receiveTracking(npHelper.formGetTrackingRequest(ordered));
-    }
-
-    public TrackingEntity getTracking(String ttn) {
-        return receiveTracking(npHelper.formGetTrackingRequest(ttn));
-    }
-
     private TrackingEntity receiveTracking(GetTrackingRequest getTrackingRequest) {
         HttpEntity httpEntity = new HttpEntity(getTrackingRequest, httpHeaders);
         ResponseEntity<TrackingEntity> responseEntity = null;
@@ -79,12 +71,16 @@ public class NovaPostaRepository {
         return trackingEntity;
     }
 
-    public TrackingEntity getTrackingByTtn(String ttn) {
-        return getTracking(orderRepository.findOneByAvailableTrueAndTtn(ttn));
+    public TrackingEntity getTracking(Ordered ordered) {
+        return receiveTracking(npHelper.formGetTrackingRequest(ordered.getNpAccountId(), ordered.getTtn()));
     }
 
-    public TrackingEntity getTrackingByTtns(List<String> ttns) {
-        return receiveTracking(npHelper.formGetTrackingRequest(ttns));
+    public TrackingEntity getTracking(Long npAccountId, String ttn) {
+        return receiveTracking(npHelper.formGetTrackingRequest(npAccountId, ttn));
+    }
+
+    public TrackingEntity getTrackingByTtns(Long npAccountId, List<String> ttns) {
+        return receiveTracking(npHelper.formGetTrackingRequest(npAccountId, ttns));
     }
 
     public ListTrackingEntity getTrackingEntityList(Ordered ordered, LocalDateTime from, LocalDateTime to) {

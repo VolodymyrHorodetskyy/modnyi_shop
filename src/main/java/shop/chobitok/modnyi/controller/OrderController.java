@@ -40,7 +40,7 @@ public class OrderController {
 
     @PostMapping("/fromNP")
     public Ordered createOrderFromNP(@RequestBody FromNPToOrderRequest fromNPToOrderRequest) {
-        return novaPostaService.createOrUpdateOrderFromNP(fromNPToOrderRequest.getTtn());
+        return novaPostaService.createOrUpdateOrderFromNP(fromNPToOrderRequest.getTtn(), null);
     }
 
     @PostMapping

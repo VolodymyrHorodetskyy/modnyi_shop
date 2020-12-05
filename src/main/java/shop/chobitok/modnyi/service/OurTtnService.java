@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.service;
 
+import org.apache.http.client.utils.DateUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -8,10 +9,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.OurTTN;
 import shop.chobitok.modnyi.entity.Status;
+import shop.chobitok.modnyi.entity.request.ImportOrdersFromStringRequest;
 import shop.chobitok.modnyi.entity.response.StringResponse;
+import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.mapper.OurTtnMapper;
+import shop.chobitok.modnyi.novaposta.entity.Data;
+import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
+import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.OurTtnRepository;
 
 import java.util.ArrayList;
@@ -40,9 +46,12 @@ public class OurTtnService {
         this.novaPostaService = novaPostaService;
     }
 
-    public StringResponse receive(String ttns) {
+    public StringResponse receive(ImportOrdersFromStringRequest request) {
+        if (request.getNpAccountId() == null) {
+            throw new ConflictException("Акаунт не вказано");
+        }
         StringBuilder result = new StringBuilder();
-        List<String> splitted = splitTTNString(ttns);
+        List<String> splitted = splitTTNString(request.getTtns());
         List<String> filtered = new ArrayList<>();
         for (String ttn : splitted) {
             String r = checkIfExistOnImportWithReturnString(ttn);
@@ -52,7 +61,7 @@ public class OurTtnService {
                 result.append(r);
             }
         }
-        List<OurTTN> ourTTNS = ourTtnMapper.toOurTtn(postaRepository.getTrackingByTtns(filtered));
+        List<OurTTN> ourTTNS = ourTtnMapper.toOurTtn(postaRepository.getTrackingByTtns(request.getNpAccountId(), filtered), request.getNpAccountId());
         for (OurTTN ourTTN : ourTTNS) {
             if (ourTTN.getStatus() == Status.НЕ_ЗНАЙДЕНО) {
                 result.append(" не знайдено");
@@ -71,13 +80,18 @@ public class OurTtnService {
             if (checkIfExist(ourTTN.getTtn())) {
                 ourTTN.setDeleted(true);
                 toUpdate.add(ourTTN);
-            }else{
+            } else {
                 ourTTN.setDeleted(false);
                 toUpdate.add(ourTTN);
             }
-            Status newStatus = novaPostaService.getStatusByTTN(ourTTN.getTtn());
+            TrackingEntity trackingEntity = postaRepository.getTracking(ourTTN.getNpAccountId(), ourTTN.getTtn());
+            Data data = trackingEntity.getData().get(0);
+            Status newStatus = ShoeUtil.convertToStatus(data.getStatusCode());
             if (newStatus != null && newStatus != ourTTN.getStatus()) {
                 ourTTN.setStatus(newStatus);
+                if (newStatus == Status.ДОСТАВЛЕНО) {
+                    ourTTN.setDatePayedKeeping(ShoeUtil.toLocalDateTime(data.getDatePayedKeeping()));
+                }
                 toUpdate.add(ourTTN);
             }
         }
@@ -111,12 +125,12 @@ public class OurTtnService {
         return stringBuilder.toString();
     }
 
-    public boolean checkIfExist(String ttn){
+    public boolean checkIfExist(String ttn) {
         boolean result = false;
         if (canceledOrderReasonService.getByReturnTtn(ttn) != null) {
-          result = true;
+            result = true;
         } else if (orderService.findByTTN(ttn) != null) {
-           result = true;
+            result = true;
         }
         return result;
     }

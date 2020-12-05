@@ -128,7 +128,7 @@ public class CanceledOrderReasonService {
                     updated.add(canceledOrderReason);
                 }
             } else if (!StringUtils.isEmpty(canceledOrderReason.getReturnTtn())) {
-                Data returned = postaRepository.getTracking(canceledOrderReason.getReturnTtn()).getData().get(0);
+                Data returned = postaRepository.getTracking(null, canceledOrderReason.getReturnTtn()).getData().get(0);
                 canceledOrderReason.setStatus(convertToStatus(returned.getStatusCode()));
                 if (returned.getDatePayedKeeping() != null && canceledOrderReason.getDatePayedKeeping() == null) {
                     canceledOrderReason.setDatePayedKeeping(ShoeUtil.toLocalDateTime(returned.getDatePayedKeeping()));
@@ -142,14 +142,14 @@ public class CanceledOrderReasonService {
     }
 
     public Data getReturnedEntity(String ttn) {
-        TrackingEntity trackingEntity = postaRepository.getTrackingByTtn(ttn);
+        TrackingEntity trackingEntity = postaRepository.getTracking(null, ttn);
         Data returned = null;
         if (trackingEntity != null && trackingEntity.getData().size() > 0) {
             Data data = trackingEntity.getData().get(0);
             if (!StringUtils.isEmpty(data.getLastCreatedOnTheBasisNumber())) {
-                returned = postaRepository.getTracking(data.getLastCreatedOnTheBasisNumber()).getData().get(0);
+                returned = postaRepository.getTracking(null, data.getLastCreatedOnTheBasisNumber()).getData().get(0);
                 if (convertToStatus(returned.getStatusCode()) == Status.ЗМІНА_АДРЕСУ) {
-                    returned = postaRepository.getTrackingByTtn(returned.getLastCreatedOnTheBasisNumber()).getData().get(0);
+                    returned = postaRepository.getTracking(null, returned.getLastCreatedOnTheBasisNumber()).getData().get(0);
                 }
             }
         }
