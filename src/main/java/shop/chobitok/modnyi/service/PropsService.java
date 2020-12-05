@@ -1,6 +1,5 @@
 package shop.chobitok.modnyi.service;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.NpAccount;
 import shop.chobitok.modnyi.entity.Ordered;
@@ -9,16 +8,16 @@ import shop.chobitok.modnyi.repository.NpAccountRepository;
 @Service
 public class PropsService {
 
-    @Value("${novaposta.actualaccount.id}")
-    private Long npActualId;
     private NpAccountRepository npAccountRepository;
+    private ParamsService paramsService;
 
-    public PropsService(NpAccountRepository npAccountRepository) {
+    public PropsService(NpAccountRepository npAccountRepository, ParamsService paramsService) {
         this.npAccountRepository = npAccountRepository;
+        this.paramsService = paramsService;
     }
 
     public NpAccount getActual() {
-        return npAccountRepository.findById(npActualId).orElse(null);
+        return npAccountRepository.findById(paramsService.getActualNpAccountId()).orElse(null);
     }
 
     public NpAccount getById(Long id) {

@@ -253,6 +253,7 @@ public class OrderService {
                 ordered.setStatusNP(data.getStatusCode());
                 if (oldStatus == Status.СТВОРЕНО) {
                     ordered.setAddress(data.getRecipientAddress());
+                    ordered.setCity(data.getCityRecipient());
                 }
                 orderRepository.save(ordered);
                 if (newStatus == Status.ВІДМОВА) {
