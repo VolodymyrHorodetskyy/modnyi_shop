@@ -23,7 +23,10 @@ public class PropsService {
     }
 
     public NpAccount getById(Long id) {
-        NpAccount npAccount = npAccountRepository.findById(id).orElse(null);
+        NpAccount npAccount = null;
+        if (id != null) {
+            npAccount = npAccountRepository.findById(id).orElse(null);
+        }
         if (npAccount == null) {
             return getActual();
         }
