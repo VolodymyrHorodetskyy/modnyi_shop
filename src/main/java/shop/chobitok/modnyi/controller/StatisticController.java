@@ -59,7 +59,7 @@ public class StatisticController {
 
     @GetMapping("/returned")
     public StringResponse returned(@RequestParam(required = false) boolean setNotForDelivery) {
-        return canceledOrderReasonService.getReturned(setNotForDelivery);
+        return canceledOrderReasonService.getReturned(setNotForDelivery, true);
     }
 
     @GetMapping("/canceled")

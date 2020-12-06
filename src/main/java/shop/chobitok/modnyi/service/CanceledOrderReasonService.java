@@ -15,8 +15,6 @@ import shop.chobitok.modnyi.google.docs.service.GoogleDocsService;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
-import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
-import shop.chobitok.modnyi.novaposta.util.NPHelper;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
@@ -24,7 +22,9 @@ import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
 import static shop.chobitok.modnyi.util.StringHelper.removeSpaces;
@@ -137,7 +137,7 @@ public class CanceledOrderReasonService {
             }
         }
         List<CanceledOrderReason> done = canceledOrderReasonRepository.saveAll(updated);
-        getReturned(true);
+        getReturned(true, true);
         return done;
     }
 
@@ -183,7 +183,7 @@ public class CanceledOrderReasonService {
         return canceledOrderReasonRepository.findById(id).orElse(null);
     }
 
-    public StringResponse getReturned(boolean excludeFromDeliveryFile) {
+    public StringResponse getReturned(boolean excludeFromDeliveryFile, boolean showOnlyImportant) {
         List<Ordered> toSave = new ArrayList<>();
         StringBuilder result = new StringBuilder();
         List<CanceledOrderReason> canceledOrderReasons = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(true, true));
@@ -197,11 +197,13 @@ public class CanceledOrderReasonService {
         Set<CanceledOrderReason> toFind = new HashSet<>();
         int countArrived = 0;
         for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
-            result.append(canceledOrderReason.getOrdered().getPostComment()).append("\n").
-                    append(canceledOrderReason.getOrdered().getTtn()).append("\n").append(canceledOrderReason.getReturnTtn()).append(" ")
-                    .append(canceledOrderReason.getStatus()).append(" ").append(canceledOrderReason.getReason())
-                    .append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
-                    .append("\n\n");
+            if (!showOnlyImportant) {
+                result.append(canceledOrderReason.getOrdered().getPostComment()).append("\n").
+                        append(canceledOrderReason.getOrdered().getTtn()).append("\n").append(canceledOrderReason.getReturnTtn()).append(" ")
+                        .append(canceledOrderReason.getStatus()).append(" ").append(canceledOrderReason.getReason())
+                        .append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
+                        .append("\n\n");
+            }
             if (canceledOrderReason.getStatus() == Status.ДОСТАВЛЕНО) {
                 ++countArrived;
             }
@@ -212,6 +214,8 @@ public class CanceledOrderReasonService {
             }
         }
         result.append("Кількість доставлених: ").append(countArrived).append("\n\n");
+
+        result.append(getPayedKeeping(canceledOrderReasons.stream().filter(canceledOrderReason -> canceledOrderReason.getDatePayedKeeping() != null).collect(Collectors.toList())));
 
         result.append("Звернути увагу\n\n");
         for (CanceledOrderReason canceledOrderReason : used) {
@@ -243,6 +247,32 @@ public class CanceledOrderReasonService {
         String resultString = result.toString();
         googleDocsService.updateReturningsFile(resultString);
         return new StringResponse(resultString);
+    }
+
+    private String getPayedKeeping(List<CanceledOrderReason> canceledOrderReasons) {
+        canceledOrderReasons.sort(Comparator.comparing(canceledOrderReason -> canceledOrderReason.getDatePayedKeeping()));
+        StringBuilder result = new StringBuilder();
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("d.MM");
+        boolean exist = false;
+        result.append("Платне зберігання").append("\n\n");
+        for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
+            if (canceledOrderReason.getDatePayedKeeping() != null &&
+                    LocalDateTime.now().plusDays(2).isAfter(canceledOrderReason.getDatePayedKeeping())) {
+                exist = true;
+                result.append(canceledOrderReason.getOrdered().getPostComment()).append("\n").
+                        append(canceledOrderReason.getOrdered().getTtn()).append("\n").append(canceledOrderReason.getReturnTtn()).append(" ")
+                        .append(canceledOrderReason.getStatus()).append(" ").append(canceledOrderReason.getReason())
+                        .append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
+                        .append("\n")
+                        .append(canceledOrderReason.getDatePayedKeeping().format(timeFormatter))
+                        .append("\n\n");
+            }
+        }
+        if (exist) {
+            return result.toString();
+        } else {
+            return "";
+        }
     }
 
     private Inside formInside(String description) {
