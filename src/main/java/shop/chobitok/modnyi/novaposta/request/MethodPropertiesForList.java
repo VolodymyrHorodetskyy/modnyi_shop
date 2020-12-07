@@ -7,8 +7,8 @@ public class MethodPropertiesForList {
 
     private String DateTimeFrom;
     private String DateTimeTo;
-    private String Page = "1";
-    private String GetFullList = "0";
+    private String Page = "0";
+    private String GetFullList = "1";
 
 
     public String getDateTimeFrom() {
