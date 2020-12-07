@@ -31,6 +31,9 @@ public interface OrderRepository extends JpaRepository<Ordered, Long> {
 
     List<Ordered> findAllByStatusInAndCreatedDateGreaterThan(List<Status> statuses, LocalDateTime dateTime);
 
+    List<Ordered> findAllByStatusInAndDateCreatedGreaterThanAndDateCreatedLessThanAndNpAccountId(List<Status> statuses, LocalDateTime dateTimeFrom, LocalDateTime dateTimeTo, Long npAccountId);
+
+
     List<Ordered> findAllByAvailableTrueAndStatusInOrderByUrgentDesc(List<Status> statuses);
 
     List<Ordered> findAllByAvailableTrueAndPayedFalseAndStatusIn(List<Status> statuses);

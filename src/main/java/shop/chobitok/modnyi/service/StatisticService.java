@@ -353,8 +353,10 @@ public class StatisticService {
         return map;
     }
 
-    public StringResponse getRedeliverySumByNpAccountId(Long npAccountId) {
-        List<Ordered> orderedList = orderRepository.findByNpAccountId(npAccountId);
+    public StringResponse getRedeliverySumByNpAccountId(Long npAccountId, String dateFrom, String dateTo) {
+        List<Ordered> orderedList = orderRepository.findAllByStatusInAndDateCreatedGreaterThanAndDateCreatedLessThanAndNpAccountId(
+                Arrays.asList(Status.ОТРИМАНО, Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО, Status.СТВОРЕНО),
+                DateHelper.formDateFrom(dateFrom), DateHelper.formDateTo(dateTo), npAccountId);
         StringBuilder stringBuilder = new StringBuilder();
         Double sumReceived = 0d;
         Double sumPredicted = 0d;
@@ -362,7 +364,7 @@ public class StatisticService {
             if (ordered.getReturnSumNP() != null) {
                 if (ordered.getStatus() == Status.ОТРИМАНО) {
                     sumReceived += ordered.getReturnSumNP();
-                } else if (ordered.getStatus() == Status.ВІДПРАВЛЕНО || ordered.getStatus() == Status.ДОСТАВЛЕНО) {
+                } else if (ordered.getStatus() == Status.СТВОРЕНО || ordered.getStatus() == Status.ВІДПРАВЛЕНО || ordered.getStatus() == Status.ДОСТАВЛЕНО) {
                     sumPredicted += ordered.getReturnSumNP();
                 }
             }

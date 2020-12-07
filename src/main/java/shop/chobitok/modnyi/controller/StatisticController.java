@@ -99,8 +99,8 @@ public class StatisticController {
     }
 
     @GetMapping("/getRedeliveryStatsByNpAccount")
-    public StringResponse getByNpAccount(@RequestParam Long npAccountId){
-        return statisticService.getRedeliverySumByNpAccountId(npAccountId);
+    public StringResponse getByNpAccount(@RequestParam Long npAccountId, @RequestParam String dateFrom, @RequestParam String dateTo){
+        return statisticService.getRedeliverySumByNpAccountId(npAccountId, dateFrom, dateTo);
     }
 
 }

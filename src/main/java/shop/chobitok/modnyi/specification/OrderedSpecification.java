@@ -26,6 +26,17 @@ public class OrderedSpecification implements Specification<Ordered> {
     private String phone;
     private String isNotTtn;
     private String userId;
+    private List<Status> statuses;
+    private LocalDateTime dateCreatedFrom;
+    private LocalDateTime dateCreatedTo;
+    private Long npAccountId;
+
+    public OrderedSpecification(List<Status> statuses, LocalDateTime dateCreatedFrom, LocalDateTime dateCreatedTo, Long npAccountId) {
+        this.statuses = statuses;
+        this.dateCreatedFrom = dateCreatedFrom;
+        this.dateCreatedTo = dateCreatedTo;
+        this.npAccountId = npAccountId;
+    }
 
     public OrderedSpecification(String phone, String isNotTtn) {
         this.phone = phone;
@@ -90,11 +101,11 @@ public class OrderedSpecification implements Specification<Ordered> {
             predicateList.add(withoutTTN);
         }
         if (from != null) {
-            Predicate predicateFrom = criteriaBuilder.greaterThanOrEqualTo(root.get("dateCreated"), from);
+            Predicate predicateFrom = criteriaBuilder.greaterThanOrEqualTo(root.get("createdDate"), from);
             predicateList.add(predicateFrom);
         }
         if (to != null) {
-            Predicate predicateTo = criteriaBuilder.lessThanOrEqualTo(root.get("dateCreated"), to);
+            Predicate predicateTo = criteriaBuilder.lessThanOrEqualTo(root.get("createdDate"), to);
             predicateList.add(predicateTo);
         }
         if (status != null) {
@@ -123,6 +134,26 @@ public class OrderedSpecification implements Specification<Ordered> {
             Predicate userPredicate = criteriaBuilder.equal(orderedUserJoin.get("id"), userId);
             predicateList.add(userPredicate);
         }
+        if (statuses != null && statuses.size() > 0) {
+            List<Predicate> statusesPredicates = new ArrayList<>();
+            for (Status status : statuses) {
+                statusesPredicates.add(criteriaBuilder.equal(root.get("status"), status));
+            }
+            predicateList.add(criteriaBuilder.or(statusesPredicates.toArray(Predicate[]::new)));
+        }
+        if (dateCreatedFrom != null) {
+            Predicate predicateFrom = criteriaBuilder.greaterThanOrEqualTo(root.get("dateCreated"), from);
+            predicateList.add(predicateFrom);
+        }
+        if (dateCreatedTo != null) {
+            Predicate predicateTo = criteriaBuilder.lessThanOrEqualTo(root.get("dateCreated"), to);
+            predicateList.add(predicateTo);
+        }
+        if (npAccountId != null) {
+            Predicate predicateNpAccount = criteriaBuilder.equal(root.get("npAccountId"), npAccountId);
+            predicateList.add(predicateNpAccount);
+        }
+
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }
 
