@@ -1,6 +1,7 @@
 package shop.chobitok.modnyi.novaposta.service;
 
 import org.springframework.stereotype.Service;
+import shop.chobitok.modnyi.entity.Discount;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.novaposta.entity.*;
@@ -34,15 +35,15 @@ public class NovaPostaService {
         this.orderRepository = orderRepository;
     }
 
-    public Ordered createOrUpdateOrderFromNP(String ttn, Long npAccountId) {
-        return formOrderedFromNPEntity(null, ttn, postaRepository.getTracking(npAccountId, ttn));
+    public Ordered createOrUpdateOrderFromNP(String ttn, Discount discount) {
+        return formOrderedFromNPEntity(null, ttn, postaRepository.getTracking(ttn), discount);
     }
 
-    public Ordered createOrUpdateOrderFromNP(Ordered ordered, String ttn) {
-        return formOrderedFromNPEntity(ordered, ttn, postaRepository.getTracking(ordered));
+    public Ordered createOrUpdateOrderFromNP(Ordered ordered, String ttn, Discount discount) {
+        return formOrderedFromNPEntity(ordered, ttn, postaRepository.getTracking(ordered), discount);
     }
 
-    public Ordered formOrderedFromNPEntity(Ordered ordered, String ttn, TrackingEntity trackingEntity) {
+    public Ordered formOrderedFromNPEntity(Ordered ordered, String ttn, TrackingEntity trackingEntity, Discount discount) {
         if (trackingEntity.getData().size() > 0) {
             Data data = trackingEntity.getData().get(0);
             //if status created
@@ -50,11 +51,11 @@ public class NovaPostaService {
                 ListTrackingEntity entity = postaRepository.getTrackingEntityList(ordered, LocalDateTime.now().minusDays(5), LocalDateTime.now());
                 List<DataForList> list = entity.getData();
                 if (list.size() > 0) {
-                    Ordered ordered1 = npOrderMapper.toOrdered(entity, ttn);
+                    Ordered ordered1 = npOrderMapper.toOrdered(entity, ttn, discount);
                     if (ordered1 != null) {
                         return ordered1;
                     } else {
-                        return npOrderMapper.toOrdered(ordered, trackingEntity);
+                        return npOrderMapper.toOrdered(ordered, trackingEntity, discount);
                     }
                 }
             } else {
@@ -74,7 +75,7 @@ public class NovaPostaService {
     }
 
     public String returnCargo(Ordered ordered) {
-        CheckPossibilityCreateReturnResponse checkPossibilityCreateReturnResponse = postaRepository.checkPossibilityReturn(ordered);
+        CheckPossibilityCreateReturnResponse checkPossibilityCreateReturnResponse = postaRepository.checkPossibilitReturn(ordered);
         if (checkPossibilityCreateReturnResponse.isSuccess()) {
             if (postaRepository.returnCargo(
                     npHelper.createReturnCargoRequest(ordered, checkPossibilityCreateReturnResponse.getData().get(0).getRef()))) {
@@ -94,9 +95,11 @@ public class NovaPostaService {
         return null;
     }
 
-    public Status getStatusByTTN(Long npAccountId, String ttn) {
-        return ShoeUtil.convertToStatus(postaRepository.getTracking(npAccountId, ttn).getData().get(0).getStatusCode());
+    public Status getStatusByTTN(String ttn) {
+        return ShoeUtil.convertToStatus(postaRepository.getTracking(ttn).getData().get(0).getStatusCode());
     }
+
+
 
 
 }

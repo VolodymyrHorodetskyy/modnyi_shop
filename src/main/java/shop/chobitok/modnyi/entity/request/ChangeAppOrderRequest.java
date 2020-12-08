@@ -9,6 +9,7 @@ public class ChangeAppOrderRequest {
     private AppOrderStatus status;
     private String ttn;
     private Long userId;
+    private Long discountId;
 
     public Long getId() {
         return id;
@@ -48,5 +49,13 @@ public class ChangeAppOrderRequest {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Long getDiscountId() {
+        return discountId;
+    }
+
+    public void setDiscountId(Long discountId) {
+        this.discountId = discountId;
     }
 }

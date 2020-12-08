@@ -2,9 +2,7 @@ package shop.chobitok.modnyi.novaposta.mapper;
 
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import shop.chobitok.modnyi.entity.Ordered;
-import shop.chobitok.modnyi.entity.Shoe;
-import shop.chobitok.modnyi.entity.Status;
+import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.DataForList;
 import shop.chobitok.modnyi.novaposta.entity.ListTrackingEntity;
@@ -38,7 +36,7 @@ public class NPOrderMapper {
         this.propsService = propsService;
     }
 
-    public Ordered toOrdered(Ordered ordered, TrackingEntity trackingEntity) {
+    public Ordered toOrdered(Ordered ordered, TrackingEntity trackingEntity, Discount discount) {
         if (trackingEntity != null) {
             List<Data> dataList = trackingEntity.getData();
             if (dataList != null && dataList.size() > 0) {
@@ -52,6 +50,7 @@ public class NPOrderMapper {
                 ordered.setStatusNP(data.getStatusCode());
                 ordered.setPostComment(data.getCargoDescriptionString());
                 ordered.setLastTransactionDateTime(ShoeUtil.toLocalDateTime(data.getLastTransactionDateTimeGM()));
+                ordered.setDiscount(discount);
                 if (ordered.getClient() == null) {
                     ordered.setClient(clientService.parseClient(data));
                 }
@@ -64,9 +63,9 @@ public class NPOrderMapper {
                     setShoeAndSizeFromDescriptionNP(ordered, data.getCargoDescriptionString());
                 }
                 if (ordered.getPrice() == null || ordered.getPrice() == 0d) {
-                    setPriceAndPrepayment(ordered, data);
+                    setPriceAndPrepayment(ordered, data, discount);
                 }
-                if(ordered.getNpAccountId() == null){
+                if (ordered.getNpAccountId() == null) {
                     ordered.setNpAccountId(propsService.getActual().getId());
                 }
             }
@@ -74,11 +73,11 @@ public class NPOrderMapper {
         return ordered;
     }
 
-    public Ordered toOrdered(TrackingEntity trackingEntity) {
-        return toOrdered(null, trackingEntity);
+    public Ordered toOrdered(TrackingEntity trackingEntity, Discount discount) {
+        return toOrdered(null, trackingEntity, discount);
     }
 
-    public Ordered toOrdered(ListTrackingEntity entity, String ttn) {
+    public Ordered toOrdered(ListTrackingEntity entity, String ttn, Discount discount) {
         List<DataForList> list = entity.getData();
         Ordered ordered = null;
         if (list.size() > 0) {
@@ -94,14 +93,15 @@ public class NPOrderMapper {
                 ordered.setReturnSumNP(Double.valueOf(filteredData.getBackwardDeliveryMoney()));
                 ordered.setNameAndSurnameNP(filteredData.getRecipientContactPerson());
                 ordered.setDateCreated(ShoeUtil.toLocalDateTime(filteredData.getDateTime()));
+                ordered.setDiscount(discount);
                 //TODO: setLastCreatedOnTheBasisDocumentTypeNP ?
                 if (ordered.getOrderedShoes() == null || ordered.getOrderedShoes().size() == 0) {
                     setShoeAndSizeFromDescriptionNP(ordered, filteredData.getDescription());
                 }
                 if (ordered.getPrice() == null || ordered.getPrice() == 0d) {
-                    setPriceAndPrepayment(ordered, filteredData.getCost());
+                    setPriceAndPrepayment(ordered, filteredData.getCost(), discount);
                 }
-                if(ordered.getNpAccountId() == null){
+                if (ordered.getNpAccountId() == null) {
                     ordered.setNpAccountId(propsService.getActual().getId());
                 }
             }
@@ -111,7 +111,7 @@ public class NPOrderMapper {
 
 
     public Shoe parseShoe(String string) {
-        List<Shoe> shoes = shoeService.getAll(0, 100, "");
+        List<Shoe> shoes = shoeService.getAll(0, 200, "");
         List<Shoe> matched = new ArrayList<>();
         for (Shoe shoe : shoes) {
             if (StringUtils.isEmpty(shoe.getPatterns())) {
@@ -159,30 +159,51 @@ public class NPOrderMapper {
     }
 
 
-    private void setPriceAndPrepayment(Ordered ordered, Data data) {
-        setPriceAndPrepayment(ordered, data.getRedeliverySum());
+    private void setPriceAndPrepayment(Ordered ordered, Data data, Discount discount) {
+        setPriceAndPrepayment(ordered, data.getRedeliverySum(), discount);
     }
 
-    public void setPriceAndPrepayment(Ordered ordered, Double redeliverySum) {
-        if (redeliverySum != null && redeliverySum == 0) {
+    public void setPriceAndPrepayment(Ordered ordered, Double redeliverySum, Discount discount) {
+        if (redeliverySum != null && redeliverySum < 2d) {
             ordered.setFullPayment(true);
+        } else {
+            ordered.setPrePayment(100d);
         }
         if (ordered.getOrderedShoes() != null && ordered.getOrderedShoes().size() > 0) {
-            Shoe shoe = ordered.getOrderedShoes().get(0);
-            if (shoe != null) {
-                //     Double prepayment = shoe.getPrice() - redeliverySum;
-                Double prepayment = shoePriceService.getShoePrice(shoe, ordered).getPrice() - redeliverySum;
-                ordered.setPrice(shoePriceService.getShoePrice(shoe, ordered).getPrice());
-                if (prepayment < 0) {
-                    prepayment = 0d;
-                } else if (prepayment == 99) {
-                    prepayment = 100d;
-                }
-                ordered.setPrePayment(prepayment);
-            }
-
+            ordered.setPrice(countDiscount(ordered.getOrderedShoes(), discount));
         }
     }
 
+    public Double countDiscount(List<Shoe> orderedShoes, Discount discount) {
+        Double generalAmount = 0d;
+        if (discount != null) {
+            ShoePrice cheapestPrice = shoePriceService.getActualShoePrice(orderedShoes.get(0));
+            if (discount.getShoeNumber() <= orderedShoes.size() && discount.getShoeNumber() > 1) {
+                for (Shoe shoe : orderedShoes) {
+                    ShoePrice shoePrice = shoePriceService.getActualShoePrice(shoe);
+                    if (cheapestPrice.getPrice() > shoePrice.getPrice()) {
+                        cheapestPrice = shoePrice;
+                    }
+                    generalAmount += shoePrice.getPrice();
+                }
+                generalAmount = generalAmount - cheapestPrice.getPrice();
+                Double discountPrice = countDiscPercentage(cheapestPrice.getPrice(), discount.getDiscountPercentage());
+                return generalAmount + discountPrice;
+            } else if (discount.getShoeNumber() == 1) {
+                for (Shoe shoe : orderedShoes) {
+                    generalAmount += countDiscPercentage(shoePriceService.getActualShoePrice(shoe).getPrice(), discount.getDiscountPercentage());
+                }
+                return generalAmount;
+            }
+        }
+        for (Shoe shoe : orderedShoes) {
+            generalAmount += shoePriceService.getActualShoePrice(shoe).getPrice();
+        }
+        return generalAmount;
+    }
+
+    public Double countDiscPercentage(Double price, Integer discountPercentage) {
+        return price - ((price / 100) * discountPercentage);
+    }
 
 }

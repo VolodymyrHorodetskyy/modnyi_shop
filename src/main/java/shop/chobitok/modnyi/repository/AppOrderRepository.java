@@ -21,4 +21,6 @@ public interface AppOrderRepository extends JpaRepository<AppOrder, Long> {
 
     List<AppOrder> findByTtnIsNotNullAndLastModifiedDateIsGreaterThan(LocalDateTime dateTime);
 
+    AppOrder findOneByTtn(String ttn);
+
 }

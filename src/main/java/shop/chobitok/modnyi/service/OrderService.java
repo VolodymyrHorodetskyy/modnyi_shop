@@ -46,12 +46,12 @@ public class OrderService {
     private StatusChangeService statusChangeService;
     private NovaPostaRepository postaRepository;
     private GoogleDocsService googleDocsService;
-    private PayedOrderedService payedOrderedService;
+    private DiscountService discountService;
 
     @Value("${spring.datasource.username}")
     private String username;
 
-    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, PayedOrderedService payedOrderedService) {
+    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService) {
         this.orderRepository = orderRepository;
         this.shoeRepository = shoeRepository;
         this.clientService = clientService;
@@ -62,7 +62,7 @@ public class OrderService {
         this.statusChangeService = statusChangeService;
         this.postaRepository = postaRepository;
         this.googleDocsService = googleDocsService;
-        this.payedOrderedService = payedOrderedService;
+        this.discountService = discountService;
     }
 
     public Ordered findByTTN(String ttn) {
@@ -135,6 +135,7 @@ public class OrderService {
         if (!StringUtils.isEmpty(updateOrderRequest.getPostComment())) {
             ordered.setPostComment(updateOrderRequest.getPostComment());
         }
+        ordered.setDiscount(discountService.getById(updateOrderRequest.getDiscountId()));
         ordered.setUrgent(updateOrderRequest.getUrgent());
         ordered.setFullPayment(updateOrderRequest.isFull_payment());
         ordered.setNotes(updateOrderRequest.getNotes());
@@ -159,12 +160,12 @@ public class OrderService {
         List<String> splitted = splitTTNString(request.getTtns());
         StringBuilder result = new StringBuilder();
         for (String ttn : splitted) {
-            result.append(importOrderFromTTNString(ttn, request.getUserId()));
+            result.append(importOrderFromTTNString(ttn, request.getUserId(), discountService.getById(request.getDiscountId())));
         }
         return new StringResponse(result.toString());
     }
 
-    public String importOrderFromTTNString(String ttn, Long userId) {
+    public String importOrderFromTTNString(String ttn, Long userId, Discount discount) {
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
             throw new ConflictException("User not found");
@@ -172,17 +173,13 @@ public class OrderService {
         StringBuilder result = new StringBuilder();
         if (orderRepository.findOneByAvailableTrueAndTtn(ttn) == null) {
             try {
-                Ordered ordered = novaPostaService.createOrUpdateOrderFromNP(ttn, null);
-                if (ordered.getStatus() != Status.НЕ_ЗНАЙДЕНО) {
-                    ordered.setUser(user);
-                    orderRepository.save(ordered);
-                    if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
-                        result.append(ttn + "  ... взуття або розмір не визначено \n");
-                    } else {
-                        result.append(ttn + "  ... імпортовано \n");
-                    }
+                Ordered ordered = novaPostaService.createOrUpdateOrderFromNP(ttn, discount);
+                ordered.setUser(user);
+                orderRepository.save(ordered);
+                if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
+                    result.append(ttn + "  ... взуття або розмір не визначено \n");
                 } else {
-                    result.append(ttn).append("  ... не знайдено, спробуйте пізніше \n");
+                    result.append(ttn + "  ... імпортовано \n");
                 }
             } catch (ConflictException e) {
                 result.append(ttn + "  ... неможливо знайти ттн \n");
@@ -255,7 +252,6 @@ public class OrderService {
                 ordered.setStatusNP(data.getStatusCode());
                 if (oldStatus == Status.СТВОРЕНО) {
                     ordered.setAddress(data.getRecipientAddress());
-                    ordered.setCity(data.getCityRecipient());
                 }
                 orderRepository.save(ordered);
                 if (newStatus == Status.ВІДМОВА) {
