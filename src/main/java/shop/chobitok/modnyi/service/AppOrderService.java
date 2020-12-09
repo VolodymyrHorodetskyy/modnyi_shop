@@ -126,7 +126,7 @@ public class AppOrderService {
         String ttn = request.getTtn();
         if (!StringUtils.isEmpty(ttn)) {
             ttn = ttn.replaceAll("\\s+", "");
-            message = orderService.importOrderFromTTNString(ttn, request.getUserId());
+            message = orderService.importOrderFromTTNString(ttn, request.getUserId(), discountService.getById(request.getDiscountId()));
             appOrder.setTtn(ttn);
             String mail = appOrder.getMail();
             Ordered ordered = orderService.findByTTN(ttn);
@@ -162,7 +162,7 @@ public class AppOrderService {
         List<AppOrder> appOrders = appOrderRepository.findByTtnIsNotNullAndLastModifiedDateIsGreaterThan(LocalDateTime.now().minusDays(3));
         for (AppOrder appOrder : appOrders) {
             if (!StringUtils.isEmpty(appOrder.getTtn()) && orderRepository.findOneByAvailableTrueAndTtn(appOrder.getTtn()) == null) {
-                result.append(orderService.importOrderFromTTNString(appOrder.getTtn(), appOrder.getUser().getId()));
+                result.append(orderService.importOrderFromTTNString(appOrder.getTtn(), appOrder.getUser().getId(), null));
             }
         }
         return result.toString();

@@ -4,6 +4,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import shop.chobitok.modnyi.entity.Discount;
 import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.entity.request.AddOrRemovePatternRequest;
 import shop.chobitok.modnyi.entity.request.CreateShoeRequest;
@@ -11,9 +12,11 @@ import shop.chobitok.modnyi.entity.request.UpdateShoeRequest;
 import shop.chobitok.modnyi.entity.response.ShoeWithPrice;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.mapper.ShoeMapper;
+import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
 import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.specification.ShoeSpecification;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -21,10 +24,15 @@ public class ShoeService {
 
     private ShoeRepository shoeRepository;
     private ShoeMapper shoeMapper;
+    private NPOrderMapper npOrderMapper;
+    private DiscountService discountService;
 
-    public ShoeService(ShoeRepository shoeRepository, ShoeMapper shoeMapper) {
+
+    public ShoeService(ShoeRepository shoeRepository, ShoeMapper shoeMapper, NPOrderMapper npOrderMapper, DiscountService discountService) {
         this.shoeRepository = shoeRepository;
         this.shoeMapper = shoeMapper;
+        this.npOrderMapper = npOrderMapper;
+        this.discountService = discountService;
     }
 
     public List<ShoeWithPrice> getAllShoeWithPrice(int page, int size, String modelAndColor) {
@@ -79,6 +87,21 @@ public class ShoeService {
             }
         }
         return strings;
+    }
+
+    public Double getShoePrice(Long[] shoeIds, Long discountId) {
+        if (shoeIds != null && shoeIds.length > 0) {
+            Discount discount = null;
+            if (discountId != 0) {
+                discount = discountService.getById(discountId);
+            }
+            List<Shoe> shoes = new ArrayList<>();
+            for (Long shoeId : shoeIds) {
+                shoes.add(shoeRepository.getOne(shoeId));
+            }
+            return npOrderMapper.countDiscount(shoes, discount);
+        }
+        return null;
     }
 
 

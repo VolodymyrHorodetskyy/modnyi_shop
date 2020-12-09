@@ -1,5 +1,7 @@
 package shop.chobitok.modnyi.novaposta.mapper;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.*;
@@ -8,10 +10,12 @@ import shop.chobitok.modnyi.novaposta.entity.DataForList;
 import shop.chobitok.modnyi.novaposta.entity.ListTrackingEntity;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
+import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.service.ClientService;
 import shop.chobitok.modnyi.service.PropsService;
 import shop.chobitok.modnyi.service.ShoePriceService;
 import shop.chobitok.modnyi.service.ShoeService;
+import shop.chobitok.modnyi.specification.ShoeSpecification;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,7 +25,7 @@ import java.util.List;
 @Service
 public class NPOrderMapper {
 
-    private ShoeService shoeService;
+    private ShoeRepository shoeRepository;
     private ClientService clientService;
     private ShoePriceService shoePriceService;
 
@@ -29,8 +33,8 @@ public class NPOrderMapper {
 
     private PropsService propsService;
 
-    public NPOrderMapper(ShoeService shoeService, ClientService clientService, ShoePriceService shoePriceService, PropsService propsService) {
-        this.shoeService = shoeService;
+    public NPOrderMapper(ShoeRepository shoeRepository, ClientService clientService, ShoePriceService shoePriceService, PropsService propsService) {
+        this.shoeRepository = shoeRepository;
         this.clientService = clientService;
         this.shoePriceService = shoePriceService;
         this.propsService = propsService;
@@ -111,7 +115,7 @@ public class NPOrderMapper {
 
 
     public Shoe parseShoe(String string) {
-        List<Shoe> shoes = shoeService.getAll(0, 200, "");
+        List<Shoe> shoes = shoeRepository.findAll(new ShoeSpecification(""), PageRequest.of(0, 300, Sort.by(Sort.Direction.DESC, "createdDate"))).getContent();
         List<Shoe> matched = new ArrayList<>();
         for (Shoe shoe : shoes) {
             if (StringUtils.isEmpty(shoe.getPatterns())) {
@@ -164,13 +168,16 @@ public class NPOrderMapper {
     }
 
     public void setPriceAndPrepayment(Ordered ordered, Double redeliverySum, Discount discount) {
+        Double price = 0d;
+        if (ordered.getOrderedShoes() != null && ordered.getOrderedShoes().size() > 0) {
+            price = countDiscount(ordered.getOrderedShoes(), discount);
+            ordered.setPrice(price);
+        }
         if (redeliverySum != null && redeliverySum < 2d) {
             ordered.setFullPayment(true);
+            ordered.setPrePayment(price);
         } else {
             ordered.setPrePayment(100d);
-        }
-        if (ordered.getOrderedShoes() != null && ordered.getOrderedShoes().size() > 0) {
-            ordered.setPrice(countDiscount(ordered.getOrderedShoes(), discount));
         }
     }
 
@@ -193,7 +200,7 @@ public class NPOrderMapper {
                 for (Shoe shoe : orderedShoes) {
                     generalAmount += countDiscPercentage(shoePriceService.getActualShoePrice(shoe).getPrice(), discount.getDiscountPercentage());
                 }
-                return generalAmount;
+                return roundDouble(generalAmount);
             }
         }
         for (Shoe shoe : orderedShoes) {
@@ -202,8 +209,13 @@ public class NPOrderMapper {
         return generalAmount;
     }
 
+
     public Double countDiscPercentage(Double price, Integer discountPercentage) {
-        return price - ((price / 100) * discountPercentage);
+        return roundDouble(price - ((price / 100) * discountPercentage));
+    }
+
+    private Double roundDouble(Double toRound) {
+        return Math.round(toRound * 100.0) / 100.0;
     }
 
 }

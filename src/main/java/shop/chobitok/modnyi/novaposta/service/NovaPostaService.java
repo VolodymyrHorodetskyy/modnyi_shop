@@ -23,20 +23,15 @@ public class NovaPostaService {
     private NovaPostaRepository postaRepository;
     private NPOrderMapper npOrderMapper;
     private NPHelper npHelper;
-    private PropsService propsService;
-    private OrderRepository orderRepository;
 
-
-    public NovaPostaService(NovaPostaRepository postaRepository, NPOrderMapper npOrderMapper, NPHelper npHelper, PropsService propsService, OrderRepository orderRepository) {
+    public NovaPostaService(NovaPostaRepository postaRepository, NPOrderMapper npOrderMapper, NPHelper npHelper) {
         this.postaRepository = postaRepository;
         this.npOrderMapper = npOrderMapper;
         this.npHelper = npHelper;
-        this.propsService = propsService;
-        this.orderRepository = orderRepository;
     }
 
-    public Ordered createOrUpdateOrderFromNP(String ttn, Discount discount) {
-        return formOrderedFromNPEntity(null, ttn, postaRepository.getTracking(ttn), discount);
+    public Ordered createOrUpdateOrderFromNP(String ttn, Long npAccountId, Discount discount) {
+        return formOrderedFromNPEntity(null, ttn, postaRepository.getTracking(npAccountId, ttn), discount);
     }
 
     public Ordered createOrUpdateOrderFromNP(Ordered ordered, String ttn, Discount discount) {
@@ -59,7 +54,7 @@ public class NovaPostaService {
                     }
                 }
             } else {
-                return npOrderMapper.toOrdered(ordered, trackingEntity);
+                return npOrderMapper.toOrdered(ordered, trackingEntity, discount);
             }
         }
         return null;
@@ -75,7 +70,7 @@ public class NovaPostaService {
     }
 
     public String returnCargo(Ordered ordered) {
-        CheckPossibilityCreateReturnResponse checkPossibilityCreateReturnResponse = postaRepository.checkPossibilitReturn(ordered);
+        CheckPossibilityCreateReturnResponse checkPossibilityCreateReturnResponse = postaRepository.checkPossibilityReturn(ordered);
         if (checkPossibilityCreateReturnResponse.isSuccess()) {
             if (postaRepository.returnCargo(
                     npHelper.createReturnCargoRequest(ordered, checkPossibilityCreateReturnResponse.getData().get(0).getRef()))) {
@@ -95,11 +90,9 @@ public class NovaPostaService {
         return null;
     }
 
-    public Status getStatusByTTN(String ttn) {
-        return ShoeUtil.convertToStatus(postaRepository.getTracking(ttn).getData().get(0).getStatusCode());
+    public Status getStatusByTTN(Long npAccountId, String ttn) {
+        return ShoeUtil.convertToStatus(postaRepository.getTracking(npAccountId, ttn).getData().get(0).getStatusCode());
     }
-
-
 
 
 }

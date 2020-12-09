@@ -47,11 +47,12 @@ public class OrderService {
     private NovaPostaRepository postaRepository;
     private GoogleDocsService googleDocsService;
     private DiscountService discountService;
+    private PayedOrderedService payedOrderedService;
 
     @Value("${spring.datasource.username}")
     private String username;
 
-    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService) {
+    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService) {
         this.orderRepository = orderRepository;
         this.shoeRepository = shoeRepository;
         this.clientService = clientService;
@@ -63,6 +64,7 @@ public class OrderService {
         this.postaRepository = postaRepository;
         this.googleDocsService = googleDocsService;
         this.discountService = discountService;
+        this.payedOrderedService = payedOrderedService;
     }
 
     public Ordered findByTTN(String ttn) {
@@ -173,7 +175,7 @@ public class OrderService {
         StringBuilder result = new StringBuilder();
         if (orderRepository.findOneByAvailableTrueAndTtn(ttn) == null) {
             try {
-                Ordered ordered = novaPostaService.createOrUpdateOrderFromNP(ttn, discount);
+                Ordered ordered = novaPostaService.createOrUpdateOrderFromNP(ttn, null, discount);
                 ordered.setUser(user);
                 orderRepository.save(ordered);
                 if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {

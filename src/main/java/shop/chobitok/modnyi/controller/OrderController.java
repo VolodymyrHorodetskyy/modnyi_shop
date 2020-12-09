@@ -37,11 +37,11 @@ public class OrderController {
                                         @RequestParam(required = false) String orderBy, @RequestParam(required = false) String userId) {
         return orderService.getAll(page, size, ttn, phoneOrName, model, withoutTTN, orderBy, userId);
     }
-
+/*
     @PostMapping("/fromNP")
     public Ordered createOrderFromNP(@RequestBody FromNPToOrderRequest fromNPToOrderRequest) {
         return novaPostaService.createOrUpdateOrderFromNP(fromNPToOrderRequest.getTtn(), null);
-    }
+    }*/
 
     @PostMapping
     public Ordered createOrdered(@RequestBody @Valid CreateOrderRequest createOrderRequest) {

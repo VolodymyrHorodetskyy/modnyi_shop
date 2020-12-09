@@ -51,6 +51,10 @@ public class ShoeController {
         return shoeService.removePattern(request);
     }
 
+    @GetMapping("/getShoePrice")
+    public Double getShoePrice(@RequestParam Long[] shoeIds, @RequestParam Long discountId) {
+        return shoeService.getShoePrice(shoeIds, discountId);
+    }
 
 
 }
