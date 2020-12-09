@@ -103,6 +103,28 @@ public class DataForList {
     private float TermExtension;
     private String TermExtensionDays;
     private float AviaDelivery;
+    private RedeliveryPaymentCard RedeliveryPaymentCard;
+
+    public class RedeliveryPaymentCard {
+        private String CardDescription;
+        private String CardMaskedNumber;
+
+        public String getCardDescription() {
+            return CardDescription;
+        }
+
+        public void setCardDescription(String cardDescription) {
+            CardDescription = cardDescription;
+        }
+
+        public String getCardMaskedNumber() {
+            return CardMaskedNumber;
+        }
+
+        public void setCardMaskedNumber(String cardMaskedNumber) {
+            CardMaskedNumber = cardMaskedNumber;
+        }
+    }
 
     // Getter Methods
 
@@ -894,5 +916,13 @@ public class DataForList {
 
     public void setCost(Double cost) {
         Cost = cost;
+    }
+
+    public DataForList.RedeliveryPaymentCard getRedeliveryPaymentCard() {
+        return RedeliveryPaymentCard;
+    }
+
+    public void setRedeliveryPaymentCard(DataForList.RedeliveryPaymentCard redeliveryPaymentCard) {
+        RedeliveryPaymentCard = redeliveryPaymentCard;
     }
 }

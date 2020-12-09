@@ -11,10 +11,7 @@ import shop.chobitok.modnyi.novaposta.entity.ListTrackingEntity;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.ShoeRepository;
-import shop.chobitok.modnyi.service.ClientService;
-import shop.chobitok.modnyi.service.PropsService;
-import shop.chobitok.modnyi.service.ShoePriceService;
-import shop.chobitok.modnyi.service.ShoeService;
+import shop.chobitok.modnyi.service.*;
 import shop.chobitok.modnyi.specification.ShoeSpecification;
 
 import java.util.ArrayList;
@@ -28,15 +25,17 @@ public class NPOrderMapper {
     private ShoeRepository shoeRepository;
     private ClientService clientService;
     private ShoePriceService shoePriceService;
+    private CardService cardService;
 
     private List<Integer> sizes = Arrays.asList(36, 37, 38, 39, 40, 41);
 
     private PropsService propsService;
 
-    public NPOrderMapper(ShoeRepository shoeRepository, ClientService clientService, ShoePriceService shoePriceService, PropsService propsService) {
+    public NPOrderMapper(ShoeRepository shoeRepository, ClientService clientService, ShoePriceService shoePriceService, CardService cardService, PropsService propsService) {
         this.shoeRepository = shoeRepository;
         this.clientService = clientService;
         this.shoePriceService = shoePriceService;
+        this.cardService = cardService;
         this.propsService = propsService;
     }
 
@@ -55,6 +54,7 @@ public class NPOrderMapper {
                 ordered.setPostComment(data.getCargoDescriptionString());
                 ordered.setLastTransactionDateTime(ShoeUtil.toLocalDateTime(data.getLastTransactionDateTimeGM()));
                 ordered.setDiscount(discount);
+                ordered.setCard(cardService.getOrSaveAndGetCardByName(data.getCardMaskedNumber()));
                 if (ordered.getClient() == null) {
                     ordered.setClient(clientService.parseClient(data));
                 }
@@ -97,6 +97,7 @@ public class NPOrderMapper {
                 ordered.setReturnSumNP(Double.valueOf(filteredData.getBackwardDeliveryMoney()));
                 ordered.setNameAndSurnameNP(filteredData.getRecipientContactPerson());
                 ordered.setDateCreated(ShoeUtil.toLocalDateTime(filteredData.getDateTime()));
+                ordered.setCard(cardService.getOrSaveAndGetCardByName(filteredData.getRedeliveryPaymentCard()));
                 ordered.setDiscount(discount);
                 //TODO: setLastCreatedOnTheBasisDocumentTypeNP ?
                 if (ordered.getOrderedShoes() == null || ordered.getOrderedShoes().size() == 0) {

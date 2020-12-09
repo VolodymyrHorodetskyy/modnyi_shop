@@ -56,4 +56,6 @@ public interface OrderRepository extends JpaRepository<Ordered, Long> {
 
     List<Ordered> findByNpAccountId(Long npAccountId);
 
+    List<Ordered> findByCardId(Long id);
+
 }

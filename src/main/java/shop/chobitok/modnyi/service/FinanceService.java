@@ -9,12 +9,15 @@ import shop.chobitok.modnyi.entity.response.EarningsResponse;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
+import shop.chobitok.modnyi.util.OrderHelper;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static shop.chobitok.modnyi.util.OrderHelper.breakdownByStatuses;
 
 @Service
 public class FinanceService {
@@ -27,18 +30,8 @@ public class FinanceService {
         this.shoePriceService = shoePriceService;
     }
 
-    public EarningsResponse getEarnings(String dateTime1, String dateTime2) {
-        Map<Status, List<Ordered>> statusListMap = new HashMap<>();
-        for (Status status : Status.values()) {
-            statusListMap.put(status, new ArrayList<>());
-        }
-        LocalDateTime fromDate = DateHelper.formDateFrom(dateTime1);
-        LocalDateTime toDate = DateHelper.formDateTo(dateTime2);
-        List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate));
-        for (Ordered ordered : orderedList) {
-            statusListMap.get(ordered.getStatus()).add(ordered);
-        }
-
+    public EarningsResponse getEarnings(List<Ordered> orderedList, LocalDateTime fromDate, LocalDateTime toDate) {
+        Map<Status, List<Ordered>> statusListMap = breakdownByStatuses(orderedList);
         Double sum = 0d;
         Double predictedSum = 0d;
         Double realisticSum;
@@ -65,6 +58,13 @@ public class FinanceService {
         realisticSum = (predictedSum / 100) * receivedPercentage;
 
         return new EarningsResponse(fromDate, toDate, sum, predictedSum, realisticSum, amountByStatus, receivedPercentage, all);
+    }
+
+    public EarningsResponse getEarnings(String dateTime1, String dateTime2) {
+        LocalDateTime fromDate = DateHelper.formDateFrom(dateTime1);
+        LocalDateTime toDate = DateHelper.formDateTo(dateTime2);
+        List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate));
+        return getEarnings(orderedList, fromDate, toDate);
     }
 
     public Double getMargin(List<Ordered> ordereds) {

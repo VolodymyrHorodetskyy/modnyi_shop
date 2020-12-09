@@ -22,6 +22,9 @@ public class Ordered extends Audit {
     @ManyToOne(cascade = CascadeType.ALL)
     private Discount discount;
 
+    @ManyToOne(cascade = CascadeType.ALL)
+    private Card card;
+
     @Column
     private Integer size;
 
@@ -371,5 +374,13 @@ public class Ordered extends Audit {
 
     public void setDiscount(Discount discount) {
         this.discount = discount;
+    }
+
+    public Card getCard() {
+        return card;
+    }
+
+    public void setCard(Card card) {
+        this.card = card;
     }
 }

@@ -19,6 +19,11 @@ public class EarningsResponse {
     public EarningsResponse() {
     }
 
+    public EarningsResponse(Double sum, Double predictedSum, Double realisticSum) {
+        this.sum = sum;
+        this.predictedSum = predictedSum;
+        this.realisticSum = realisticSum;
+    }
 
     public EarningsResponse(LocalDateTime from, LocalDateTime to, Double sum, Double predictedSum, Double realisticSum, Map<Status, Integer> amountByStatus, int receivedPercentage, int all) {
         this.from = from;
