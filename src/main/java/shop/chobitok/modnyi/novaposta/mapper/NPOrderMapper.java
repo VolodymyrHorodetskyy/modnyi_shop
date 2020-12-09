@@ -103,7 +103,7 @@ public class NPOrderMapper {
                     setShoeAndSizeFromDescriptionNP(ordered, filteredData.getDescription());
                 }
                 if (ordered.getPrice() == null || ordered.getPrice() == 0d) {
-                    setPriceAndPrepayment(ordered, filteredData.getCost(), discount);
+                    setPriceAndPrepayment(ordered, ordered.getReturnSumNP(), discount);
                 }
                 if (ordered.getNpAccountId() == null) {
                     ordered.setNpAccountId(propsService.getActual().getId());
