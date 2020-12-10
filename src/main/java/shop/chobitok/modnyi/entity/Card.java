@@ -2,7 +2,6 @@ package shop.chobitok.modnyi.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import java.util.List;
 
 @Entity
 public class Card extends Audit {

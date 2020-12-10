@@ -27,6 +27,14 @@ public class StringHelper {
         return new StringResponse(stringBuilder.toString());
     }
 
+    public static StringResponse formCardStatsInfo(EarningsResponse earningsResponse) {
+        StringBuilder result = new StringBuilder();
+        result.append("Сума = ").append(earningsResponse.getSum()).append("\n")
+                .append("Сума передбачуваних = ").append(earningsResponse.getPredictedSum()).append("\n")
+                .append("Сума реалістичних передбачуванних = ").append(earningsResponse.getRealisticSum()).append("\n");
+        return new StringResponse(result.toString());
+    }
+
     public static StringResponse fromSoldShoeResponse(Map<Shoe, Integer> sortedByAmount) {
         StringBuilder builder = new StringBuilder();
         for (Map.Entry<Shoe, Integer> entry : sortedByAmount.entrySet()) {

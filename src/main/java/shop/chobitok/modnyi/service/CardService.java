@@ -71,6 +71,7 @@ public class CardService {
                 }
             }
         }
-        return new EarningsResponse(sum, predictedSum, null);
+        Double realisticSum = (predictedSum / 100) * 80;
+        return new EarningsResponse(sum, predictedSum, realisticSum);
     }
 }
