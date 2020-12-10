@@ -361,9 +361,10 @@ public class OrderService {
         List<Ordered> toSave = new ArrayList<>();
         List<Ordered> urgent = new ArrayList<>();
         for (Ordered ordered : orderedList) {
-            addOrderToMap(localDateOrderedMap, ordered);
             if (ordered.getUrgent() != null && ordered.getUrgent()) {
                 urgent.add(ordered);
+            } else {
+                addOrderToMap(localDateOrderedMap, ordered);
             }
         }
         result.append("Терміново").append("\n\n");
@@ -379,7 +380,7 @@ public class OrderService {
                     count = ordered.getSequenceNumber();
                 }
             }
-            for (Ordered ordered : entry.getValue()) {
+            for (Ordered ordered : ordereds) {
                 if (ordered.getSequenceNumber() == null) {
                     ordered.setSequenceNumber(++count);
                     toSave.add(ordered);
