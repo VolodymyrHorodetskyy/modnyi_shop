@@ -1,12 +1,10 @@
 package shop.chobitok.modnyi.service;
 
-import org.apache.http.client.utils.DateUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.OurTTN;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.request.ImportOrdersFromStringRequest;
@@ -20,10 +18,7 @@ import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.OurTtnRepository;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static shop.chobitok.modnyi.util.StringHelper.splitTTNString;
 
@@ -104,7 +99,8 @@ public class OurTtnService {
         if (showDeletedAndReceived) {
             pageObject = ourTtnRepository.findAll(pageable);
         } else {
-            pageObject = ourTtnRepository.findAllByDeletedFalseAndStatusNot(Status.ОТРИМАНО, pageable);
+            pageObject = ourTtnRepository.findAllByDeletedFalseAndStatusNotIn(
+                    Arrays.asList(Status.ОТРИМАНО, Status.ВІДМОВА, Status.ВИДАЛЕНО), pageable);
         }
         return pageObject;
     }

@@ -18,6 +18,6 @@ public interface OurTtnRepository extends JpaRepository<OurTTN, Long> {
 
     Page<OurTTN> findAll(Pageable pageable);
 
-    Page<OurTTN> findAllByDeletedFalseAndStatusNot(Status status, Pageable pageable);
+    Page<OurTTN> findAllByDeletedFalseAndStatusNotIn(List<Status> status, Pageable pageable);
 
 }
