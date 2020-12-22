@@ -41,6 +41,10 @@ public class OurTtnService {
         this.novaPostaService = novaPostaService;
     }
 
+    public List<OurTTN> getAll(List<Status> statusesNotIn) {
+        return ourTtnRepository.findAllByStatusNotIn(statusesNotIn);
+    }
+
     public StringResponse receive(ImportOrdersFromStringRequest request) {
         if (request.getNpAccountId() == null) {
             throw new ConflictException("Акаунт не вказано");

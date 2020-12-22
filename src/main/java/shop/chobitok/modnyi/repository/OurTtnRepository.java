@@ -20,4 +20,6 @@ public interface OurTtnRepository extends JpaRepository<OurTTN, Long> {
 
     Page<OurTTN> findAllByDeletedFalseAndStatusNotIn(List<Status> status, Pageable pageable);
 
+    List<OurTTN> findAllByStatusNotIn(List<Status> statuses);
+
 }

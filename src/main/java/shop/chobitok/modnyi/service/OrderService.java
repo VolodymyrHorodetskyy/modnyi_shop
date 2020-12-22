@@ -367,9 +367,11 @@ public class OrderService {
                 addOrderToMap(localDateOrderedMap, ordered);
             }
         }
-        result.append("Терміново").append("\n\n");
-        for (Ordered ordered : urgent) {
-            result.append(ordered.getTtn()).append("\n").append(ordered.getPostComment()).append("\n\n");
+        if (urgent.size() > 0) {
+            result.append("Терміново").append("\n\n");
+            for (Ordered ordered : urgent) {
+                result.append(ordered.getTtn()).append("\n").append(ordered.getPostComment()).append("\n\n");
+            }
         }
         for (Map.Entry<LocalDate, List<Ordered>> entry : localDateOrderedMap.entrySet()) {
             result.append(entry.getKey().format(timeFormatter)).append("\n\n");

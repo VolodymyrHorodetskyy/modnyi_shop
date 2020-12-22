@@ -218,11 +218,18 @@ public class CanceledOrderReasonService {
         result.append(getPayedKeeping(canceledOrderReasons.stream().filter(canceledOrderReason -> canceledOrderReason.getDatePayedKeeping() != null).collect(Collectors.toList())));
 
         result.append("Звернути увагу\n\n");
-        for (CanceledOrderReason canceledOrderReason : used) {
+        Set<CanceledOrderReason> used2;
+        if (showOnlyImportant) {
+            used2 = used.stream().filter(canceledOrderReason -> canceledOrderReason.getStatus() == Status.ДОСТАВЛЕНО).collect(Collectors.toSet());
+        } else {
+            used2 = used;
+        }
+        for (CanceledOrderReason canceledOrderReason : used2) {
             result.append(canceledOrderReason.getOrdered().getTtn()).append("\n")
                     .append(canceledOrderReason.getReturnTtn()).append(" ").append(canceledOrderReason.getStatus()).append("\n")
                     .append(canceledOrderReason.getReason()).append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
                     .append("\n\n");
+
         }
         result.append("Співпадіння\n\n");
         for (Ordered ordered : createdList) {
@@ -274,6 +281,25 @@ public class CanceledOrderReasonService {
             return "";
         }
     }
+
+/*    private String getPayedKeepingOurTtn(List<OurTTN> ourTTNS) {
+        StringBuilder result = new StringBuilder();
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("d.MM");
+        result.append("Наші Ттн").append("\n\n");
+        boolean exist = false;
+        for (OurTTN ourTTN : ourTTNS) {
+            if (ourTTN.getDatePayedKeeping() != null &&
+                    LocalDateTime.now().plusDays(2).isAfter(ourTTN.getDatePayedKeeping())) {
+                result.append(ourTTN.getTtn()).append("\n")
+                        .append(ourTTN.getDatePayedKeeping().format(timeFormatter)).append("\n\n");
+            }
+        }
+        if (exist) {
+            return result.toString();
+        } else {
+            return "";
+        }
+    }*/
 
     private Inside formInside(String description) {
         description = description.toLowerCase();

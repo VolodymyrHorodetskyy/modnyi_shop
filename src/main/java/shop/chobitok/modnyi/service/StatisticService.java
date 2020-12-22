@@ -373,7 +373,7 @@ public class StatisticService {
         Double realisticSum = (sumPredicted / 100) * 80;
         stringBuilder.append("Сума отриманих = ").append(sumReceived).append("\n")
                 .append("Сума прогнозованих = ").append(sumPredicted).append("\n")
-                .append("Сума прогнозованих реалістична = ").append(realisticSum).append("\n");
+                .append("80% = ").append(realisticSum).append("\n");
         return new StringResponse(stringBuilder.toString());
     }
 

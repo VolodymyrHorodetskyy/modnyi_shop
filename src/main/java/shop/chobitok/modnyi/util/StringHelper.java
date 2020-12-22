@@ -31,7 +31,7 @@ public class StringHelper {
         StringBuilder result = new StringBuilder();
         result.append("Сума = ").append(earningsResponse.getSum()).append("\n")
                 .append("Сума передбачуваних = ").append(earningsResponse.getPredictedSum()).append("\n")
-                .append("Сума реалістичних передбачуванних = ").append(earningsResponse.getRealisticSum()).append("\n");
+                .append("80% = ").append(earningsResponse.getRealisticSum()).append("\n");
         return new StringResponse(result.toString());
     }
 
