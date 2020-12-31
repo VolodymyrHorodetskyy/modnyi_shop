@@ -71,6 +71,22 @@ public class OrderService {
         return orderRepository.findOneByAvailableTrueAndTtn(ttn);
     }
 
+    public Ordered findById(Long id) {
+        return orderRepository.findById(id).orElse(null);
+    }
+
+    public Ordered saveOrder(Ordered ordered) {
+        return orderRepository.save(ordered);
+    }
+
+    public OrderRepository getOrderRepository() {
+        return orderRepository;
+    }
+
+    public List<Ordered> getAll(LocalDateTime from, LocalDateTime to, Status status) {
+        return orderRepository.findAll(new OrderedSpecification(from, to, status));
+    }
+
     public GetAllOrderedResponse getAll(int page, int size, String TTN, String phoneOrName, String model, boolean withoutTTN, String orderBy,
                                         String userId) {
         PageRequest pageRequest = PageRequest.of(page, size, createSort(orderBy));
@@ -206,18 +222,6 @@ public class OrderService {
         return resultString;
     }
 
-    public void updateCanceled() {
-        List<Ordered> canceledAndDeniedOrders = orderRepository
-                .findAllByStatusInAndLastModifiedDateGreaterThan(Arrays.asList(Status.ВИДАЛЕНО, Status.ВІДМОВА, Status.ЗМІНА_АДРЕСУ),
-                        DateHelper.formLocalDateTimeStartOfTheDay(LocalDateTime.now().minusDays(5)));
-        for (Ordered ordered : canceledAndDeniedOrders) {
-            CanceledOrderReason canceledOrderReason = canceledOrderReasonService.getCanceledOrderReasonByOrderId(ordered.getId());
-            if (canceledOrderReason == null || !canceledOrderReason.isManual()) {
-                updateStatusByNovaPosta(ordered);
-            }
-        }
-    }
-
     public void updateStatus103() {
         List<Ordered> canceled = orderRepository.findBystatusNP(103);
         for (Ordered ordered : canceled) {
@@ -242,7 +246,7 @@ public class OrderService {
 
 
     @Transactional
-    private boolean updateStatusByNovaPosta(Ordered ordered) {
+    public boolean updateStatusByNovaPosta(Ordered ordered) {
         TrackingEntity trackingEntity = postaRepository.getTracking(ordered);
         if (trackingEntity != null && trackingEntity.getData().size() > 0) {
             Data data = trackingEntity.getData().get(0);

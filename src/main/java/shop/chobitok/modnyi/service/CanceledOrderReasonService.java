@@ -20,6 +20,7 @@ import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
+import shop.chobitok.modnyi.util.DateHelper;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -32,7 +33,6 @@ import static shop.chobitok.modnyi.util.StringHelper.removeSpaces;
 @Service
 public class CanceledOrderReasonService {
 
-    private OrderRepository orderRepository;
     private CanceledOrderReasonRepository canceledOrderReasonRepository;
     private NovaPostaRepository postaRepository;
     private MailService mailService;
@@ -40,9 +40,9 @@ public class CanceledOrderReasonService {
     private ShoePriceService shoePriceService;
     private GoogleDocsService googleDocsService;
     private PayedOrderedService payedOrderedService;
+    private OrderService orderService;
 
-    public CanceledOrderReasonService(OrderRepository orderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, NovaPostaRepository postaRepository, MailService mailService, StatusChangeService statusChangeService, ShoePriceService shoePriceService, GoogleDocsService googleDocsService, PayedOrderedService payedOrderedService) {
-        this.orderRepository = orderRepository;
+    public CanceledOrderReasonService(CanceledOrderReasonRepository canceledOrderReasonRepository, NovaPostaRepository postaRepository, MailService mailService, StatusChangeService statusChangeService, ShoePriceService shoePriceService, GoogleDocsService googleDocsService, PayedOrderedService payedOrderedService, OrderService orderService) {
         this.canceledOrderReasonRepository = canceledOrderReasonRepository;
         this.postaRepository = postaRepository;
         this.mailService = mailService;
@@ -50,10 +50,11 @@ public class CanceledOrderReasonService {
         this.shoePriceService = shoePriceService;
         this.googleDocsService = googleDocsService;
         this.payedOrderedService = payedOrderedService;
+        this.orderService = orderService;
     }
 
-    public Ordered cancelOrder(CancelOrderWithOrderRequest cancelOrderRequest) {
-        Ordered ordered = orderRepository.findById(cancelOrderRequest.getOrderId()).orElse(null);
+    public StringResponse cancelOrder(CancelOrderWithOrderRequest cancelOrderRequest) {
+        Ordered ordered = orderService.findById(cancelOrderRequest.getOrderId());
         if (ordered == null) {
             throw new ConflictException("Немає такого замовлення");
         }
@@ -70,10 +71,14 @@ public class CanceledOrderReasonService {
             canceledOrderReason.setNewTtn(cancelOrderRequest.getNewTTN());
             canceledOrderReason.setReturnTtn(cancelOrderRequest.getReturnTTN());
         }
+        String message = null;
+        if (!StringUtils.isEmpty(cancelOrderRequest.getNewTTN())) {
+            message = orderService.importOrderFromTTNString(cancelOrderRequest.getNewTTN(), ordered.getUser().getId(), ordered.getDiscount());
+        }
         canceledOrderReason.setManual(true);
-        orderRepository.save(ordered);
+        orderService.saveOrder(ordered);
         canceledOrderReasonRepository.save(canceledOrderReason);
-        return ordered;
+        return new StringResponse(message);
     }
 
     private void sendMailIfPayed(Ordered ordered) {
@@ -101,7 +106,7 @@ public class CanceledOrderReasonService {
     }
 
     public List<CanceledOrderReason> checkIfWithoutCancelReasonExistsAndCreateDefaultReason(LocalDateTime from) {
-        List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(from, null, Status.ВІДМОВА));
+        List<Ordered> orderedList = orderService.getAll(from, null, Status.ВІДМОВА);
         List<CanceledOrderReason> canceledOrderReasons = new ArrayList<>();
         for (Ordered ordered : orderedList) {
             if (canceledOrderReasonRepository.findFirstByOrderedId(ordered.getId()) == null) {
@@ -187,12 +192,12 @@ public class CanceledOrderReasonService {
         List<Ordered> toSave = new ArrayList<>();
         StringBuilder result = new StringBuilder();
         List<CanceledOrderReason> canceledOrderReasons = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(true, true));
-        List<Ordered> orderedList = orderRepository.findByNotForDeliveryFileTrue();
+        List<Ordered> orderedList = orderService.getOrderRepository().findByNotForDeliveryFileTrue();
         for (Ordered order : orderedList) {
             order.setNotForDeliveryFile(false);
             toSave.add(order);
         }
-        List<Ordered> createdList = orderRepository.findAllByAvailableTrueAndStatusInOrderByUrgentDesc(Arrays.asList(Status.СТВОРЕНО));
+        List<Ordered> createdList = orderService.getOrderRepository().findAllByAvailableTrueAndStatusInOrderByUrgentDesc(Arrays.asList(Status.СТВОРЕНО));
         Set<CanceledOrderReason> used = new HashSet<>();
         Set<CanceledOrderReason> toFind = new HashSet<>();
         int countArrived = 0;
@@ -249,12 +254,25 @@ public class CanceledOrderReasonService {
             }
         }
         if (toSave.size() > 0) {
-            orderRepository.saveAll(toSave);
+            orderService.getOrderRepository().saveAll(toSave);
         }
         String resultString = result.toString();
         googleDocsService.updateReturningsFile(resultString);
         return new StringResponse(resultString);
     }
+
+    public void updateCanceled() {
+        List<Ordered> canceledAndDeniedOrders = orderService.getOrderRepository()
+                .findAllByStatusInAndLastModifiedDateGreaterThan(Arrays.asList(Status.ВИДАЛЕНО, Status.ВІДМОВА, Status.ЗМІНА_АДРЕСУ),
+                        DateHelper.formLocalDateTimeStartOfTheDay(LocalDateTime.now().minusDays(5)));
+        for (Ordered ordered : canceledAndDeniedOrders) {
+            CanceledOrderReason canceledOrderReason = getCanceledOrderReasonByOrderId(ordered.getId());
+            if (canceledOrderReason == null || !canceledOrderReason.isManual()) {
+                orderService.updateStatusByNovaPosta(ordered);
+            }
+        }
+    }
+
 
     private String getPayedKeeping(List<CanceledOrderReason> canceledOrderReasons) {
         canceledOrderReasons.sort(Comparator.comparing(canceledOrderReason -> canceledOrderReason.getDatePayedKeeping()));

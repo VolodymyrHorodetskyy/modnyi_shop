@@ -6,6 +6,7 @@ import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.request.CancelOrderWithIdRequest;
 import shop.chobitok.modnyi.entity.request.CancelOrderWithOrderRequest;
 import shop.chobitok.modnyi.entity.response.GetCanceledResponse;
+import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.service.CanceledOrderReasonService;
 
 import java.time.LocalDateTime;
@@ -23,7 +24,7 @@ public class CanceledOrderController {
     }
 
     @PatchMapping("/cancelOrder")
-    public Ordered cancelOrdered(@RequestBody CancelOrderWithOrderRequest request) {
+    public StringResponse cancelOrdered(@RequestBody CancelOrderWithOrderRequest request) {
         return canceledOrderReasonService.cancelOrder(request);
     }
 
