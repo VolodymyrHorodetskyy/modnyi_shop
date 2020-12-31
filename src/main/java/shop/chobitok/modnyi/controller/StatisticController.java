@@ -58,8 +58,9 @@ public class StatisticController {
     }
 
     @GetMapping("/returned")
-    public StringResponse returned(@RequestParam(required = false) boolean setNotForDelivery) {
-        return canceledOrderReasonService.getReturned(setNotForDelivery, true);
+    public StringResponse returned(@RequestParam(required = false) boolean setNotForDelivery,
+                                   @RequestParam boolean onlyImportant) {
+        return canceledOrderReasonService.getReturned(setNotForDelivery, onlyImportant);
     }
 
     @GetMapping("/canceled")
@@ -94,12 +95,12 @@ public class StatisticController {
     }
 
     @PatchMapping
-    public void payAllForOperator(@RequestParam Long userId){
+    public void payAllForOperator(@RequestParam Long userId) {
         statisticService.payAllForOperator(userId);
     }
 
     @GetMapping("/getRedeliveryStatsByNpAccount")
-    public StringResponse getByNpAccount(@RequestParam Long npAccountId, @RequestParam String dateFrom, @RequestParam String dateTo){
+    public StringResponse getByNpAccount(@RequestParam Long npAccountId, @RequestParam String dateFrom, @RequestParam String dateTo) {
         return statisticService.getRedeliverySumByNpAccountId(npAccountId, dateFrom, dateTo);
     }
 
