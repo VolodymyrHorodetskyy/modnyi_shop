@@ -1,12 +1,15 @@
 package shop.chobitok.modnyi.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Card;
 import shop.chobitok.modnyi.entity.Ordered;
+import shop.chobitok.modnyi.entity.Params;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.response.EarningsResponse;
+import shop.chobitok.modnyi.entity.response.SavedParamsForNpAccountStats;
 import shop.chobitok.modnyi.novaposta.entity.DataForList;
 import shop.chobitok.modnyi.repository.CardRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
@@ -21,12 +24,19 @@ public class CardService {
 
     private CardRepository cardRepository;
     private OrderRepository orderRepository;
-    private FinanceService financeService;
+    private ParamsService paramsService;
 
-    public CardService(CardRepository cardRepository, OrderRepository orderRepository, FinanceService financeService) {
+    @Value("${params.actualCardParam}")
+    private String actualCardParamName;
+    @Value("${params.dateFromNpAccountSearch}")
+    private String dateFromParamName;
+    @Value("${params.dateToNpAccountSearch}")
+    private String dateToParamName;
+
+    public CardService(CardRepository cardRepository, OrderRepository orderRepository, ParamsService paramsService) {
         this.cardRepository = cardRepository;
         this.orderRepository = orderRepository;
-        this.financeService = financeService;
+        this.paramsService = paramsService;
     }
 
     public Card getOrSaveAndGetCardByName(String name) {
@@ -39,6 +49,7 @@ public class CardService {
             card.setCardMask(name);
             card = cardRepository.save(card);
         }
+        paramsService.saveOrChangeParam(actualCardParamName, card.getId().toString());
         return card;
     }
 
@@ -74,4 +85,27 @@ public class CardService {
         Double realisticSum = (predictedSum / 100) * 80;
         return new EarningsResponse(sum, predictedSum, realisticSum);
     }
+
+    public EarningsResponse getSumByActualCard() {
+        Params params = paramsService.getParam(actualCardParamName);
+        if (params != null) {
+            return getSumByCardId(Long.parseLong(params.getGetting()));
+        }
+        return null;
+    }
+
+    public Card getActualCard() {
+        Params params = paramsService.getParam(actualCardParamName);
+        if (params != null) {
+            return cardRepository.findById(Long.parseLong(params.getGetting())).orElse(null);
+        }
+        return null;
+    }
+
+    public SavedParamsForNpAccountStats getParamsForNpAccountStat() {
+        return new SavedParamsForNpAccountStats(
+                paramsService.getActualNpAccountId(), paramsService.getParam(dateFromParamName).getGetting(),
+                paramsService.getParam(dateToParamName).getGetting());
+    }
+
 }

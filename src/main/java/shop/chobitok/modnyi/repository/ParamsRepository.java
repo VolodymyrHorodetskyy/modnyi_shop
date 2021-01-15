@@ -7,6 +7,6 @@ import shop.chobitok.modnyi.entity.Params;
 @Repository
 public interface ParamsRepository extends JpaRepository<Params, Long> {
 
-    Params findByKey(String key);
+    Params findByClue(String key);
 
 }

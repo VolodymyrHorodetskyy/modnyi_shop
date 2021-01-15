@@ -1,6 +1,7 @@
 package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.response.AmountsInfoResponse;
@@ -24,6 +25,7 @@ import java.util.*;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
+import static shop.chobitok.modnyi.util.DateHelper.*;
 
 @Service
 public class StatisticService {
@@ -36,8 +38,9 @@ public class StatisticService {
     private AppOrderRepository appOrderRepository;
     private CanceledOrderReasonRepository canceledOrderReasonRepository;
     private PayedOrderedService payedOrderedService;
+    private ParamsService paramsService;
 
-    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, NPOrderMapper npOrderMapper, OrderService orderService, ShoePriceService shoePriceService, AppOrderRepository appOrderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, PayedOrderedService payedOrderedService) {
+    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, NPOrderMapper npOrderMapper, OrderService orderService, ShoePriceService shoePriceService, AppOrderRepository appOrderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, PayedOrderedService payedOrderedService, ParamsService paramsService) {
         this.postaRepository = postaRepository;
         this.orderRepository = orderRepository;
         this.npOrderMapper = npOrderMapper;
@@ -46,6 +49,7 @@ public class StatisticService {
         this.appOrderRepository = appOrderRepository;
         this.canceledOrderReasonRepository = canceledOrderReasonRepository;
         this.payedOrderedService = payedOrderedService;
+        this.paramsService = paramsService;
     }
 
     public StringResponse getIssueOrders() {
@@ -220,8 +224,8 @@ public class StatisticService {
     }
 
     public Map<Shoe, Integer> getSoldShoes(String dateFrom, String dateTo, Status status) {
-        LocalDateTime fromDate = DateHelper.formDateFrom(dateFrom);
-        LocalDateTime toDate = DateHelper.formDateTo(dateTo);
+        LocalDateTime fromDate = formDateFrom(dateFrom);
+        LocalDateTime toDate = formDateTo(dateTo);
         List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate, status, true));
         final Map<Shoe, Integer> shoeIntegerMap = countShoesAmount(orderedList);
         final Map<Shoe, Integer> sortedByAmount = shoeIntegerMap.entrySet()
@@ -234,8 +238,8 @@ public class StatisticService {
     }
 
     public List<StatShoe> getReceivedPercentage(String dateFrom, String dateTo) {
-        LocalDateTime fromDate = DateHelper.formDateFrom(dateFrom);
-        LocalDateTime toDate = DateHelper.formDateTo(dateTo);
+        LocalDateTime fromDate = formDateFrom(dateFrom);
+        LocalDateTime toDate = formDateTo(dateTo);
         List<Ordered> receivedOrderList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate, Status.ОТРИМАНО));
         List<Ordered> deniedOrderList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate, Status.ВІДМОВА));
         final Map<Shoe, Integer> receivedMap = countShoesAmount(receivedOrderList);
@@ -355,9 +359,10 @@ public class StatisticService {
     }
 
     public StringResponse getRedeliverySumByNpAccountId(Long npAccountId, String dateFrom, String dateTo) {
+        paramsService.saveDateFromAndDateToSearchNpAccount(dateFrom, dateTo);
         List<Ordered> orderedList = orderRepository.findAllByStatusInAndDateCreatedGreaterThanAndDateCreatedLessThanAndNpAccountId(
                 Arrays.asList(Status.ОТРИМАНО, Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО, Status.СТВОРЕНО),
-                DateHelper.formDateFrom(dateFrom), DateHelper.formDateTo(dateTo), npAccountId);
+                formDateFrom(dateFrom), formDateTo(dateTo), npAccountId);
         StringBuilder stringBuilder = new StringBuilder();
         Double sumReceived = 0d;
         Double sumPredicted = 0d;

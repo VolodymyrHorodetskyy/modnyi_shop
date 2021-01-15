@@ -1,26 +1,37 @@
 package shop.chobitok.modnyi.entity;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 
 @Entity
 public class Params extends Audit {
 
-    private String key;
-    private String value;
+    @Column
+    private String clue;
+    @Column
+    private String getting;
 
-    public String getKey() {
-        return key;
+    public Params() {
     }
 
-    public void setKey(String key) {
-        this.key = key;
+    public Params(String clue, String getting) {
+        this.clue = clue;
+        this.getting = getting;
     }
 
-    public String getValue() {
-        return value;
+    public String getClue() {
+        return clue;
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    public void setClue(String clue) {
+        this.clue = clue;
+    }
+
+    public String getGetting() {
+        return getting;
+    }
+
+    public void setGetting(String getting) {
+        this.getting = getting;
     }
 }

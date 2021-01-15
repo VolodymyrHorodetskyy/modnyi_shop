@@ -7,4 +7,6 @@ import shop.chobitok.modnyi.entity.NpAccount;
 @Repository
 public interface NpAccountRepository extends JpaRepository<NpAccount, Long> {
 
+
+
 }
