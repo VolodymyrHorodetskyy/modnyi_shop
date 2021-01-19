@@ -1,7 +1,6 @@
 package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.response.AmountsInfoResponse;
@@ -17,7 +16,6 @@ import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.service.entity.StatShoe;
 import shop.chobitok.modnyi.specification.AppOrderSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
-import shop.chobitok.modnyi.util.DateHelper;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -224,8 +222,8 @@ public class StatisticService {
     }
 
     public Map<Shoe, Integer> getSoldShoes(String dateFrom, String dateTo, Status status) {
-        LocalDateTime fromDate = formDateFrom(dateFrom);
-        LocalDateTime toDate = formDateTo(dateTo);
+        LocalDateTime fromDate = formDateFromOrGetDefault(dateFrom);
+        LocalDateTime toDate = formDateToOrGetDefault(dateTo);
         List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate, status, true));
         final Map<Shoe, Integer> shoeIntegerMap = countShoesAmount(orderedList);
         final Map<Shoe, Integer> sortedByAmount = shoeIntegerMap.entrySet()
@@ -238,8 +236,8 @@ public class StatisticService {
     }
 
     public List<StatShoe> getReceivedPercentage(String dateFrom, String dateTo) {
-        LocalDateTime fromDate = formDateFrom(dateFrom);
-        LocalDateTime toDate = formDateTo(dateTo);
+        LocalDateTime fromDate = formDateFromOrGetDefault(dateFrom);
+        LocalDateTime toDate = formDateToOrGetDefault(dateTo);
         List<Ordered> receivedOrderList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate, Status.ОТРИМАНО));
         List<Ordered> deniedOrderList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate, Status.ВІДМОВА));
         final Map<Shoe, Integer> receivedMap = countShoesAmount(receivedOrderList);
@@ -362,7 +360,7 @@ public class StatisticService {
         paramsService.saveDateFromAndDateToSearchNpAccount(dateFrom, dateTo);
         List<Ordered> orderedList = orderRepository.findAllByStatusInAndDateCreatedGreaterThanAndDateCreatedLessThanAndNpAccountId(
                 Arrays.asList(Status.ОТРИМАНО, Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО, Status.СТВОРЕНО),
-                formDateFrom(dateFrom), formDateTo(dateTo), npAccountId);
+                formDateFromOrGetDefault(dateFrom), formDateToOrGetDefault(dateTo), npAccountId);
         StringBuilder stringBuilder = new StringBuilder();
         Double sumReceived = 0d;
         Double sumPredicted = 0d;

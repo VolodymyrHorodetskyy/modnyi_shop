@@ -59,8 +59,8 @@ public class FinanceService {
     }
 
     public EarningsResponse getEarnings(String dateTime1, String dateTime2) {
-        LocalDateTime fromDate = DateHelper.formDateFrom(dateTime1);
-        LocalDateTime toDate = DateHelper.formDateTo(dateTime2);
+        LocalDateTime fromDate = DateHelper.formDateFromOrGetDefault(dateTime1);
+        LocalDateTime toDate = DateHelper.formDateToOrGetDefault(dateTime2);
         List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate));
         return getEarnings(orderedList, fromDate, toDate);
     }

@@ -1,12 +1,22 @@
 package shop.chobitok.modnyi.util;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 public class DateHelper {
 
-    public static LocalDateTime formDate(String date) {
+
+    public static LocalDate formDate(String date) {
+        if (!checkDateStringFromFrontEnd(date)) {
+            return null;
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        return LocalDate.parse(date, formatter);
+    }
+
+    public static LocalDateTime formDateTime(String date) {
         if (!checkDateStringFromFrontEnd(date)) {
             return null;
         }
@@ -14,8 +24,8 @@ public class DateHelper {
         return LocalDateTime.parse(date, formatter);
     }
 
-    public static LocalDateTime formDateFrom(String dateTimeFrom) {
-        LocalDateTime localDateTime = formDate(dateTimeFrom);
+    public static LocalDateTime formDateFromOrGetDefault(String dateTimeFrom) {
+        LocalDateTime localDateTime = formDateTime(dateTimeFrom);
         if (localDateTime == null) {
             localDateTime = LocalDateTime.now().minusDays(7);
         }
@@ -23,8 +33,8 @@ public class DateHelper {
     }
 
 
-    public static LocalDateTime formDateTo(String dateTimeTo) {
-        LocalDateTime localDateTime = formDate(dateTimeTo);
+    public static LocalDateTime formDateToOrGetDefault(String dateTimeTo) {
+        LocalDateTime localDateTime = formDateTime(dateTimeTo);
         if (localDateTime == null) {
             localDateTime = LocalDateTime.now();
         }

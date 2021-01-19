@@ -79,11 +79,11 @@ public class AppOrderService {
     public Map<AppOrderStatus, Set<AppOrder>> getAll(Long id, String phoneAndName, String comment, String fromForNotReady, String fromForReady
             , String userId) {
         List<AppOrder> appOrdersNotReady = appOrderRepository.findAll(
-                new AppOrderSpecification(id, phoneAndName, comment, DateHelper.formDate(fromForNotReady),
+                new AppOrderSpecification(id, phoneAndName, comment, DateHelper.formDateTime(fromForNotReady),
                         Arrays.asList(AppOrderStatus.Новий, AppOrderStatus.Не_Відповідає, AppOrderStatus.Чекаємо_оплату, AppOrderStatus.В_обробці), userId),
                 Sort.by(Sort.Direction.DESC, "createdDate"));
         List<AppOrder> appOrdersReady = appOrderRepository.findAll(
-                new AppOrderSpecification(id, phoneAndName, comment, DateHelper.formDate(fromForReady),
+                new AppOrderSpecification(id, phoneAndName, comment, DateHelper.formDateTime(fromForReady),
                         Arrays.asList(AppOrderStatus.Передплачено, AppOrderStatus.Повна_оплата, AppOrderStatus.Скасовано), userId),
                 Sort.by(Sort.Direction.DESC, "createdDate"));
         List<AppOrder> combinedAppOrders;
