@@ -8,6 +8,8 @@ import shop.chobitok.modnyi.util.FileReader;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class MailService {
@@ -18,17 +20,23 @@ public class MailService {
         this.javaMailSender = javaMailSender;
     }
 
-    public void sendEmail(String subject, String body, String... to) {
+    public void sendEmail(String subject, String body, String to) {
+        sendEmail(subject, body, Arrays.asList(to));
+    }
+
+    public void sendEmail(String subject, String body, List<String> toList) {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         try {
             MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
-            mimeMessageHelper.setTo(to);
             mimeMessageHelper.setText(body, true);
             mimeMessageHelper.setSubject(subject);
+            for (String to : toList) {
+                mimeMessageHelper.setTo(to);
+                javaMailSender.send(mimeMessage);
+            }
         } catch (MessagingException e) {
             e.printStackTrace();
         }
-        javaMailSender.send(mimeMessage);
     }
 
     public void sendStatusNotificationEmail(String to, Status status) {
