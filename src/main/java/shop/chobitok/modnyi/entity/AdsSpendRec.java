@@ -6,33 +6,23 @@ import java.time.LocalDate;
 @Entity
 public class AdsSpendRec extends Audit {
 
-    private LocalDate start;
-    private LocalDate end;
+    private LocalDate spendDate;
     private Double spendSum;
 
     public AdsSpendRec() {
     }
 
-    public AdsSpendRec(LocalDate start, LocalDate end, Double spendSum) {
-        this.start = start;
-        this.end = end;
+    public AdsSpendRec(LocalDate spendDate, Double spendSum) {
+        this.spendDate = spendDate;
         this.spendSum = spendSum;
     }
 
-    public LocalDate getStart() {
-        return start;
+    public LocalDate getSpendDate() {
+        return spendDate;
     }
 
-    public void setStart(LocalDate start) {
-        this.start = start;
-    }
-
-    public LocalDate getEnd() {
-        return end;
-    }
-
-    public void setEnd(LocalDate end) {
-        this.end = end;
+    public void setSpendDate(LocalDate spendDate) {
+        this.spendDate = spendDate;
     }
 
     public Double getSpendSum() {

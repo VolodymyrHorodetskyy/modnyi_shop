@@ -13,6 +13,6 @@ public interface AdsSpendRepository extends JpaRepository<AdsSpendRec, Long> {
 
     List<AdsSpendRec> findAll(Specification specification);
 
-    AdsSpendRec findOneByStartEqualsAndEndEquals(LocalDate start, LocalDate end);
+    AdsSpendRec findBySpendDate(LocalDate date);
 
 }

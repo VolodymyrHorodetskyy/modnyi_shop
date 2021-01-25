@@ -11,9 +11,8 @@ import shop.chobitok.modnyi.specification.AdsSpendsSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
 
 import java.time.LocalDate;
-import java.time.temporal.WeekFields;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 @Service
 public class AdsSpendsService {
@@ -26,18 +25,39 @@ public class AdsSpendsService {
         this.financeService = financeService;
     }
 
-    public AdsSpendRec addOrEditRecord(SaveAdsSpends saveAdsSpends) {
+    public List<AdsSpendRec> addOrEditRecord(SaveAdsSpends saveAdsSpends) {
         LocalDate startLocalDate = DateHelper.formDate(saveAdsSpends.getStart());
         LocalDate endLocalDate = DateHelper.formDate(saveAdsSpends.getEnd());
+        List<AdsSpendRec> adsSpendRecs = new ArrayList<>();
         checkDates(startLocalDate, endLocalDate);
-        AdsSpendRec adsSpendRec = adsSpendRepository.findOneByStartEqualsAndEndEquals(startLocalDate, endLocalDate);
-        if (adsSpendRec != null) {
-            adsSpendRec.setSpendSum(saveAdsSpends.getSpends());
+        if (startLocalDate.isEqual(endLocalDate)) {
+            adsSpendRecs.add(saveAdsSpendsRec(startLocalDate, saveAdsSpends.getSpends()));
         } else {
-            adsSpendRec = new AdsSpendRec(startLocalDate,
-                    endLocalDate,
-                    saveAdsSpends.getSpends());
+            List<LocalDate> localDates = new ArrayList<>();
+            LocalDate temp = startLocalDate;
+            while (true) {
+                localDates.add(temp);
+                temp = temp.plusDays(1);
+                if (temp.isEqual(endLocalDate)) {
+                    localDates.add(temp);
+                    break;
+                }
+            }
+            Double amountPerDay = saveAdsSpends.getSpends() / localDates.size();
+            for (LocalDate date : localDates) {
+                adsSpendRecs.add(saveAdsSpendsRec(date, amountPerDay));
+            }
         }
+        return adsSpendRecs;
+    }
+
+    public AdsSpendRec saveAdsSpendsRec(LocalDate localDate, Double amount) {
+        AdsSpendRec adsSpendRec = adsSpendRepository.findBySpendDate(localDate);
+        if (adsSpendRec == null) {
+            adsSpendRec = new AdsSpendRec();
+            adsSpendRec.setSpendDate(localDate);
+        }
+        adsSpendRec.setSpendSum(amount);
         return adsSpendRepository.save(adsSpendRec);
     }
 
@@ -48,7 +68,7 @@ public class AdsSpendsService {
         if (start.isAfter(end)) {
             throw new ConflictException("Date start cannot be greater than end");
         }
-        Locale locale = Locale.UK;
+/*        Locale locale = Locale.UK;
         int weekOfYearStartDay = start.get(WeekFields.of(locale).weekOfYear());
         int weekOfYearEndDay = start.get(WeekFields.of(locale).weekOfYear());
         if (weekOfYearStartDay != weekOfYearEndDay) {
@@ -59,7 +79,7 @@ public class AdsSpendsService {
         }
         if (end.get(WeekFields.of(locale).dayOfWeek()) != 7) {
             throw new ConflictException("End date is not end of week");
-        }
+        }*/
         return true;
     }
 

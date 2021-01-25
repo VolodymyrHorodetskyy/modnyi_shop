@@ -25,14 +25,9 @@ public class AdsSpendsSpecification implements Specification<AdsSpendRec> {
     public Predicate toPredicate(Root<AdsSpendRec> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicateList = new ArrayList<>();
         if (from != null) {
-            Predicate startFromPredicate = criteriaBuilder.greaterThanOrEqualTo(root.get("start"), from);
-            Predicate startToPredicate = criteriaBuilder.lessThanOrEqualTo(root.get("start"), to);
+            Predicate startFromPredicate = criteriaBuilder.greaterThanOrEqualTo(root.get("spendDate"), from);
+            Predicate startToPredicate = criteriaBuilder.lessThanOrEqualTo(root.get("spendDate"), to);
             predicateList.add(criteriaBuilder.and(startFromPredicate, startToPredicate));
-        }
-        if (to != null) {
-            Predicate endFromPredicate = criteriaBuilder.greaterThanOrEqualTo(root.get("end"), from);
-            Predicate endToPredicate = criteriaBuilder.lessThanOrEqualTo(root.get("end"), to);
-            predicateList.add(criteriaBuilder.and(endFromPredicate, endToPredicate));
         }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }

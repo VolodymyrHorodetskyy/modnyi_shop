@@ -6,6 +6,8 @@ import shop.chobitok.modnyi.entity.request.SaveAdsSpends;
 import shop.chobitok.modnyi.service.AdsSpendsService;
 import shop.chobitok.modnyi.service.entity.FinanceStats;
 
+import java.util.List;
+
 @RestController
 @CrossOrigin
 @RequestMapping("/AdsSpends")
@@ -18,7 +20,7 @@ public class AdsSpendController {
     }
 
     @PostMapping
-    public AdsSpendRec saveAdsSpendRec(@RequestBody SaveAdsSpends saveAdsSpends) {
+    public List<AdsSpendRec> saveAdsSpendRec(@RequestBody SaveAdsSpends saveAdsSpends) {
         return adsSpendsService.addOrEditRecord(saveAdsSpends);
     }
 
