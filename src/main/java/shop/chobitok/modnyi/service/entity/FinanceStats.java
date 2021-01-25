@@ -8,14 +8,16 @@ public class FinanceStats {
     private Double generalEarnings;
     private Double spends;
     private Double cleanEarnings;
+    private Double projectedEarningsMinusSpends;
 
-    public FinanceStats(Double earnings, Double projectedEarnings, int receivedPercentage, Double generalEarnings, Double spends, Double cleanEarnings) {
+    public FinanceStats(Double earnings, Double projectedEarnings, int receivedPercentage, Double generalEarnings, Double spends, Double cleanEarnings, Double projectedEarningsMinusSpends) {
         this.earnings = earnings;
         this.projectedEarnings = projectedEarnings;
         this.receivedPercentage = receivedPercentage;
         this.generalEarnings = generalEarnings;
         this.spends = spends;
         this.cleanEarnings = cleanEarnings;
+        this.projectedEarningsMinusSpends = projectedEarningsMinusSpends;
     }
 
     public FinanceStats() {
@@ -67,5 +69,13 @@ public class FinanceStats {
 
     public void setReceivedPercentage(int receivedPercentage) {
         this.receivedPercentage = receivedPercentage;
+    }
+
+    public Double getProjectedEarningsMinusSpends() {
+        return projectedEarningsMinusSpends;
+    }
+
+    public void setProjectedEarningsMinusSpends(Double projectedEarningsMinusSpends) {
+        this.projectedEarningsMinusSpends = projectedEarningsMinusSpends;
     }
 }

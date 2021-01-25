@@ -96,8 +96,11 @@ public class AdsSpendsService {
         Double sum = earningsResponse.getSum();
         Double predictedSum = earningsResponse.getPredictedSum();
         financeStats.setEarnings(earningsResponse.getSum() + earningsResponse.getPredictedSum() - countSpends(adsSpendRecList));
-        return new FinanceStats(sum, predictedSum, earningsResponse.getReceivedPercentage(), sum + predictedSum, countSpends(adsSpendRecList),
-                sum + predictedSum - countSpends(adsSpendRecList));
+        Double spends = countSpends(adsSpendRecList);
+        Double cleanEarning = sum - spends;
+        Double projectedEarningMinusSpends = sum + predictedSum - spends;
+        return new FinanceStats(sum, predictedSum, earningsResponse.getReceivedPercentage(), sum + predictedSum, spends,
+                cleanEarning, projectedEarningMinusSpends);
     }
 
     private Double countSpends(List<AdsSpendRec> adsSpendRecs) {
