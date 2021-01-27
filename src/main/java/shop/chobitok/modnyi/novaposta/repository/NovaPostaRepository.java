@@ -34,6 +34,9 @@ public class NovaPostaRepository {
     private String cargoReturnURL = "https://api.novaposhta.ua/v2.0/json/save";
     private String checkPossibilityReturnCargoURL = "https://api.novaposhta.ua/v2.0/json/CheckPossibilityCreateReturn";
 
+    private String getMarkingUrlPart1 = "http://testapi.novaposhta.ua/orders/printMarkings/orders[]/";
+    private String getMarkingUrlPart2 = "/type/pdf/apiKey/";
+
     private RestTemplate restTemplate;
     private HttpHeaders httpHeaders;
 
@@ -113,6 +116,14 @@ public class NovaPostaRepository {
         HttpEntity httpEntity = new HttpEntity(returnCargoRequest, httpHeaders);
         ResponseEntity<CargoReturnResponse> responseEntity = restTemplate.postForEntity(cargoReturnURL, httpEntity, CargoReturnResponse.class);
         return responseEntity.getBody().isSuccess();
+    }
+
+    public String getMarking(Ordered ordered) {
+        NpAccount npAccount = propsService.getByOrder(ordered);
+        StringBuilder link = new StringBuilder();
+        link.append(getMarkingUrlPart1).append(ordered.getTtn()).append(getMarkingUrlPart2)
+                .append(npAccount.getToken());
+        return link.toString();
     }
 
     private String formatDate(LocalDateTime date) {

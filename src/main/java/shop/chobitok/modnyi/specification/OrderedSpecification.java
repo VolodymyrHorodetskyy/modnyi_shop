@@ -2,10 +2,7 @@ package shop.chobitok.modnyi.specification;
 
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
-import shop.chobitok.modnyi.entity.Client;
-import shop.chobitok.modnyi.entity.Ordered;
-import shop.chobitok.modnyi.entity.Status;
-import shop.chobitok.modnyi.entity.User;
+import shop.chobitok.modnyi.entity.*;
 
 import javax.persistence.criteria.*;
 import java.time.LocalDateTime;
@@ -15,6 +12,8 @@ import java.util.List;
 public class OrderedSpecification implements Specification<Ordered> {
 
     private String model;
+    private String color;
+    private Integer size;
     private String ttn;
     private String phoneOrName;
     private boolean withoutTTN;
@@ -30,6 +29,9 @@ public class OrderedSpecification implements Specification<Ordered> {
     private LocalDateTime dateCreatedFrom;
     private LocalDateTime dateCreatedTo;
     private Long npAccountId;
+
+    public OrderedSpecification() {
+    }
 
     public OrderedSpecification(List<Status> statuses, LocalDateTime dateCreatedFrom, LocalDateTime dateCreatedTo, Long npAccountId) {
         this.statuses = statuses;
@@ -153,8 +155,157 @@ public class OrderedSpecification implements Specification<Ordered> {
             Predicate predicateNpAccount = criteriaBuilder.equal(root.get("npAccountId"), npAccountId);
             predicateList.add(predicateNpAccount);
         }
-
+        if (!StringUtils.isEmpty(model) || !StringUtils.isEmpty(color)) {
+            Join<Ordered, Shoe> orderedShoeJoin = root.join("orderedShoes");
+            if (!StringUtils.isEmpty(model)) {
+                Predicate modelPredicate = criteriaBuilder.like(orderedShoeJoin.get("model"), "%" + model + "%");
+                predicateList.add(modelPredicate);
+            }
+        }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }
 
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+    public Integer getSize() {
+        return size;
+    }
+
+    public void setSize(Integer size) {
+        this.size = size;
+    }
+
+    public String getTtn() {
+        return ttn;
+    }
+
+    public void setTtn(String ttn) {
+        this.ttn = ttn;
+    }
+
+    public String getPhoneOrName() {
+        return phoneOrName;
+    }
+
+    public void setPhoneOrName(String phoneOrName) {
+        this.phoneOrName = phoneOrName;
+    }
+
+    public boolean isWithoutTTN() {
+        return withoutTTN;
+    }
+
+    public void setWithoutTTN(boolean withoutTTN) {
+        this.withoutTTN = withoutTTN;
+    }
+
+    public LocalDateTime getFrom() {
+        return from;
+    }
+
+    public void setFrom(LocalDateTime from) {
+        this.from = from;
+    }
+
+    public LocalDateTime getTo() {
+        return to;
+    }
+
+    public void setTo(LocalDateTime to) {
+        this.to = to;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public boolean isExcludeDeleted() {
+        return excludeDeleted;
+    }
+
+    public void setExcludeDeleted(boolean excludeDeleted) {
+        this.excludeDeleted = excludeDeleted;
+    }
+
+    public Boolean getNotForDeliveryFile() {
+        return notForDeliveryFile;
+    }
+
+    public void setNotForDeliveryFile(Boolean notForDeliveryFile) {
+        this.notForDeliveryFile = notForDeliveryFile;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getIsNotTtn() {
+        return isNotTtn;
+    }
+
+    public void setIsNotTtn(String isNotTtn) {
+        this.isNotTtn = isNotTtn;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public List<Status> getStatuses() {
+        return statuses;
+    }
+
+    public void setStatuses(List<Status> statuses) {
+        this.statuses = statuses;
+    }
+
+    public LocalDateTime getDateCreatedFrom() {
+        return dateCreatedFrom;
+    }
+
+    public void setDateCreatedFrom(LocalDateTime dateCreatedFrom) {
+        this.dateCreatedFrom = dateCreatedFrom;
+    }
+
+    public LocalDateTime getDateCreatedTo() {
+        return dateCreatedTo;
+    }
+
+    public void setDateCreatedTo(LocalDateTime dateCreatedTo) {
+        this.dateCreatedTo = dateCreatedTo;
+    }
+
+    public Long getNpAccountId() {
+        return npAccountId;
+    }
+
+    public void setNpAccountId(Long npAccountId) {
+        this.npAccountId = npAccountId;
+    }
 }

@@ -3,6 +3,7 @@ package shop.chobitok.modnyi.controller;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.AdsSpendRec;
 import shop.chobitok.modnyi.entity.request.SaveAdsSpends;
+import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.service.AdsSpendsService;
 import shop.chobitok.modnyi.service.entity.FinanceStats;
 
@@ -25,8 +26,13 @@ public class AdsSpendController {
     }
 
     @GetMapping
-    public FinanceStats getFinanceStats(@RequestParam String from, @RequestParam String to){
+    public FinanceStats getFinanceStats(@RequestParam String from, @RequestParam String to) {
         return adsSpendsService.getFinanceStats(from, to);
+    }
+
+    @GetMapping("/getFinanceStatsString")
+    public StringResponse getFinanceStatsStringResponse(@RequestParam String from, @RequestParam String to) {
+        return adsSpendsService.getFinanceStatsStringResponse(from, to);
     }
 
 }

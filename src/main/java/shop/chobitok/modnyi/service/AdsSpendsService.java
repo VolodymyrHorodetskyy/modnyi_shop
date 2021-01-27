@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.AdsSpendRec;
 import shop.chobitok.modnyi.entity.request.SaveAdsSpends;
 import shop.chobitok.modnyi.entity.response.EarningsResponse;
+import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.repository.AdsSpendRepository;
 import shop.chobitok.modnyi.service.entity.FinanceStats;
@@ -101,6 +102,19 @@ public class AdsSpendsService {
         Double projectedEarningMinusSpends = sum + predictedSum - spends;
         return new FinanceStats(sum, predictedSum, earningsResponse.getReceivedPercentage(), sum + predictedSum, spends,
                 cleanEarning, projectedEarningMinusSpends);
+    }
+
+    public StringResponse getFinanceStatsStringResponse(String from, String to) {
+        FinanceStats financeStats = getFinanceStats(from, to);
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("Дохід : ").append(financeStats.getEarnings()).append("\n")
+                .append("Прогнозований дохід : ").append(financeStats.getEarnings()).append("\n")
+                .append("Відсоток отримань : ").append(financeStats.getReceivedPercentage()).append("\n")
+                .append("Чистий + прогноз : ").append(financeStats.getCleanEarnings()).append("\n")
+                .append("Витрати : ").append(financeStats.getSpends()).append("\n")
+                .append("Дохід - витрати ").append(financeStats.getSpends()).append("\n")
+                .append("Дохід + прогноз - витрати : ").append(financeStats.getProjectedEarningsMinusSpends()).append("\n");
+        return new StringResponse(stringBuilder.toString());
     }
 
     private Double countSpends(List<AdsSpendRec> adsSpendRecs) {

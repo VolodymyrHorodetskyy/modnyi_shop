@@ -330,7 +330,9 @@ public class OrderService {
     public StringResponse makeAllPayed() {
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndPayedFalseAndStatusIn(Arrays.asList(Status.ОТРИМАНО));
         for (Ordered ordered : orderedList) {
-            ordered.setPayed(true);
+            if (ordered.getOrderedShoes().size() > 0) {
+                ordered.setPayed(true);
+            }
         }
         payedOrderedService.makeAllCounted();
         orderRepository.saveAll(orderedList);
