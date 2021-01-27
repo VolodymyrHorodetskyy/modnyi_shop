@@ -108,7 +108,7 @@ public class AdsSpendsService {
         FinanceStats financeStats = getFinanceStats(from, to);
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Дохід : ").append(financeStats.getEarnings()).append("\n")
-                .append("Прогнозований дохід : ").append(financeStats.getEarnings()).append("\n")
+                .append("Прогнозований дохід : ").append(financeStats.getProjectedEarnings()).append("\n")
                 .append("Відсоток отримань : ").append(financeStats.getReceivedPercentage()).append("\n")
                 .append("Чистий + прогноз : ").append(financeStats.getCleanEarnings()).append("\n")
                 .append("Витрати : ").append(financeStats.getSpends()).append("\n")

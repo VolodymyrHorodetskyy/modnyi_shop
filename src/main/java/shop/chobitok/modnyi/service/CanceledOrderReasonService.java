@@ -197,7 +197,7 @@ public class CanceledOrderReasonService {
         Set<CanceledOrderReason> toFind = new HashSet<>();
         int countArrived = 0;
         for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
-            if (!showOnlyImportant) {
+            if (!showOnlyImportant && canceledOrderReason.getReason() != CancelReason.БРАК && canceledOrderReason.getReason() != CancelReason.ПОМИЛКА) {
                 result.append(canceledOrderReason.getOrdered().getPostComment()).append("\n").
                         append(canceledOrderReason.getOrdered().getTtn()).append("\n").append(canceledOrderReason.getReturnTtn()).append(" ")
                         .append(canceledOrderReason.getStatus()).append(" ").append(canceledOrderReason.getReason())
@@ -207,7 +207,7 @@ public class CanceledOrderReasonService {
             if (canceledOrderReason.getStatus() == Status.ДОСТАВЛЕНО) {
                 ++countArrived;
             }
-            if (canceledOrderReason.getReason() == CancelReason.БРАК) {
+            if (canceledOrderReason.getReason() == CancelReason.БРАК ||canceledOrderReason.getReason() == CancelReason.ПОМИЛКА) {
                 used.add(canceledOrderReason);
             } else {
                 toFind.add(canceledOrderReason);
