@@ -1,6 +1,7 @@
 package shop.chobitok.modnyi.novaposta.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.novaposta.entity.MarkingResponse;
@@ -25,13 +26,15 @@ public class MarkingService {
 
     public List<MarkingResponse> getMarking(String ttn, String modelAndColor, Integer size) {
         OrderedSpecification orderedSpecification = new OrderedSpecification();
-        String model;
+        String model = null;
         String color = null;
-        if (modelAndColor.indexOf(' ') != -1) {
-            model = modelAndColor.substring(0, modelAndColor.indexOf(' '));
-            color = modelAndColor.substring(modelAndColor.indexOf(' ') + 1);
-        } else {
-            model = modelAndColor;
+        if (!StringUtils.isEmpty(modelAndColor)) {
+            if (modelAndColor.indexOf(' ') != -1) {
+                model = modelAndColor.substring(0, modelAndColor.indexOf(' '));
+                color = modelAndColor.substring(modelAndColor.indexOf(' ') + 1);
+            } else {
+                model = modelAndColor;
+            }
         }
         orderedSpecification.setModel(model);
         orderedSpecification.setColor(color);

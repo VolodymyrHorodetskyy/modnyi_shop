@@ -5,18 +5,18 @@ public class FinanceStats {
     private Double earnings;
     private Double projectedEarnings;
     private int receivedPercentage;
-    private Double generalEarnings;
+    private Double earningsPlusProjected;
     private Double spends;
-    private Double cleanEarnings;
+    private Double earningMinusSpends;
     private Double projectedEarningsMinusSpends;
 
-    public FinanceStats(Double earnings, Double projectedEarnings, int receivedPercentage, Double generalEarnings, Double spends, Double cleanEarnings, Double projectedEarningsMinusSpends) {
+    public FinanceStats(Double earnings, Double projectedEarnings, int receivedPercentage, Double earningsPlusProjected, Double spends, Double earningMinusSpends, Double projectedEarningsMinusSpends) {
         this.earnings = earnings;
         this.projectedEarnings = projectedEarnings;
         this.receivedPercentage = receivedPercentage;
-        this.generalEarnings = generalEarnings;
+        this.earningsPlusProjected = earningsPlusProjected;
         this.spends = spends;
-        this.cleanEarnings = cleanEarnings;
+        this.earningMinusSpends = earningMinusSpends;
         this.projectedEarningsMinusSpends = projectedEarningsMinusSpends;
     }
 
@@ -39,12 +39,12 @@ public class FinanceStats {
         this.projectedEarnings = projectedEarnings;
     }
 
-    public Double getGeneralEarnings() {
-        return generalEarnings;
+    public Double getEarningsPlusProjected() {
+        return earningsPlusProjected;
     }
 
-    public void setGeneralEarnings(Double generalEarnings) {
-        this.generalEarnings = generalEarnings;
+    public void setEarningsPlusProjected(Double earningsPlusProjected) {
+        this.earningsPlusProjected = earningsPlusProjected;
     }
 
     public Double getSpends() {
@@ -55,12 +55,12 @@ public class FinanceStats {
         this.spends = spends;
     }
 
-    public Double getCleanEarnings() {
-        return cleanEarnings;
+    public Double getEarningMinusSpends() {
+        return earningMinusSpends;
     }
 
-    public void setCleanEarnings(Double cleanEarnings) {
-        this.cleanEarnings = cleanEarnings;
+    public void setEarningMinusSpends(Double earningMinusSpends) {
+        this.earningMinusSpends = earningMinusSpends;
     }
 
     public int getReceivedPercentage() {

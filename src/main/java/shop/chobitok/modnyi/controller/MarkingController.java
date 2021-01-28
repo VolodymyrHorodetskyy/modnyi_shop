@@ -18,7 +18,9 @@ public class MarkingController {
     }
 
     @GetMapping
-    public List<MarkingResponse> getMarkings(@RequestParam String ttn, @RequestParam String modelAndColor, @RequestParam Integer size) {
+    public List<MarkingResponse> getMarkings(@RequestParam(required = false) String ttn,
+                                             @RequestParam(required = false) String modelAndColor,
+                                             @RequestParam(required = false) Integer size) {
         return markingService.getMarking(ttn, modelAndColor, size);
     }
 }
