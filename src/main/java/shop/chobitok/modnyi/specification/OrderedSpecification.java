@@ -161,6 +161,14 @@ public class OrderedSpecification implements Specification<Ordered> {
                 Predicate modelPredicate = criteriaBuilder.like(orderedShoeJoin.get("model"), "%" + model + "%");
                 predicateList.add(modelPredicate);
             }
+            if (!StringUtils.isEmpty(color)) {
+                Predicate colorPredicate = criteriaBuilder.like(orderedShoeJoin.get("color"), "%" + color + "%");
+                predicateList.add(colorPredicate);
+            }
+        }
+        if (size != null) {
+            Predicate sizePredicate = criteriaBuilder.equal(root.get("size"), size);
+            predicateList.add(sizePredicate);
         }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }

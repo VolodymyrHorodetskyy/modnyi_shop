@@ -30,8 +30,8 @@ public class MarkingService {
         String color = null;
         if (!StringUtils.isEmpty(modelAndColor)) {
             if (modelAndColor.indexOf(' ') != -1) {
-                model = modelAndColor.substring(0, modelAndColor.indexOf(' '));
-                color = modelAndColor.substring(modelAndColor.indexOf(' ') + 1);
+                model = StringUtils.trimAllWhitespace(modelAndColor.substring(0, modelAndColor.indexOf(' ')));
+                color = StringUtils.trimLeadingWhitespace(modelAndColor.substring(modelAndColor.indexOf(' ') + 1));
             } else {
                 model = modelAndColor;
             }

@@ -111,7 +111,7 @@ public class AdsSpendsService {
                 .append("Відсоток отримань : ").append(financeStats.getReceivedPercentage()).append("\n")
                 .append("Чистий + прогноз : ").append(financeStats.getEarningsPlusProjected()).append("\n")
                 .append("Витрати : ").append(financeStats.getSpends()).append("\n")
-                .append("Дохід - витрати ").append(financeStats.getEarningMinusSpends()).append("\n")
+                .append("Дохід - витрати : ").append(financeStats.getEarningMinusSpends()).append("\n")
                 .append("Дохід + прогноз - витрати : ").append(financeStats.getProjectedEarningsMinusSpends()).append("\n");
         return new StringResponse(stringBuilder.toString());
     }
