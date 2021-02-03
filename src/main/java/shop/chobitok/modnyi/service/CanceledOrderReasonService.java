@@ -21,6 +21,7 @@ import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -112,6 +113,7 @@ public class CanceledOrderReasonService {
         return canceledOrderReasons;
     }
 
+    @Transactional
     public List<CanceledOrderReason> setReturnTtnAndUpdateStatus() {
         List<CanceledOrderReason> canceledOrderReasons = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(LocalDateTime.now().minusMonths(1), true));
         List<CanceledOrderReason> updated = new ArrayList<>();
