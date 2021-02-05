@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import shop.chobitok.modnyi.entity.NpAccount;
@@ -66,7 +67,7 @@ public class NovaPostaRepository {
             try {
                 responseEntity = restTemplate.postForEntity(getTrackingURL, httpEntity, TrackingEntity.class);
                 break;
-            } catch (ResourceAccessException e) {
+            } catch (ResourceAccessException | HttpServerErrorException.GatewayTimeout e) {
                 System.out.println(getTrackingRequest.getMethodProperties().getDocuments().get(0).getDocumentNumber());
             }
         }

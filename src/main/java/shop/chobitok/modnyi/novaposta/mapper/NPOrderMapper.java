@@ -49,6 +49,8 @@ public class NPOrderMapper {
                 Data data = dataList.get(0);
                 ordered.setTtn(data.getNumber());
                 ordered.setAddress(data.getRecipientAddress());
+                ordered.setCity(data.getCityRecipient());
+                ordered.setCityRefNP(data.getRefCityRecipient());
                 ordered.setStatus(ShoeUtil.convertToStatus(data.getStatusCode()));
                 ordered.setStatusNP(data.getStatusCode());
                 ordered.setPostComment(data.getCargoDescriptionString());
@@ -91,6 +93,8 @@ public class NPOrderMapper {
                 ordered.setTtn(filteredData.getIntDocNumber());
                 ordered.setClient(clientService.parseClient(filteredData.getRecipientContactPerson(), filteredData.getRecipientsPhone()));
                 ordered.setAddress(filteredData.getRecipientAddressDescription());
+                ordered.setCity(filteredData.getCityRecipientDescription());
+                ordered.setCityRefNP(filteredData.getCityRecipient());
                 ordered.setStatus(Status.СТВОРЕНО);
                 ordered.setStatusNP(1);
                 ordered.setPostComment(filteredData.getDescription());

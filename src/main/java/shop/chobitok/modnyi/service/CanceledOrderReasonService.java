@@ -139,7 +139,7 @@ public class CanceledOrderReasonService {
             }
         }
         List<CanceledOrderReason> done = canceledOrderReasonRepository.saveAll(updated);
-        getReturned(true, true);
+        getReturned(true, true, false, true);
         return done;
     }
 
@@ -185,7 +185,8 @@ public class CanceledOrderReasonService {
         return canceledOrderReasonRepository.findById(id).orElse(null);
     }
 
-    public StringResponse getReturned(boolean excludeFromDeliveryFile, boolean showOnlyImportant) {
+    public StringResponse getReturned(boolean excludeFromDeliveryFile, boolean showOnlyImportant,
+                                      boolean showClientTtn, boolean showOnlyDelivered) {
         List<Ordered> toSave = new ArrayList<>();
         StringBuilder result = new StringBuilder();
         List<CanceledOrderReason> canceledOrderReasons = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(true, true));
@@ -198,48 +199,56 @@ public class CanceledOrderReasonService {
         Set<CanceledOrderReason> used = new HashSet<>();
         Set<CanceledOrderReason> toFind = new HashSet<>();
         int countArrived = 0;
+        String coincidencesString = getCoincidences(createdList, toFind, used, excludeFromDeliveryFile, toSave);
+
         for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
-            if (!showOnlyImportant && canceledOrderReason.getReason() != CancelReason.БРАК && canceledOrderReason.getReason() != CancelReason.ПОМИЛКА) {
-                result.append(canceledOrderReason.getOrdered().getPostComment()).append("\n").
-                        append(canceledOrderReason.getOrdered().getTtn()).append("\n").append(canceledOrderReason.getReturnTtn()).append(" ")
-                        .append(canceledOrderReason.getStatus()).append(" ").append(canceledOrderReason.getReason())
-                        .append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
-                        .append("\n\n");
+            if (canceledOrderReason.getReason() == CancelReason.БРАК || canceledOrderReason.getReason() == CancelReason.ПОМИЛКА) {
+                used.add(canceledOrderReason);
+            } else {
+                toFind.add(canceledOrderReason);
+                if (!showOnlyImportant && !used.contains(canceledOrderReason)
+                        && showOnlyDelivered ? canceledOrderReason.getStatus() == Status.ДОСТАВЛЕНО : true) {
+                    result.append(canceledOrderReason.getOrdered().getPostComment()).append("\n").
+                            append(showClientTtn ? canceledOrderReason.getOrdered().getTtn() : "").append(showClientTtn ? "\n" : "").append(canceledOrderReason.getReturnTtn()).append(" ")
+                            .append(canceledOrderReason.getStatus()).append(" ").append(canceledOrderReason.getReason())
+                            .append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
+                            .append("\n\n");
+                }
             }
             if (canceledOrderReason.getStatus() == Status.ДОСТАВЛЕНО) {
                 ++countArrived;
             }
-            if (canceledOrderReason.getReason() == CancelReason.БРАК ||canceledOrderReason.getReason() == CancelReason.ПОМИЛКА) {
-                used.add(canceledOrderReason);
-            } else {
-                toFind.add(canceledOrderReason);
-            }
         }
-        result.append("Кількість доставлених: ").append(countArrived).append("\n\n");
 
         result.append(getPayedKeeping(canceledOrderReasons.stream().filter(canceledOrderReason -> canceledOrderReason.getDatePayedKeeping() != null).collect(Collectors.toList())));
+        result.append(getPayAttention(showOnlyImportant, used));
+        result.append(coincidencesString);
 
-        result.append("Звернути увагу\n\n");
-        Set<CanceledOrderReason> used2;
-        if (showOnlyImportant) {
-            used2 = used.stream().filter(canceledOrderReason -> canceledOrderReason.getStatus() == Status.ДОСТАВЛЕНО).collect(Collectors.toSet());
-        } else {
-            used2 = used;
-        }
-        for (CanceledOrderReason canceledOrderReason : used2) {
-            result.append(canceledOrderReason.getOrdered().getTtn()).append("\n")
-                    .append(canceledOrderReason.getReturnTtn()).append(" ").append(canceledOrderReason.getStatus()).append("\n")
-                    .append(canceledOrderReason.getReason()).append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
-                    .append("\n\n");
+        result.append("Кількість доставлених: ").append(countArrived).append("\n\n");
 
+        if (toSave.size() > 0) {
+            orderRepository.saveAll(toSave);
         }
-        result.append("Співпадіння\n\n");
+        String resultString = result.toString();
+        googleDocsService.updateReturningsFile(resultString);
+        return new StringResponse(resultString);
+    }
+
+    private String getCoincidences(List<Ordered> createdList,
+                                   Set<CanceledOrderReason> toFind, Set<CanceledOrderReason> used,
+                                   boolean excludeFromDeliveryFile, List<Ordered> toSave) {
+        StringBuilder result = new StringBuilder();
+        boolean foundFirst = false;
         for (Ordered ordered : createdList) {
             for (CanceledOrderReason canceledOrderReason : toFind) {
                 if (formInside(canceledOrderReason.getOrdered().getPostComment()) == formInside(ordered.getPostComment()) &&
                         compareShoeArrays(canceledOrderReason.getOrdered().getOrderedShoes(), ordered.getOrderedShoes()) &&
                         ordered.getSize().equals(canceledOrderReason.getOrdered().getSize()) &&
                         used.add(canceledOrderReason)) {
+                    if (foundFirst) {
+                        result.append("Співпадіння\n\n");
+                        foundFirst = true;
+                    }
                     result.append(ordered.getTtn() + " " + ordered.getPostComment() + "\n");
                     result.append(canceledOrderReason.getReturnTtn() + " " + canceledOrderReason.getStatus() + " " + canceledOrderReason.getReason() + "\n\n");
                     if (excludeFromDeliveryFile) {
@@ -250,12 +259,7 @@ public class CanceledOrderReasonService {
                 }
             }
         }
-        if (toSave.size() > 0) {
-            orderRepository.saveAll(toSave);
-        }
-        String resultString = result.toString();
-        googleDocsService.updateReturningsFile(resultString);
-        return new StringResponse(resultString);
+        return result.toString();
     }
 
     private String getPayedKeeping(List<CanceledOrderReason> canceledOrderReasons) {
@@ -282,6 +286,27 @@ public class CanceledOrderReasonService {
         } else {
             return "";
         }
+    }
+
+    private String getPayAttention(boolean showOnlyImportant, Set<CanceledOrderReason> used) {
+        StringBuilder result = new StringBuilder();
+        Set<CanceledOrderReason> used2;
+        if (showOnlyImportant) {
+            used2 = used.stream().filter(canceledOrderReason -> canceledOrderReason.getStatus() == Status.ДОСТАВЛЕНО).collect(Collectors.toSet());
+        } else {
+            used2 = used;
+        }
+        if (used.size() > 0) {
+            result.append("Звернути увагу\n\n");
+        }
+        for (CanceledOrderReason canceledOrderReason : used2) {
+            result.append(canceledOrderReason.getOrdered().getTtn()).append("\n")
+                    .append(canceledOrderReason.getReturnTtn()).append(" ").append(canceledOrderReason.getStatus()).append("\n")
+                    .append(canceledOrderReason.getReason()).append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
+                    .append("\n\n");
+
+        }
+        return result.toString();
     }
 
 /*    private String getPayedKeepingOurTtn(List<OurTTN> ourTTNS) {
