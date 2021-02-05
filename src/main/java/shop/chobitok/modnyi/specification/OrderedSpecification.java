@@ -81,6 +81,7 @@ public class OrderedSpecification implements Specification<Ordered> {
         List<Predicate> predicateList = new ArrayList<>();
         Predicate availablePredicate = criteriaBuilder.isTrue(root.get("available"));
         predicateList.add(availablePredicate);
+        criteriaQuery.distinct(true);
 
         if (!StringUtils.isEmpty(ttn)) {
             Predicate ttnPredicate = criteriaBuilder.like(root.get("ttn"), "%" + ttn + "%");
@@ -316,4 +317,5 @@ public class OrderedSpecification implements Specification<Ordered> {
     public void setNpAccountId(Long npAccountId) {
         this.npAccountId = npAccountId;
     }
+
 }

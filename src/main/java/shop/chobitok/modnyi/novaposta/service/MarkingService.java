@@ -2,29 +2,32 @@ package shop.chobitok.modnyi.novaposta.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import shop.chobitok.modnyi.entity.Marking;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Status;
-import shop.chobitok.modnyi.novaposta.entity.MarkingResponse;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
+import shop.chobitok.modnyi.repository.MarkingRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class MarkingService {
 
     private OrderRepository orderRepository;
     private NovaPostaRepository postaRepository;
+    private MarkingRepository markingRepository;
 
-    public MarkingService(OrderRepository orderRepository, NovaPostaRepository postaRepository) {
+    public MarkingService(OrderRepository orderRepository, NovaPostaRepository postaRepository, MarkingRepository markingRepository) {
         this.orderRepository = orderRepository;
         this.postaRepository = postaRepository;
+        this.markingRepository = markingRepository;
     }
 
-    public List<MarkingResponse> getMarking(String ttn, String modelAndColor, Integer size) {
+    public List<Marking> getMarking(String ttn, String modelAndColor, Integer size, Boolean showPrinted) {
         OrderedSpecification orderedSpecification = new OrderedSpecification();
         String model = null;
         String color = null;
@@ -42,11 +45,29 @@ public class MarkingService {
         orderedSpecification.setSize(size);
         orderedSpecification.setStatuses(Arrays.asList(Status.СТВОРЕНО));
         List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
-        List<MarkingResponse> markings = new ArrayList<>();
-        for (Ordered ordered : orderedList) {
-            markings.add(new MarkingResponse(ordered, postaRepository.getMarking(ordered)));
+        List<Marking> markings = getAndSaveMarking(orderedList);
+        if (!showPrinted) {
+            markings = markings.stream().filter(marking -> !marking.isPrinted()).collect(Collectors.toList());
         }
         return markings;
+    }
+
+    private Marking getAndSaveMarking(Ordered ordered) {
+        Marking marking = markingRepository.findByOrderedId(ordered.getId());
+        if (marking == null) {
+            marking = markingRepository.save(new Marking(ordered, postaRepository.getMarking(ordered)));
+        }
+        return marking;
+    }
+
+    private List<Marking> getAndSaveMarking(List<Ordered> orderedList) {
+        return orderedList.stream().map(this::getAndSaveMarking).collect(Collectors.toList());
+    }
+
+    public Marking setPrinted(Long orderedId) {
+        Marking marking = markingRepository.findByOrderedId(orderedId);
+        marking.setPrinted(true);
+        return markingRepository.save(marking);
     }
 
 }
