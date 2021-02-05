@@ -9,11 +9,12 @@ import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.repository.AdsSpendRepository;
 import shop.chobitok.modnyi.service.entity.FinanceStats;
 import shop.chobitok.modnyi.specification.AdsSpendsSpecification;
-import shop.chobitok.modnyi.util.DateHelper;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+
+import static shop.chobitok.modnyi.util.DateHelper.formDate;
 
 @Service
 public class AdsSpendsService {
@@ -27,8 +28,8 @@ public class AdsSpendsService {
     }
 
     public List<AdsSpendRec> addOrEditRecord(SaveAdsSpends saveAdsSpends) {
-        LocalDate startLocalDate = DateHelper.formDate(saveAdsSpends.getStart());
-        LocalDate endLocalDate = DateHelper.formDate(saveAdsSpends.getEnd());
+        LocalDate startLocalDate = formDate(saveAdsSpends.getStart());
+        LocalDate endLocalDate = formDate(saveAdsSpends.getEnd());
         List<AdsSpendRec> adsSpendRecs = new ArrayList<>();
         checkDates(startLocalDate, endLocalDate);
         if (startLocalDate.isEqual(endLocalDate)) {
@@ -69,30 +70,16 @@ public class AdsSpendsService {
         if (start.isAfter(end)) {
             throw new ConflictException("Date start cannot be greater than end");
         }
-/*        Locale locale = Locale.UK;
-        int weekOfYearStartDay = start.get(WeekFields.of(locale).weekOfYear());
-        int weekOfYearEndDay = start.get(WeekFields.of(locale).weekOfYear());
-        if (weekOfYearStartDay != weekOfYearEndDay) {
-            throw new ConflictException("Dates are not in the same week");
-        }
-        if (start.get(WeekFields.of(locale).dayOfWeek()) != 1) {
-            throw new ConflictException("Start date is not first day of week");
-        }
-        if (end.get(WeekFields.of(locale).dayOfWeek()) != 7) {
-            throw new ConflictException("End date is not end of week");
-        }*/
         return true;
     }
 
     private List<AdsSpendRec> getAdsSpendRecs(String from, String to) {
-        LocalDate fromLocalDate = DateHelper.formDate(from);
-        LocalDate toLocalDate = DateHelper.formDate(to);
+        LocalDate fromLocalDate = formDate(from);
+        LocalDate toLocalDate = formDate(to);
         return adsSpendRepository.findAll(new AdsSpendsSpecification(fromLocalDate, toLocalDate));
     }
 
-    public FinanceStats getFinanceStats(String from, String to) {
-        List<AdsSpendRec> adsSpendRecList = getAdsSpendRecs(from, to);
-        EarningsResponse earningsResponse = financeService.getEarnings(from, to);
+    public FinanceStats getFinanceStats(List<AdsSpendRec> adsSpendRecList, EarningsResponse earningsResponse) {
         FinanceStats financeStats = new FinanceStats();
         Double sum = earningsResponse.getSum();
         Double predictedSum = earningsResponse.getPredictedSum();
@@ -104,8 +91,10 @@ public class AdsSpendsService {
     }
 
     public StringResponse getFinanceStatsStringResponse(String from, String to) {
-        FinanceStats financeStats = getFinanceStats(from, to);
+        List<AdsSpendRec> adsSpendRecList = getAdsSpendRecs(from, to);
+        FinanceStats financeStats = getFinanceStats(adsSpendRecList, financeService.getEarnings(from, to));
         StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(findMissedDate(formDate(from), formDate(to), adsSpendRecList));
         stringBuilder.append("Дохід : ").append(financeStats.getEarnings()).append("\n")
                 .append("Прогнозований дохід : ").append(financeStats.getProjectedEarnings()).append("\n")
                 .append("Відсоток отримань : ").append(financeStats.getReceivedPercentage()).append("\n")
@@ -114,6 +103,27 @@ public class AdsSpendsService {
                 .append("Дохід - витрати : ").append(financeStats.getEarningMinusSpends()).append("\n")
                 .append("Дохід + прогноз - витрати : ").append(financeStats.getProjectedEarningsMinusSpends()).append("\n");
         return new StringResponse(stringBuilder.toString());
+    }
+
+    private String findMissedDate(LocalDate from, LocalDate to, List<AdsSpendRec> adsSpendRecs) {
+        StringBuilder result = new StringBuilder();
+        while (true) {
+            boolean found = false;
+            for (AdsSpendRec adsSpendRec : adsSpendRecs) {
+                if (adsSpendRec.getSpendDate().isEqual(from)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                result.append(from).append(", ");
+            }
+            if(from.isEqual(to)){
+                break;
+            }
+            from = from.plusDays(1);
+        }
+        return result.toString();
     }
 
     private Double countSpends(List<AdsSpendRec> adsSpendRecs) {

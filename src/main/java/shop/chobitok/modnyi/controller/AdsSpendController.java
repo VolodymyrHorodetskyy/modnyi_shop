@@ -5,7 +5,6 @@ import shop.chobitok.modnyi.entity.AdsSpendRec;
 import shop.chobitok.modnyi.entity.request.SaveAdsSpends;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.service.AdsSpendsService;
-import shop.chobitok.modnyi.service.entity.FinanceStats;
 
 import java.util.List;
 
@@ -24,11 +23,11 @@ public class AdsSpendController {
     public List<AdsSpendRec> saveAdsSpendRec(@RequestBody SaveAdsSpends saveAdsSpends) {
         return adsSpendsService.addOrEditRecord(saveAdsSpends);
     }
-
+/*
     @GetMapping
     public FinanceStats getFinanceStats(@RequestParam String from, @RequestParam String to) {
         return adsSpendsService.getFinanceStats(from, to);
-    }
+    }*/
 
     @GetMapping("/getFinanceStatsString")
     public StringResponse getFinanceStatsStringResponse(@RequestParam String from, @RequestParam String to) {
