@@ -208,10 +208,10 @@ public class CanceledOrderReasonService {
                 toFind.add(canceledOrderReason);
                 if (!showOnlyImportant && !used.contains(canceledOrderReason)
                         && showOnlyDelivered ? canceledOrderReason.getStatus() == Status.ДОСТАВЛЕНО : true) {
-                    result.append(canceledOrderReason.getOrdered().getPostComment()).append("\n").
-                            append(showClientTtn ? canceledOrderReason.getOrdered().getTtn() : "").append(showClientTtn ? "\n" : "").append(canceledOrderReason.getReturnTtn()).append(" ")
-                            .append(canceledOrderReason.getStatus()).append(" ").append(canceledOrderReason.getReason())
+                    result.append(showClientTtn ? canceledOrderReason.getOrdered().getTtn() : "").append(showClientTtn ? "\n" : "").append(canceledOrderReason.getReturnTtn()).append(" ")
+                            .append(canceledOrderReason.getStatus()).append(" ").append("\n").append(canceledOrderReason.getReason())
                             .append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
+                            .append("\n").append(canceledOrderReason.getOrdered().getPostComment())
                             .append("\n\n");
                 }
             }
@@ -221,7 +221,7 @@ public class CanceledOrderReasonService {
         }
 
         result.append(getPayedKeeping(canceledOrderReasons.stream().filter(canceledOrderReason -> canceledOrderReason.getDatePayedKeeping() != null).collect(Collectors.toList())));
-        result.append(getPayAttention(showOnlyImportant, used));
+        result.append(getPayAttention(showOnlyImportant, showClientTtn, used));
         result.append(coincidencesString);
 
         result.append("Кількість доставлених: ").append(countArrived).append("\n\n");
@@ -288,7 +288,7 @@ public class CanceledOrderReasonService {
         }
     }
 
-    private String getPayAttention(boolean showOnlyImportant, Set<CanceledOrderReason> used) {
+    private String getPayAttention(boolean showOnlyImportant, boolean showClientTtn, Set<CanceledOrderReason> used) {
         StringBuilder result = new StringBuilder();
         Set<CanceledOrderReason> used2;
         if (showOnlyImportant) {
@@ -300,7 +300,7 @@ public class CanceledOrderReasonService {
             result.append("Звернути увагу\n\n");
         }
         for (CanceledOrderReason canceledOrderReason : used2) {
-            result.append(canceledOrderReason.getOrdered().getTtn()).append("\n")
+            result.append(showClientTtn ? canceledOrderReason.getOrdered().getTtn() : "").append(showClientTtn ? "\n" : "")
                     .append(canceledOrderReason.getReturnTtn()).append(" ").append(canceledOrderReason.getStatus()).append("\n")
                     .append(canceledOrderReason.getReason()).append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
                     .append("\n\n");

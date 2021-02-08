@@ -80,7 +80,6 @@ public class AdsSpendsService {
     }
 
     public FinanceStats getFinanceStats(List<AdsSpendRec> adsSpendRecList, EarningsResponse earningsResponse) {
-        FinanceStats financeStats = new FinanceStats();
         Double sum = earningsResponse.getSum();
         Double predictedSum = earningsResponse.getPredictedSum();
         Double spends = countSpends(adsSpendRecList);
@@ -118,10 +117,13 @@ public class AdsSpendsService {
             if (!found) {
                 result.append(from).append(", ");
             }
-            if(from.isEqual(to)){
+            if (from.isEqual(to)) {
                 break;
             }
             from = from.plusDays(1);
+        }
+        if (result.length() > 0) {
+            result.append("\n");
         }
         return result.toString();
     }

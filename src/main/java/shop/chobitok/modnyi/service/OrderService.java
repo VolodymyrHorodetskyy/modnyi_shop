@@ -146,7 +146,6 @@ public class OrderService {
         ordered.setPrePayment(updateOrderRequest.getPrepayment());
         ordered.setPrice(updateOrderRequest.getPrice());
         statusChangeService.createRecord(ordered, ordered.getStatus(), updateOrderRequest.getStatus());
-        ordered.setStatus(updateOrderRequest.getStatus());
         return orderRepository.save(ordered);
     }
 
