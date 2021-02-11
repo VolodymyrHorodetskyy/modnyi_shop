@@ -37,8 +37,9 @@ public class StatisticService {
     private CanceledOrderReasonRepository canceledOrderReasonRepository;
     private PayedOrderedService payedOrderedService;
     private ParamsService paramsService;
+    private OurTtnService ourTtnService;
 
-    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, NPOrderMapper npOrderMapper, OrderService orderService, ShoePriceService shoePriceService, AppOrderRepository appOrderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, PayedOrderedService payedOrderedService, ParamsService paramsService) {
+    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, NPOrderMapper npOrderMapper, OrderService orderService, ShoePriceService shoePriceService, AppOrderRepository appOrderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, PayedOrderedService payedOrderedService, ParamsService paramsService, OurTtnService ourTtnService) {
         this.postaRepository = postaRepository;
         this.orderRepository = orderRepository;
         this.npOrderMapper = npOrderMapper;
@@ -48,6 +49,7 @@ public class StatisticService {
         this.canceledOrderReasonRepository = canceledOrderReasonRepository;
         this.payedOrderedService = payedOrderedService;
         this.paramsService = paramsService;
+        this.ourTtnService = ourTtnService;
     }
 
     public StringResponse getIssueOrders() {
@@ -263,7 +265,8 @@ public class StatisticService {
     public AmountsInfoResponse countAmounts() {
         int newAppOrdersSize = appOrderRepository.findByStatusIn(Arrays.asList(AppOrderStatus.Новий)).size();
         int canceledWithoutReasonSize = canceledOrderReasonRepository.findByReasonIn(Arrays.asList(CancelReason.НЕ_ВИЗНАЧЕНО)).size();
-        return new AmountsInfoResponse(newAppOrdersSize, canceledWithoutReasonSize);
+        int ourTtnsSize = ourTtnService.getTtns(0, 100, false).getNumber();
+        return new AmountsInfoResponse(newAppOrdersSize, canceledWithoutReasonSize, ourTtnsSize);
     }
 
 
