@@ -236,7 +236,7 @@ public class OrderService {
     }
 
     public String updateOrderStatusesNovaPosta() {
-        return updateOrderStatusesNovaPosta(Arrays.asList(Status.СТВОРЕНО, Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО));
+        return updateOrderStatusesNovaPosta(Arrays.asList(Status.СТВОРЕНО, Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО, Status.ЗМІНА_АДРЕСУ));
     }
 
 
@@ -245,7 +245,7 @@ public class OrderService {
         TrackingEntity trackingEntity = postaRepository.getTracking(ordered);
         if (trackingEntity != null && trackingEntity.getData().size() > 0) {
             Data data = trackingEntity.getData().get(0);
-            Status newStatus = convertToStatus(data.getStatusCode());
+            Status newStatus = checkNewStatus(data, ordered, convertToStatus(data.getStatusCode()));
             Status oldStatus = ordered.getStatus();
             if (oldStatus != newStatus) {
                 statusChangeService.createRecord(ordered, oldStatus, newStatus);
@@ -272,6 +272,20 @@ public class OrderService {
             }
         }
         return false;
+    }
+
+    private Status checkNewStatus(Data data, Ordered ordered, Status newStatus) {
+        Status toReturn = newStatus;
+        if (newStatus == Status.ЗМІНА_АДРЕСУ) {
+            TrackingEntity trackingEntity = postaRepository.getTracking(ordered.getNpAccountId(), data.getLastCreatedOnTheBasisNumber());
+            if (trackingEntity.getData().size() > 0) {
+                toReturn = convertToStatus(trackingEntity.getData().get(0).getStatusCode());
+            }
+        }
+        if (newStatus == null) {
+            toReturn = Status.ВИДАЛЕНО;
+        }
+        return toReturn;
     }
 
     public List<Ordered> getCanceled(boolean updateStatuses) {
