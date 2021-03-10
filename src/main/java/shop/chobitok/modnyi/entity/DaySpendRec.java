@@ -4,15 +4,15 @@ import javax.persistence.Entity;
 import java.time.LocalDate;
 
 @Entity
-public class AdsSpendRec extends Audit {
+public class DaySpendRec extends Audit {
 
     private LocalDate spendDate;
     private Double spendSum;
 
-    public AdsSpendRec() {
+    public DaySpendRec() {
     }
 
-    public AdsSpendRec(LocalDate spendDate, Double spendSum) {
+    public DaySpendRec(LocalDate spendDate, Double spendSum) {
         this.spendDate = spendDate;
         this.spendSum = spendSum;
     }

@@ -1,7 +1,7 @@
 package shop.chobitok.modnyi.specification;
 
 import org.springframework.data.jpa.domain.Specification;
-import shop.chobitok.modnyi.entity.AdsSpendRec;
+import shop.chobitok.modnyi.entity.DaySpendRec;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -11,7 +11,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AdsSpendsSpecification implements Specification<AdsSpendRec> {
+public class AdsSpendsSpecification implements Specification<DaySpendRec> {
 
     private LocalDate from;
     private LocalDate to;
@@ -22,7 +22,7 @@ public class AdsSpendsSpecification implements Specification<AdsSpendRec> {
     }
 
     @Override
-    public Predicate toPredicate(Root<AdsSpendRec> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+    public Predicate toPredicate(Root<DaySpendRec> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicateList = new ArrayList<>();
         if (from != null) {
             Predicate startFromPredicate = criteriaBuilder.greaterThanOrEqualTo(root.get("spendDate"), from);

@@ -1,12 +1,15 @@
 package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
-import shop.chobitok.modnyi.entity.AdsSpendRec;
+import shop.chobitok.modnyi.entity.DaySpendRec;
+import shop.chobitok.modnyi.entity.SpendRec;
+import shop.chobitok.modnyi.entity.SpendType;
 import shop.chobitok.modnyi.entity.request.SaveAdsSpends;
 import shop.chobitok.modnyi.entity.response.EarningsResponse;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
-import shop.chobitok.modnyi.repository.AdsSpendRepository;
+import shop.chobitok.modnyi.repository.DaySpendRepository;
+import shop.chobitok.modnyi.repository.SpendRecRepository;
 import shop.chobitok.modnyi.service.entity.FinanceStats;
 import shop.chobitok.modnyi.specification.AdsSpendsSpecification;
 
@@ -17,23 +20,25 @@ import java.util.List;
 import static shop.chobitok.modnyi.util.DateHelper.formDate;
 
 @Service
-public class AdsSpendsService {
+public class SpendsService {
 
-    private AdsSpendRepository adsSpendRepository;
+    private DaySpendRepository daySpendRepository;
     private FinanceService financeService;
+    private SpendRecRepository spendRecRepository;
 
-    public AdsSpendsService(AdsSpendRepository adsSpendRepository, FinanceService financeService) {
-        this.adsSpendRepository = adsSpendRepository;
+    public SpendsService(DaySpendRepository daySpendRepository, FinanceService financeService, SpendRecRepository spendRecRepository) {
+        this.daySpendRepository = daySpendRepository;
         this.financeService = financeService;
+        this.spendRecRepository = spendRecRepository;
     }
 
-    public List<AdsSpendRec> addOrEditRecord(SaveAdsSpends saveAdsSpends) {
+    public List<DaySpendRec> addOrEditRecord(SaveAdsSpends saveAdsSpends) {
         LocalDate startLocalDate = formDate(saveAdsSpends.getStart());
         LocalDate endLocalDate = formDate(saveAdsSpends.getEnd());
-        List<AdsSpendRec> adsSpendRecs = new ArrayList<>();
         checkDates(startLocalDate, endLocalDate);
+        List<DaySpendRec> daySpendRecs = new ArrayList<>();
         if (startLocalDate.isEqual(endLocalDate)) {
-            adsSpendRecs.add(saveAdsSpendsRec(startLocalDate, saveAdsSpends.getSpends()));
+            daySpendRecs.add(saveDaySpendRec(startLocalDate, saveAdsSpends.getSpends()));
         } else {
             List<LocalDate> localDates = new ArrayList<>();
             LocalDate temp = startLocalDate;
@@ -47,20 +52,27 @@ public class AdsSpendsService {
             }
             Double amountPerDay = saveAdsSpends.getSpends() / localDates.size();
             for (LocalDate date : localDates) {
-                adsSpendRecs.add(saveAdsSpendsRec(date, amountPerDay));
+                daySpendRecs.add(saveDaySpendRec(date, amountPerDay));
             }
         }
-        return adsSpendRecs;
+        saveSpendRec(saveAdsSpends, startLocalDate, endLocalDate);
+        return daySpendRecs;
     }
 
-    public AdsSpendRec saveAdsSpendsRec(LocalDate localDate, Double amount) {
-        AdsSpendRec adsSpendRec = adsSpendRepository.findBySpendDate(localDate);
-        if (adsSpendRec == null) {
-            adsSpendRec = new AdsSpendRec();
-            adsSpendRec.setSpendDate(localDate);
+    public DaySpendRec saveDaySpendRec(LocalDate localDate, Double amount) {
+        DaySpendRec daySpendRec = daySpendRepository.findBySpendDate(localDate);
+        if (daySpendRec == null) {
+            daySpendRec = new DaySpendRec();
+            daySpendRec.setSpendDate(localDate);
+            daySpendRec.setSpendSum(amount);
+        } else {
+            daySpendRec.setSpendSum(daySpendRec.getSpendSum() + amount);
         }
-        adsSpendRec.setSpendSum(amount);
-        return adsSpendRepository.save(adsSpendRec);
+        return daySpendRepository.save(daySpendRec);
+    }
+
+    public SpendRec saveSpendRec(SaveAdsSpends saveAdsSpends, LocalDate from, LocalDate to) {
+        return spendRecRepository.save(new SpendRec(from, to, saveAdsSpends));
     }
 
     private boolean checkDates(LocalDate start, LocalDate end) {
@@ -73,16 +85,17 @@ public class AdsSpendsService {
         return true;
     }
 
-    private List<AdsSpendRec> getAdsSpendRecs(String from, String to) {
+    private List<DaySpendRec> getAdsSpendRecs(String from, String to) {
         LocalDate fromLocalDate = formDate(from);
         LocalDate toLocalDate = formDate(to);
-        return adsSpendRepository.findAll(new AdsSpendsSpecification(fromLocalDate, toLocalDate));
+        return daySpendRepository.findAll(new AdsSpendsSpecification(fromLocalDate, toLocalDate));
     }
 
-    public FinanceStats getFinanceStats(List<AdsSpendRec> adsSpendRecList, EarningsResponse earningsResponse) {
+
+    public FinanceStats getFinanceStats(List<DaySpendRec> daySpendRecList, EarningsResponse earningsResponse) {
         Double sum = earningsResponse.getSum();
         Double predictedSum = earningsResponse.getPredictedSum();
-        Double spends = countSpends(adsSpendRecList);
+        Double spends = countSpends(daySpendRecList);
         Double cleanEarning = sum - spends;
         Double projectedEarningMinusSpends = sum + predictedSum - spends;
         return new FinanceStats(sum, predictedSum, earningsResponse.getReceivedPercentage(), sum + predictedSum, spends,
@@ -90,10 +103,10 @@ public class AdsSpendsService {
     }
 
     public StringResponse getFinanceStatsStringResponse(String from, String to) {
-        List<AdsSpendRec> adsSpendRecList = getAdsSpendRecs(from, to);
-        FinanceStats financeStats = getFinanceStats(adsSpendRecList, financeService.getEarnings(from, to));
+        List<DaySpendRec> daySpendRecList = getAdsSpendRecs(from, to);
+        FinanceStats financeStats = getFinanceStats(daySpendRecList, financeService.getEarnings(from, to));
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(findMissedDate(formDate(from), formDate(to), adsSpendRecList));
+        stringBuilder.append(findMissedDate(formDate(from), formDate(to), daySpendRecList));
         stringBuilder.append("Дохід : ").append(financeStats.getEarnings()).append("\n")
                 .append("Прогнозований дохід : ").append(financeStats.getProjectedEarnings()).append("\n")
                 .append("Відсоток отримань : ").append(financeStats.getReceivedPercentage()).append("\n")
@@ -104,12 +117,12 @@ public class AdsSpendsService {
         return new StringResponse(stringBuilder.toString());
     }
 
-    private String findMissedDate(LocalDate from, LocalDate to, List<AdsSpendRec> adsSpendRecs) {
+    private String findMissedDate(LocalDate from, LocalDate to, List<DaySpendRec> daySpendRecs) {
         StringBuilder result = new StringBuilder();
         while (true) {
             boolean found = false;
-            for (AdsSpendRec adsSpendRec : adsSpendRecs) {
-                if (adsSpendRec.getSpendDate().isEqual(from)) {
+            for (DaySpendRec daySpendRec : daySpendRecs) {
+                if (daySpendRec.getSpendDate().isEqual(from)) {
                     found = true;
                     break;
                 }
@@ -128,10 +141,10 @@ public class AdsSpendsService {
         return result.toString();
     }
 
-    private Double countSpends(List<AdsSpendRec> adsSpendRecs) {
+    private Double countSpends(List<DaySpendRec> daySpendRecs) {
         Double amount = 0d;
-        for (AdsSpendRec adsSpendRec : adsSpendRecs) {
-            amount += adsSpendRec.getSpendSum();
+        for (DaySpendRec daySpendRec : daySpendRecs) {
+            amount += daySpendRec.getSpendSum();
         }
         return amount;
     }

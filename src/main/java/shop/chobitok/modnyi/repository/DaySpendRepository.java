@@ -3,16 +3,16 @@ package shop.chobitok.modnyi.repository;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import shop.chobitok.modnyi.entity.AdsSpendRec;
+import shop.chobitok.modnyi.entity.DaySpendRec;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface AdsSpendRepository extends JpaRepository<AdsSpendRec, Long> {
+public interface DaySpendRepository extends JpaRepository<DaySpendRec, Long> {
 
-    List<AdsSpendRec> findAll(Specification specification);
+    List<DaySpendRec> findAll(Specification specification);
 
-    AdsSpendRec findBySpendDate(LocalDate date);
+    DaySpendRec findBySpendDate(LocalDate date);
 
 }

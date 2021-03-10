@@ -37,8 +37,15 @@ public class StringHelper {
 
     public static StringResponse fromSoldShoeResponse(Map<Shoe, Integer> sortedByAmount) {
         StringBuilder builder = new StringBuilder();
+        Integer wholeAmountSoldShoes = 0;
         for (Map.Entry<Shoe, Integer> entry : sortedByAmount.entrySet()) {
-            builder.append(entry.getKey().getModel() + " " + entry.getKey().getColor() + " = " + entry.getValue() + "\n");
+            wholeAmountSoldShoes += entry.getValue();
+        }
+        Double percentageOfOneShoe = 100d / wholeAmountSoldShoes;
+        for (Map.Entry<Shoe, Integer> entry : sortedByAmount.entrySet()) {
+            builder.append(entry.getKey().getModel()).append(" ")
+                    .append(entry.getKey().getColor()).append(" = ")
+                    .append(entry.getValue()).append(", % = ").append(entry.getValue() * percentageOfOneShoe).append("\n");
         }
         return new StringResponse(builder.toString());
     }
