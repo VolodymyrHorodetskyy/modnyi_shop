@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.novaposta.service;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Marking;
@@ -44,7 +45,8 @@ public class MarkingService {
         orderedSpecification.setTtn(ttn);
         orderedSpecification.setSize(size);
         orderedSpecification.setStatuses(Arrays.asList(Status.СТВОРЕНО));
-        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
+        Sort sort = Sort.by("urgent").descending().and(Sort.by("createdDate").ascending());
+        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification, sort);
         List<Marking> markings = getAndSaveMarking(orderedList);
         if (!showPrinted) {
             markings = markings.stream().filter(marking -> !marking.isPrinted()).collect(Collectors.toList());
