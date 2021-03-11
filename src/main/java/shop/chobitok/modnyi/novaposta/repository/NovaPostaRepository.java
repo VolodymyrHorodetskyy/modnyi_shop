@@ -35,7 +35,7 @@ public class NovaPostaRepository {
     private String cargoReturnURL = "https://api.novaposhta.ua/v2.0/json/save";
     private String checkPossibilityReturnCargoURL = "https://api.novaposhta.ua/v2.0/json/CheckPossibilityCreateReturn";
 
-    private String getMarkingUrlPart1 = "http://testapi.novaposhta.ua/orders/printMarkings/orders[]/";
+    private String getMarkingUrlPart1 = "https://my.novaposhta.ua/orders/printMarking100x100/orders[]/";
     private String getMarkingUrlPart2 = "/type/pdf/apiKey/";
 
     private RestTemplate restTemplate;
