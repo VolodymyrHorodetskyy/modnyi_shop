@@ -40,7 +40,7 @@ public class MailService {
     }
 
     public void sendStatusNotificationEmail(String to, Status status) {
-        String htmlTemplate = FileReader.getHtmlTemplate();
+        String htmlTemplate = FileReader.getHtmlTemplate(status);
         htmlTemplate = htmlTemplate.replaceAll("%s", status.toString());
         sendEmail("Статус вашого замовлення 'Модний чобіток'", htmlTemplate, to);
     }
