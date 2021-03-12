@@ -7,11 +7,13 @@ import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.DataForList;
-import shop.chobitok.modnyi.novaposta.entity.ListTrackingEntity;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.ShoeRepository;
-import shop.chobitok.modnyi.service.*;
+import shop.chobitok.modnyi.service.CardService;
+import shop.chobitok.modnyi.service.ClientService;
+import shop.chobitok.modnyi.service.PropsService;
+import shop.chobitok.modnyi.service.ShoePriceService;
 import shop.chobitok.modnyi.specification.ShoeSpecification;
 
 import java.util.ArrayList;
@@ -83,36 +85,32 @@ public class NPOrderMapper {
         return toOrdered(null, trackingEntity, discount);
     }
 
-    public Ordered toOrdered(ListTrackingEntity entity, String ttn, Discount discount) {
-        List<DataForList> list = entity.getData();
+    public Ordered toOrdered(DataForList dataForList, Discount discount) {
         Ordered ordered = null;
-        if (list.size() > 0) {
-            DataForList filteredData = list.stream().filter(dataForList -> dataForList.getIntDocNumber().equals(ttn)).findFirst().orElse(null);
-            if (filteredData != null) {
-                ordered = new Ordered();
-                ordered.setTtn(filteredData.getIntDocNumber());
-                ordered.setClient(clientService.parseClient(filteredData.getRecipientContactPerson(), filteredData.getRecipientsPhone()));
-                ordered.setAddress(filteredData.getRecipientAddressDescription());
-                ordered.setCity(filteredData.getCityRecipientDescription());
-                ordered.setCityRefNP(filteredData.getCityRecipient());
-                ordered.setStatus(Status.СТВОРЕНО);
-                ordered.setStatusNP(1);
-                ordered.setPostComment(filteredData.getDescription());
-                ordered.setReturnSumNP(Double.valueOf(filteredData.getBackwardDeliveryMoney()));
-                ordered.setNameAndSurnameNP(filteredData.getRecipientContactPerson());
-                ordered.setDateCreated(ShoeUtil.toLocalDateTime(filteredData.getDateTime()));
-                ordered.setCard(cardService.getOrSaveAndGetCardByName(filteredData.getRedeliveryPaymentCard()));
-                ordered.setDiscount(discount);
-                //TODO: setLastCreatedOnTheBasisDocumentTypeNP ?
-                if (ordered.getOrderedShoes() == null || ordered.getOrderedShoes().size() == 0) {
-                    setShoeAndSizeFromDescriptionNP(ordered, filteredData.getDescription());
-                }
-                if (ordered.getPrice() == null || ordered.getPrice() == 0d) {
-                    setPriceAndPrepayment(ordered, ordered.getReturnSumNP(), discount);
-                }
-                if (ordered.getNpAccountId() == null) {
-                    ordered.setNpAccountId(propsService.getActual().getId());
-                }
+        if (dataForList != null) {
+            ordered = new Ordered();
+            ordered.setTtn(dataForList.getIntDocNumber());
+            ordered.setClient(clientService.parseClient(dataForList.getRecipientContactPerson(), dataForList.getRecipientsPhone()));
+            ordered.setAddress(dataForList.getRecipientAddressDescription());
+            ordered.setCity(dataForList.getCityRecipientDescription());
+            ordered.setCityRefNP(dataForList.getCityRecipient());
+            ordered.setStatus(Status.СТВОРЕНО);
+            ordered.setStatusNP(1);
+            ordered.setPostComment(dataForList.getDescription());
+            ordered.setReturnSumNP(Double.valueOf(dataForList.getBackwardDeliveryMoney()));
+            ordered.setNameAndSurnameNP(dataForList.getRecipientContactPerson());
+            ordered.setDateCreated(ShoeUtil.toLocalDateTime(dataForList.getDateTime()));
+            ordered.setCard(cardService.getOrSaveAndGetCardByName(dataForList.getRedeliveryPaymentCard()));
+            ordered.setDiscount(discount);
+            //TODO: setLastCreatedOnTheBasisDocumentTypeNP ?
+            if (ordered.getOrderedShoes() == null || ordered.getOrderedShoes().size() == 0) {
+                setShoeAndSizeFromDescriptionNP(ordered, dataForList.getDescription());
+            }
+            if (ordered.getPrice() == null || ordered.getPrice() == 0d) {
+                setPriceAndPrepayment(ordered, ordered.getReturnSumNP(), discount);
+            }
+            if (ordered.getNpAccountId() == null) {
+                ordered.setNpAccountId(propsService.getActual().getId());
             }
         }
         return ordered;

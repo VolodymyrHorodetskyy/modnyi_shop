@@ -13,10 +13,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import shop.chobitok.modnyi.entity.NpAccount;
 import shop.chobitok.modnyi.entity.Ordered;
-import shop.chobitok.modnyi.novaposta.entity.CargoReturnResponse;
-import shop.chobitok.modnyi.novaposta.entity.CheckPossibilityCreateReturnResponse;
-import shop.chobitok.modnyi.novaposta.entity.ListTrackingEntity;
-import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
+import shop.chobitok.modnyi.novaposta.entity.*;
 import shop.chobitok.modnyi.novaposta.request.*;
 import shop.chobitok.modnyi.novaposta.util.NPHelper;
 import shop.chobitok.modnyi.repository.OrderRepository;
@@ -87,8 +84,8 @@ public class NovaPostaRepository {
         return receiveTracking(npHelper.formGetTrackingRequest(npAccountId, ttns));
     }
 
-    public ListTrackingEntity getTrackingEntityList(Ordered ordered, LocalDateTime from, LocalDateTime to) {
-        NpAccount npAccount = propsService.getByOrder(ordered);
+    public ListTrackingEntity getTrackingEntityList(LocalDateTime from, LocalDateTime to) {
+        NpAccount npAccount = propsService.getActual();
         GetDocumentListRequest getDocumentListRequest = new GetDocumentListRequest();
         getDocumentListRequest.setApiKey(npAccount.getToken());
         MethodPropertiesForList methodPropertiesForList = new MethodPropertiesForList();
@@ -100,6 +97,26 @@ public class NovaPostaRepository {
         HttpEntity httpEntity = new HttpEntity(getDocumentListRequest, httpHeaders);
         ResponseEntity<ListTrackingEntity> responseEntity = restTemplate.postForEntity(getListTrackingURL, httpEntity, ListTrackingEntity.class);
         return responseEntity.getBody();
+    }
+
+    public ListTrackingEntity getTrackingEntityList(int daysPeriod) {
+        return getTrackingEntityList(LocalDateTime.now().minusDays(daysPeriod), LocalDateTime.now());
+    }
+
+    public DataForList getDataForListFromListTrackingEntityInFiveDaysPeriod(String ttn, int daysPeriod) {
+        return getDataForList(getTrackingEntityList(daysPeriod), ttn, daysPeriod);
+    }
+
+    public DataForList getDataForList(ListTrackingEntity listTrackingEntity, String ttn, int daysPeriod) {
+        if (listTrackingEntity == null) {
+            listTrackingEntity = getTrackingEntityList(daysPeriod);
+        }
+        DataForList result = null;
+        List<DataForList> list = listTrackingEntity.getData();
+        if (list != null && list.size() > 0) {
+            result = list.stream().filter(dataForList -> dataForList.getIntDocNumber().equals(ttn)).findFirst().orElse(null);
+        }
+        return result;
     }
 
 

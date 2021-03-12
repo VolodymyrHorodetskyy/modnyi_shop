@@ -4,16 +4,13 @@ import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.Discount;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Status;
-import shop.chobitok.modnyi.novaposta.entity.*;
+import shop.chobitok.modnyi.novaposta.entity.CheckPossibilityCreateReturnResponse;
+import shop.chobitok.modnyi.novaposta.entity.Data;
+import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.util.NPHelper;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
-import shop.chobitok.modnyi.repository.OrderRepository;
-import shop.chobitok.modnyi.service.PropsService;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
 
@@ -43,15 +40,13 @@ public class NovaPostaService {
             Data data = trackingEntity.getData().get(0);
             //if status created
             if (data.getStatusCode().equals(3) || ShoeUtil.convertToStatus(data.getStatusCode()) == Status.СТВОРЕНО) {
-                ListTrackingEntity entity = postaRepository.getTrackingEntityList(ordered, LocalDateTime.now().minusDays(5), LocalDateTime.now());
-                List<DataForList> list = entity.getData();
-                if (list.size() > 0) {
-                    Ordered ordered1 = npOrderMapper.toOrdered(entity, ttn, discount);
-                    if (ordered1 != null) {
-                        return ordered1;
-                    } else {
-                        return npOrderMapper.toOrdered(ordered, trackingEntity, discount);
-                    }
+                Ordered ordered1 = npOrderMapper.toOrdered(
+                        postaRepository.getDataForListFromListTrackingEntityInFiveDaysPeriod(ttn, 5),
+                        discount);
+                if (ordered1 != null) {
+                    return ordered1;
+                } else {
+                    return npOrderMapper.toOrdered(ordered, trackingEntity, discount);
                 }
             } else {
                 return npOrderMapper.toOrdered(ordered, trackingEntity, discount);

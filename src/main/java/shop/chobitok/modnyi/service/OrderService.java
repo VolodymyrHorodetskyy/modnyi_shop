@@ -14,6 +14,8 @@ import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.google.docs.service.GoogleDocsService;
 import shop.chobitok.modnyi.novaposta.entity.Data;
+import shop.chobitok.modnyi.novaposta.entity.DataForList;
+import shop.chobitok.modnyi.novaposta.entity.ListTrackingEntity;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
@@ -196,8 +198,9 @@ public class OrderService {
     public String updateOrderStatusesNovaPosta(List<Status> statuses) {
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(statuses);
         StringBuilder result = new StringBuilder();
+        ListTrackingEntity listTrackingEntity = postaRepository.getTrackingEntityList(15);
         for (Ordered ordered : orderedList) {
-            if (updateStatusByNovaPosta(ordered)) {
+            if (updateStatusByNovaPosta(ordered, listTrackingEntity)) {
                 result.append(ordered.getTtn() + " ... статус змінено на " + ordered.getStatus() + "\n");
             }
         }
@@ -214,7 +217,7 @@ public class OrderService {
         for (Ordered ordered : canceledAndDeniedOrders) {
             CanceledOrderReason canceledOrderReason = canceledOrderReasonService.getCanceledOrderReasonByOrderId(ordered.getId());
             if (canceledOrderReason == null || !canceledOrderReason.isManual()) {
-                updateStatusByNovaPosta(ordered);
+                updateStatusByNovaPosta(ordered, null);
             }
         }
     }
@@ -243,13 +246,13 @@ public class OrderService {
 
 
     @Transactional
-    private boolean updateStatusByNovaPosta(Ordered ordered) {
+    private boolean updateStatusByNovaPosta(Ordered ordered, ListTrackingEntity listTrackingEntity) {
         TrackingEntity trackingEntity = postaRepository.getTracking(ordered);
         if (trackingEntity != null && trackingEntity.getData().size() > 0) {
             Data data = trackingEntity.getData().get(0);
-            updateOrderedFields(ordered, data);
             Status newStatus = checkNewStatus(data, ordered, convertToStatus(data.getStatusCode()));
             Status oldStatus = ordered.getStatus();
+            updateOrderedFields(newStatus, ordered, data, listTrackingEntity);
             if (oldStatus != newStatus) {
                 statusChangeService.createRecord(ordered, oldStatus, newStatus);
                 ordered.setStatus(newStatus);
@@ -277,11 +280,20 @@ public class OrderService {
         return false;
     }
 
-    private Ordered updateOrderedFields(Ordered ordered, Data data) {
-        if (ordered.getReturnSumNP() != null && !ordered.getReturnSumNP().equals(data.getRedeliverySum())) {
-            ordered.setReturnSumNP(data.getRedeliverySum());
-            ordered.setCard(cardService.getOrSaveAndGetCardByName(data.getCardMaskedNumber()));
-            ordered = orderRepository.save(ordered);
+    private Ordered updateOrderedFields(Status newStatus, Ordered ordered, Data data, ListTrackingEntity listTrackingEntity) {
+        if (newStatus != Status.СТВОРЕНО) {
+            if (data.getRedeliverySum() != null && !data.getRedeliverySum().equals(ordered.getReturnSumNP())) {
+                ordered.setReturnSumNP(data.getRedeliverySum());
+                ordered.setCard(cardService.getOrSaveAndGetCardByName(data.getCardMaskedNumber()));
+                ordered = orderRepository.save(ordered);
+            }
+        } else {
+            DataForList dataForList = postaRepository.getDataForList(listTrackingEntity, ordered.getTtn(), 14);
+            if (dataForList != null) {
+                ordered.setReturnSumNP(Double.valueOf(dataForList.getBackwardDeliveryMoney()));
+                ordered.setCard(cardService.getOrSaveAndGetCardByName(dataForList.getRedeliveryPaymentCard()));
+                ordered = orderRepository.save(ordered);
+            }
         }
         return ordered;
     }
