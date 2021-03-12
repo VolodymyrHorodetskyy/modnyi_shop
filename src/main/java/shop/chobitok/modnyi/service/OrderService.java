@@ -48,11 +48,12 @@ public class OrderService {
     private GoogleDocsService googleDocsService;
     private DiscountService discountService;
     private PayedOrderedService payedOrderedService;
+    private CardService cardService;
 
     @Value("${spring.datasource.username}")
     private String username;
 
-    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService) {
+    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService) {
         this.orderRepository = orderRepository;
         this.shoeRepository = shoeRepository;
         this.clientService = clientService;
@@ -65,6 +66,7 @@ public class OrderService {
         this.googleDocsService = googleDocsService;
         this.discountService = discountService;
         this.payedOrderedService = payedOrderedService;
+        this.cardService = cardService;
     }
 
     public Ordered findByTTN(String ttn) {
@@ -276,8 +278,9 @@ public class OrderService {
     }
 
     private Ordered updateOrderedFields(Ordered ordered, Data data) {
-        if (!ordered.getReturnSumNP().equals(data.getRedeliverySum())) {
+        if (ordered.getReturnSumNP() != null && !ordered.getReturnSumNP().equals(data.getRedeliverySum())) {
             ordered.setReturnSumNP(data.getRedeliverySum());
+            ordered.setCard(cardService.getOrSaveAndGetCardByName(data.getCardMaskedNumber()));
             ordered = orderRepository.save(ordered);
         }
         return ordered;
