@@ -245,6 +245,7 @@ public class OrderService {
         TrackingEntity trackingEntity = postaRepository.getTracking(ordered);
         if (trackingEntity != null && trackingEntity.getData().size() > 0) {
             Data data = trackingEntity.getData().get(0);
+            updateOrderedFields(ordered, data);
             Status newStatus = checkNewStatus(data, ordered, convertToStatus(data.getStatusCode()));
             Status oldStatus = ordered.getStatus();
             if (oldStatus != newStatus) {
@@ -272,6 +273,14 @@ public class OrderService {
             }
         }
         return false;
+    }
+
+    private Ordered updateOrderedFields(Ordered ordered, Data data) {
+        if (!ordered.getReturnSumNP().equals(data.getRedeliverySum())) {
+            ordered.setReturnSumNP(data.getRedeliverySum());
+            ordered = orderRepository.save(ordered);
+        }
+        return ordered;
     }
 
     private Status checkNewStatus(Data data, Ordered ordered, Status newStatus) {
