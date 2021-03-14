@@ -329,7 +329,7 @@ public class StatisticService {
         List<Ordered> received = statusListMap.get(Status.ОТРИМАНО);
         for (Ordered ordered : received) {
             if (!ordered.isPayedForUser() && ordered.getOrderedShoes() != null && ordered.getOrderedShoes().size() > 0) {
-                notPayed += ordered.getSize();
+                notPayed += ordered.getOrderedShoes().size();
             }
         }
         builder.append("Не оплаченно = " + notPayed);
