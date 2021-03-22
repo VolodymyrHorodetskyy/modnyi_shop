@@ -2,7 +2,6 @@ package shop.chobitok.modnyi.job;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import shop.chobitok.modnyi.entity.MessageType;
 import shop.chobitok.modnyi.service.CanceledOrderReasonService;
 import shop.chobitok.modnyi.service.CheckerService;
 import shop.chobitok.modnyi.service.NotificationService;
@@ -29,7 +28,7 @@ public class CronJob {
     //  @Scheduled(cron = "0/30 * * * * ?")
     @Scheduled(cron = "0 0 4 * * *")
     public void dailyJob() {
-        orderService.updateOrderStatusesNovaPosta();
+        orderService.updateOrdersByNovaPosta();
         checkerService.checkPayedKeepingOrders();
         checkerService.makeAppOrderNewAgain();
         orderService.updateCanceled();
@@ -39,7 +38,7 @@ public class CronJob {
     public void every2Hours() {
         canceledOrderReasonService.checkIfWithoutCancelReasonExistsAndCreateDefaultReason(LocalDateTime.now().minusDays(10));
         canceledOrderReasonService.setReturnTtnAndUpdateStatus();
-        orderService.updateOrderStatusesNovaPosta();
+        orderService.updateOrdersByNovaPosta();
     }
 
 }

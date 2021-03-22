@@ -30,6 +30,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
 import static shop.chobitok.modnyi.util.StringHelper.removeSpaces;
@@ -86,8 +88,12 @@ public class OrderService {
         return getAllOrderedResponse;
     }
 
+    public Ordered getById(Long id) {
+        return orderRepository.findById(id).orElse(null);
+    }
+
     public List<Ordered> getOrdersByStatus(Status status) {
-        updateOrderStatusesNovaPosta();
+        updateOrdersByNovaPosta();
         return orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(status));
     }
 
@@ -195,20 +201,79 @@ public class OrderService {
         return result.toString();
     }
 
-    public String updateOrderStatusesNovaPosta(List<Status> statuses) {
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(statuses);
+    public String updateOrdersByStatusesByNovaPosta(List<Status> statuses) {
+        return updateOrdersByNovaPosta(orderRepository.findAllByAvailableTrueAndStatusIn(statuses));
+    }
+
+    public String updateOrdersByNovaPosta(List<Ordered> orderedList) {
         StringBuilder result = new StringBuilder();
-        ListTrackingEntity listTrackingEntity = postaRepository.getTrackingEntityList(15);
+        ListTrackingEntity listTrackingEntity = null;
+        List<Ordered> orderedsStatusNotCreated = new ArrayList<>();
         for (Ordered ordered : orderedList) {
-            if (updateStatusByNovaPosta(ordered, listTrackingEntity)) {
-                result.append(ordered.getTtn() + " ... статус змінено на " + ordered.getStatus() + "\n");
+            if (ordered.getStatus() == Status.СТВОРЕНО) {
+                if (listTrackingEntity == null) {
+                    listTrackingEntity = postaRepository.getTrackingEntityList(15);
+                }
+                DataForList dataForList = listTrackingEntity.getData().stream().filter(dtf -> dtf.getIntDocNumber().equals(ordered.getTtn())).findFirst().orElse(null);
+                if (dataForList == null) {
+                    result.append(ordered.getTtn()).append(" ... не було обновлено ").append("\n");
+                } else {
+                    updateOrderByDataListTrackingEntity(ordered, dataForList);
+                    result.append(ordered.getTtn()).append(" ... обновлено ").append("\n");
+                }
+            } else {
+                orderedsStatusNotCreated.add(ordered);
             }
         }
+        result.append(updateStatusNotCreatedOrders(orderedsStatusNotCreated));
         updateStatus103();
         String resultString = result.toString();
         updateGoogleDocsDeliveryFile();
         return resultString;
     }
+
+    private String updateStatusNotCreatedOrders(List<Ordered> orderedList) {
+        StringBuilder result = new StringBuilder();
+        List<Data> dataList = getTrackingEntityByOrders(orderedList);
+        for (Ordered ordered : orderedList) {
+            Data data = dataList.stream().filter(data1 -> data1.getNumber().equals(ordered.getTtn())).findFirst().orElse(null);
+            if (data != null) {
+                updateOrderByTrackingEntity(ordered, data);
+                result.append(ordered.getTtn()).append(" ... обновлено ").append("\n");
+            } else {
+                result.append(ordered.getTtn()).append(" ... не було обновлено ").append("\n");
+            }
+        }
+        return result.toString();
+    }
+
+    private List<Data> getTrackingEntityByOrders(List<Ordered> orderedList) {
+        Map<Long, List<String>> npAndTtns = formMapNpAccountIdAndTtns(orderedList);
+        List<Data> data = new ArrayList<>();
+        for (Map.Entry<Long, List<String>> entry : npAndTtns.entrySet()) {
+            data = Stream.concat(data.stream(), postaRepository.getTrackingByTtns(entry.getKey(), entry.getValue()).getData().stream())
+                    .collect(Collectors.toList());
+        }
+        return data;
+    }
+
+    private Map<Long, List<String>> formMapNpAccountIdAndTtns(List<Ordered> orderedList) {
+        Map<Long, List<String>> npAndTtns = new HashMap<>();
+        for (Ordered ordered : orderedList) {
+            Long npAccountId = ordered.getNpAccountId();
+            String ttn = ordered.getTtn();
+            List<String> ttns = npAndTtns.get(npAccountId);
+            if (ttns == null) {
+                ttns = new ArrayList<>();
+                ttns.add(ttn);
+                npAndTtns.put(npAccountId, ttns);
+            } else {
+                ttns.add(ttn);
+            }
+        }
+        return npAndTtns;
+    }
+
 
     public void updateCanceled() {
         List<Ordered> canceledAndDeniedOrders = orderRepository
@@ -217,7 +282,7 @@ public class OrderService {
         for (Ordered ordered : canceledAndDeniedOrders) {
             CanceledOrderReason canceledOrderReason = canceledOrderReasonService.getCanceledOrderReasonByOrderId(ordered.getId());
             if (canceledOrderReason == null || !canceledOrderReason.isManual()) {
-                updateStatusByNovaPosta(ordered, null);
+                updateOrdersByNovaPosta(Arrays.asList(ordered));
             }
         }
     }
@@ -240,81 +305,81 @@ public class OrderService {
         }
     }
 
-    public String updateOrderStatusesNovaPosta() {
-        return updateOrderStatusesNovaPosta(Arrays.asList(Status.СТВОРЕНО, Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО, Status.ЗМІНА_АДРЕСУ));
+    public String updateOrdersByNovaPosta() {
+        return updateOrdersByStatusesByNovaPosta(Arrays.asList(Status.СТВОРЕНО, Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО, Status.ЗМІНА_АДРЕСУ));
     }
 
 
-    @Transactional
-    private boolean updateStatusByNovaPosta(Ordered ordered, ListTrackingEntity listTrackingEntity) {
-        TrackingEntity trackingEntity = postaRepository.getTracking(ordered);
-        if (trackingEntity != null && trackingEntity.getData().size() > 0) {
-            Data data = trackingEntity.getData().get(0);
-            Status newStatus = checkNewStatus(data, ordered, convertToStatus(data.getStatusCode()));
-            Status oldStatus = ordered.getStatus();
-            updateOrderedFields(newStatus, ordered, data, listTrackingEntity);
-            if (oldStatus != newStatus) {
-                statusChangeService.createRecord(ordered, oldStatus, newStatus);
-                ordered.setStatus(newStatus);
-                ordered.setStatusNP(data.getStatusCode());
-                if (oldStatus == Status.СТВОРЕНО) {
-                    ordered.setAddress(data.getRecipientAddress());
-                }
-                orderRepository.save(ordered);
-                if (newStatus == Status.ВІДМОВА) {
-                    canceledOrderReasonService.createDefaultReasonOnCancel(ordered);
-                } else {
-                    if (newStatus == Status.ДОСТАВЛЕНО) {
-                        orderRepository.save(novaPostaService.updateDatePayedKeeping(ordered));
-                    }
-                    Client client = ordered.getClient();
-                    if (client != null) {
-                        if (!StringUtils.isEmpty(client.getMail()) && !username.equals("root") && newStatus != Status.ВИДАЛЕНО) {
-                            mailService.sendStatusNotificationEmail(client.getMail(), newStatus);
-                        }
-                    }
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private Ordered updateOrderedFields(Status newStatus, Ordered ordered, Data data, ListTrackingEntity listTrackingEntity) {
-        if (newStatus != Status.СТВОРЕНО) {
-            if (data.getRedeliverySum() != null && !data.getRedeliverySum().equals(ordered.getReturnSumNP())) {
-                ordered.setReturnSumNP(data.getRedeliverySum());
-                ordered.setCard(cardService.getOrSaveAndGetCardByName(data.getCardMaskedNumber()));
-                ordered = orderRepository.save(ordered);
-            }
-        } else {
-            DataForList dataForList = postaRepository.getDataForList(listTrackingEntity, ordered.getTtn(), 14);
-            if (dataForList != null) {
-                ordered.setReturnSumNP(Double.valueOf(dataForList.getBackwardDeliveryMoney()));
-                ordered.setCard(cardService.getOrSaveAndGetCardByName(dataForList.getRedeliveryPaymentCard()));
-                ordered = orderRepository.save(ordered);
-            }
+    private Ordered updateOrderByTrackingEntity(Ordered ordered, Data data) {
+        if (data != null && ordered != null) {
+            return updateOrderFields(ordered, data.getStatusCode(), data.getRecipientAddress()
+                    , data.getRedeliverySum(), cardService.getOrSaveAndGetCardByName(data.getCardMaskedNumber()));
         }
         return ordered;
     }
 
+    private Ordered updateOrderByDataListTrackingEntity(Ordered ordered, DataForList dataForList) {
+        if (dataForList == null && ordered != null) {
+            return updateOrderFields(ordered, 1, dataForList.getRecipientAddressDescription(),
+                    Double.valueOf(dataForList.getBackwardDeliveryMoney()), cardService.getOrSaveAndGetCardByName(dataForList.getRedeliveryPaymentCard()));
+        }
+        return ordered;
+    }
+
+    @Transactional
+    private Ordered updateOrderFields(Ordered ordered, Integer statusCode, String recipientAddress
+            , Double redeliverySum, Card card) {
+        Status oldStatus = ordered.getStatus();
+        Status newStatus = convertToStatus(statusCode);
+        updateOrderFieldBeforeStatusesCheck(ordered, redeliverySum, card);
+        if (oldStatus != newStatus) {
+            statusChangeService.createRecord(ordered, oldStatus, newStatus);
+            ordered.setStatus(newStatus);
+            ordered.setStatusNP(statusCode);
+            if (oldStatus == Status.СТВОРЕНО) {
+                ordered.setAddress(recipientAddress);
+            }
+            orderRepository.save(ordered);
+            if (newStatus == Status.ВІДМОВА) {
+                canceledOrderReasonService.createDefaultReasonOnCancel(ordered);
+            } else {
+                if (newStatus == Status.ДОСТАВЛЕНО) {
+                    novaPostaService.updateDatePayedKeeping(ordered);
+                }
+                Client client = ordered.getClient();
+                if (client != null) {
+                    if (!StringUtils.isEmpty(client.getMail()) && !username.equals("root") && newStatus != Status.ВИДАЛЕНО) {
+                        mailService.sendStatusNotificationEmail(client.getMail(), newStatus);
+                    }
+                }
+            }
+        }
+        return orderRepository.save(ordered);
+    }
+
+    private Ordered updateOrderFieldBeforeStatusesCheck(Ordered ordered, Double redeliverySum, Card card) {
+        ordered.setReturnSumNP(redeliverySum);
+        ordered.setCard(card);
+        return orderRepository.save(ordered);
+    }
+
     private Status checkNewStatus(Data data, Ordered ordered, Status newStatus) {
-        Status toReturn = newStatus;
+        Status result = newStatus;
         if (newStatus == Status.ЗМІНА_АДРЕСУ) {
             TrackingEntity trackingEntity = postaRepository.getTracking(ordered.getNpAccountId(), data.getLastCreatedOnTheBasisNumber());
             if (trackingEntity.getData().size() > 0) {
-                toReturn = convertToStatus(trackingEntity.getData().get(0).getStatusCode());
+                result = convertToStatus(trackingEntity.getData().get(0).getStatusCode());
             }
         }
         if (newStatus == null) {
-            toReturn = Status.ВИДАЛЕНО;
+            result = Status.ВИДАЛЕНО;
         }
-        return toReturn;
+        return result;
     }
 
     public List<Ordered> getCanceled(boolean updateStatuses) {
         if (updateStatuses) {
-            updateOrderStatusesNovaPosta();
+            updateOrdersByNovaPosta();
         }
         List<Ordered> canceledOrdereds = orderRepository.findBystatusNP(103);
         return canceledOrdereds;
@@ -384,7 +449,7 @@ public class OrderService {
     public StringResponse countNeedDeliveryFromDB(boolean updateStatuses) {
         StringBuilder stringBuilder = new StringBuilder();
         if (updateStatuses) {
-            updateOrderStatusesNovaPosta(Arrays.asList(Status.СТВОРЕНО));
+            updateOrdersByStatusesByNovaPosta(Arrays.asList(Status.СТВОРЕНО));
         }
         List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(Status.СТВОРЕНО, false), Sort.by("dateCreated"));
         stringBuilder.append(countNeedDelivery(orderedList));

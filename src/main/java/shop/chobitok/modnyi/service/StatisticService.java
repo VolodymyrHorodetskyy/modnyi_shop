@@ -130,7 +130,7 @@ public class StatisticService {
         Map<String, NeedToBePayed> companySumMap = new HashMap<>();
         StringBuilder result = new StringBuilder();
         if (updateStatuses) {
-            orderService.updateOrderStatusesNovaPosta();
+            orderService.updateOrdersByNovaPosta();
         }
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndPayedFalseAndStatusIn(Arrays.asList(Status.ОТРИМАНО));
 

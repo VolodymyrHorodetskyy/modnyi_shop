@@ -38,7 +38,7 @@ public class CheckerService {
     public List<Notification> checkPayedKeepingOrders() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         List<Notification> notifications = new ArrayList<>();
-        orderService.updateOrderStatusesNovaPosta();
+        orderService.updateOrdersByNovaPosta();
         List<Ordered> arrivedOrders = orderService.getOrdersByStatus(Status.ДОСТАВЛЕНО);
         for (Ordered ordered : arrivedOrders) {
             LocalDateTime datePayedKeeping = ordered.getDatePayedKeepingNP();

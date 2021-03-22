@@ -37,6 +37,11 @@ public class OrderController {
                                         @RequestParam(required = false) String orderBy, @RequestParam(required = false) String userId) {
         return orderService.getAll(page, size, ttn, phoneOrName, model, withoutTTN, orderBy, userId);
     }
+
+    @GetMapping("/{id}")
+    public Ordered getOrdered(@PathVariable Long id) {
+        return orderService.getById(id);
+    }
 /*
     @PostMapping("/fromNP")
     public Ordered createOrderFromNP(@RequestBody FromNPToOrderRequest fromNPToOrderRequest) {
@@ -70,12 +75,12 @@ public class OrderController {
 
     @PatchMapping("/updateStatuses")
     public String updateStatuses() {
-        return orderService.updateOrderStatusesNovaPosta();
+        return orderService.updateOrdersByNovaPosta();
     }
 
     @PatchMapping("/updateStatusesWithoutResponse")
     public void updateStatusesWithoutResponse() {
-        orderService.updateOrderStatusesNovaPosta();
+        orderService.updateOrdersByNovaPosta();
     }
 
     @GetMapping("/getCanceled")
@@ -97,6 +102,11 @@ public class OrderController {
     public StringResponse makeAllPayed() {
         return orderService.makeAllPayed();
     }
+
+ /*   @PatchMapping("/updateOrderFromNP")
+    public Ordered updateOrdered() {
+        return orderService.updateOrdersByNovaPosta();
+    }*/
 
 
 }

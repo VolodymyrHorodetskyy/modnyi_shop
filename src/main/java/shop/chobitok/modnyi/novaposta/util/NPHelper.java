@@ -35,11 +35,6 @@ public class NPHelper {
         return getTrackingRequest;
     }
 
-
-    public GetTrackingRequest formGetTrackingRequest(Ordered ordered) {
-        return formGetTrackingRequest(propsService.getByOrder(ordered), Arrays.asList(ordered.getTtn()));
-    }
-
     public GetTrackingRequest formGetTrackingRequest(Long npAccountId, String ttn) {
         return formGetTrackingRequest(propsService.getById(npAccountId), Arrays.asList(ttn));
     }
