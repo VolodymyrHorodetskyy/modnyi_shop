@@ -84,32 +84,30 @@ public class NovaPostaRepository {
         return receiveTracking(npHelper.formGetTrackingRequest(npAccountId, ttns));
     }
 
-    public ListTrackingEntity getTrackingEntityList(LocalDateTime from, LocalDateTime to) {
-        NpAccount npAccount = propsService.getActual();
+    public ListTrackingEntity getTrackingEntityList(LocalDateTime from, LocalDateTime to, Long npAccountId) {
+        NpAccount npAccount = propsService.getById(npAccountId);
         GetDocumentListRequest getDocumentListRequest = new GetDocumentListRequest();
         getDocumentListRequest.setApiKey(npAccount.getToken());
         MethodPropertiesForList methodPropertiesForList = new MethodPropertiesForList();
-        String fromString = formatDate(from);
-        String toString = formatDate(to);
-        methodPropertiesForList.setDateTimeFrom(fromString);
-        methodPropertiesForList.setDateTimeTo(toString);
+        methodPropertiesForList.setDateTimeFrom(formatDate(from));
+        methodPropertiesForList.setDateTimeTo(formatDate(to));
         getDocumentListRequest.setMethodProperties(methodPropertiesForList);
         HttpEntity httpEntity = new HttpEntity(getDocumentListRequest, httpHeaders);
         ResponseEntity<ListTrackingEntity> responseEntity = restTemplate.postForEntity(getListTrackingURL, httpEntity, ListTrackingEntity.class);
         return responseEntity.getBody();
     }
 
-    public ListTrackingEntity getTrackingEntityList(int daysPeriod) {
-        return getTrackingEntityList(LocalDateTime.now().minusDays(daysPeriod), LocalDateTime.now());
+    public ListTrackingEntity getTrackingEntityList(int daysPeriod, Long npAccountId) {
+        return getTrackingEntityList(LocalDateTime.now().minusDays(daysPeriod), LocalDateTime.now(), npAccountId);
     }
 
-    public DataForList getDataForListFromListTrackingEntityInFiveDaysPeriod(String ttn, int daysPeriod) {
-        return getDataForList(getTrackingEntityList(daysPeriod), ttn, daysPeriod);
+    public DataForList getDataForListFromListTrackingEntityInFiveDaysPeriod(String ttn, int daysPeriod, Long npAccountId) {
+        return getDataForList(getTrackingEntityList(daysPeriod, npAccountId), ttn, daysPeriod, npAccountId);
     }
 
-    public DataForList getDataForList(ListTrackingEntity listTrackingEntity, String ttn, int daysPeriod) {
+    public DataForList getDataForList(ListTrackingEntity listTrackingEntity, String ttn, int daysPeriod, Long npAccountId) {
         if (listTrackingEntity == null) {
-            listTrackingEntity = getTrackingEntityList(daysPeriod);
+            listTrackingEntity = getTrackingEntityList(daysPeriod, npAccountId);
         }
         DataForList result = null;
         List<DataForList> list = listTrackingEntity.getData();

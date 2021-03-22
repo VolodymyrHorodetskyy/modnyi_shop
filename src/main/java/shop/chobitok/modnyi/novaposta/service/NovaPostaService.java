@@ -41,7 +41,7 @@ public class NovaPostaService {
             //if status created
             if (data.getStatusCode().equals(3) || ShoeUtil.convertToStatus(data.getStatusCode()) == Status.СТВОРЕНО) {
                 Ordered ordered1 = npOrderMapper.toOrdered(
-                        postaRepository.getDataForListFromListTrackingEntityInFiveDaysPeriod(ttn, 5),
+                        postaRepository.getDataForListFromListTrackingEntityInFiveDaysPeriod(ttn, 5, ordered.getNpAccountId()),
                         discount);
                 if (ordered1 != null) {
                     return ordered1;

@@ -207,16 +207,19 @@ public class OrderService {
 
     public String updateOrdersByNovaPosta(List<Ordered> orderedList) {
         StringBuilder result = new StringBuilder();
-        ListTrackingEntity listTrackingEntity = null;
+        Map<Long, List<String>> npAndTtns = formMapNpAccountIdAndTtns(orderedList);
+        List<DataForList> dataForLists = null;
         List<Ordered> orderedsStatusNotCreated = new ArrayList<>();
         for (Ordered ordered : orderedList) {
             if (ordered.getStatus() == Status.СТВОРЕНО) {
-                if (listTrackingEntity == null) {
-                    listTrackingEntity = postaRepository.getTrackingEntityList(15);
+                if (dataForLists == null) {
+                    dataForLists = getDataForList(formMapNpAccountIdAndTtns(
+                            orderedList.stream().filter(ordered1 -> ordered1.getStatus() == Status.СТВОРЕНО).collect(Collectors.toList())));
                 }
-                DataForList dataForList = listTrackingEntity.getData().stream().filter(dtf -> dtf.getIntDocNumber().equals(ordered.getTtn())).findFirst().orElse(null);
+                DataForList dataForList = dataForLists.stream().filter(dtf -> dtf.getIntDocNumber().equals(ordered.getTtn())).findFirst().orElse(null);
                 if (dataForList == null) {
                     result.append(ordered.getTtn()).append(" ... не було обновлено ").append("\n");
+                    orderedsStatusNotCreated.add(ordered);
                 } else {
                     updateOrderByDataListTrackingEntity(ordered, dataForList);
                     result.append(ordered.getTtn()).append(" ... обновлено ").append("\n");
@@ -225,16 +228,16 @@ public class OrderService {
                 orderedsStatusNotCreated.add(ordered);
             }
         }
-        result.append(updateStatusNotCreatedOrders(orderedsStatusNotCreated));
+        result.append(updateStatusNotCreatedOrders(orderedsStatusNotCreated, npAndTtns));
         updateStatus103();
         String resultString = result.toString();
         updateGoogleDocsDeliveryFile();
         return resultString;
     }
 
-    private String updateStatusNotCreatedOrders(List<Ordered> orderedList) {
+    private String updateStatusNotCreatedOrders(List<Ordered> orderedList, Map<Long, List<String>> npAndTtns) {
         StringBuilder result = new StringBuilder();
-        List<Data> dataList = getTrackingEntityByOrders(orderedList);
+        List<Data> dataList = getTrackingEntityByOrders(npAndTtns);
         for (Ordered ordered : orderedList) {
             Data data = dataList.stream().filter(data1 -> data1.getNumber().equals(ordered.getTtn())).findFirst().orElse(null);
             if (data != null) {
@@ -247,8 +250,16 @@ public class OrderService {
         return result.toString();
     }
 
-    private List<Data> getTrackingEntityByOrders(List<Ordered> orderedList) {
-        Map<Long, List<String>> npAndTtns = formMapNpAccountIdAndTtns(orderedList);
+    private List<DataForList> getDataForList(Map<Long, List<String>> npAndTtns) {
+        List<DataForList> dataForList = new ArrayList<>();
+        for (Map.Entry<Long, List<String>> entry : npAndTtns.entrySet()) {
+            dataForList = Stream.concat(dataForList.stream(), postaRepository.getTrackingEntityList(15, entry.getKey()).getData().stream())
+                    .collect(Collectors.toList());
+        }
+        return dataForList;
+    }
+
+    private List<Data> getTrackingEntityByOrders(Map<Long, List<String>> npAndTtns) {
         List<Data> data = new ArrayList<>();
         for (Map.Entry<Long, List<String>> entry : npAndTtns.entrySet()) {
             data = Stream.concat(data.stream(), postaRepository.getTrackingByTtns(entry.getKey(), entry.getValue()).getData().stream())
