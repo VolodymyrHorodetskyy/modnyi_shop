@@ -387,12 +387,12 @@ public class OrderService {
         Integer result = null;
         if (data != null) {
             result = data.getStatusCode();
-            if (convertToStatus(result) == Status.ЗМІНА_АДРЕСУ) {
+            if (Status.ЗМІНА_АДРЕСУ == convertToStatus(result)) {
                 TrackingEntity trackingEntity = postaRepository.getTracking(ordered.getNpAccountId(), data.getLastCreatedOnTheBasisNumber());
                 if (trackingEntity.getData().size() > 0) {
                     Data addressChangedTtnData = trackingEntity.getData().get(0);
                     result = addressChangedTtnData.getStatusCode();
-                    ordered.setAddressChangeTtn(data.getNumber());
+                    ordered.setAddressChangeTtn(addressChangedTtnData.getNumber());
                 }
             }
             if (data.getStatusCode() == null) {
