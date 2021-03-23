@@ -208,31 +208,37 @@ public class OrderService {
     public String updateOrdersByNovaPosta(List<Ordered> orderedList) {
         StringBuilder result = new StringBuilder();
         Map<Long, List<String>> npAndTtns = formMapNpAccountIdAndTtns(orderedList);
-        List<DataForList> dataForLists = null;
-        List<Ordered> orderedsStatusNotCreated = new ArrayList<>();
+        List<Ordered> orderedsStatusCreated = new ArrayList<>();
+        result.append(updateStatusNotCreatedOrders(orderedList, npAndTtns));
         for (Ordered ordered : orderedList) {
             if (ordered.getStatus() == Status.СТВОРЕНО) {
-                if (dataForLists == null) {
-                    dataForLists = getDataForList(formMapNpAccountIdAndTtns(
-                            orderedList.stream().filter(ordered1 -> ordered1.getStatus() == Status.СТВОРЕНО).collect(Collectors.toList())));
-                }
-                DataForList dataForList = dataForLists.stream().filter(dtf -> dtf.getIntDocNumber().equals(ordered.getTtn())).findFirst().orElse(null);
-                if (dataForList == null) {
-                    result.append(ordered.getTtn()).append(" ... не було обновлено ").append("\n");
-                    orderedsStatusNotCreated.add(ordered);
-                } else {
-                    updateOrderByDataListTrackingEntity(ordered, dataForList);
-                    result.append(ordered.getTtn()).append(" ... обновлено ").append("\n");
-                }
-            } else {
-                orderedsStatusNotCreated.add(ordered);
+                orderedsStatusCreated.add(ordered);
             }
         }
-        result.append(updateStatusNotCreatedOrders(orderedsStatusNotCreated, npAndTtns));
+        result.append(updateStatusCreatedOrders(orderedsStatusCreated));
         updateStatus103();
         String resultString = result.toString();
         updateGoogleDocsDeliveryFile();
         return resultString;
+    }
+
+    private String updateStatusCreatedOrders(List<Ordered> orderedsStatusCreated) {
+        List<DataForList> dataForLists = null;
+        StringBuilder result = new StringBuilder();
+        for (Ordered ordered : orderedsStatusCreated) {
+            if (dataForLists == null) {
+                dataForLists = getDataForList(formMapNpAccountIdAndTtns(
+                        orderedsStatusCreated.stream().filter(ordered1 -> ordered1.getStatus() == Status.СТВОРЕНО).collect(Collectors.toList())));
+            }
+            DataForList dataForList = dataForLists.stream().filter(dtf -> dtf.getIntDocNumber().equals(ordered.getTtn())).findFirst().orElse(null);
+            if (dataForList != null) {
+                updateOrderByDataListTrackingEntity(ordered, dataForList);
+                result.append(ordered.getTtn()).append(" ... обновлено ").append("\n");
+            } else {
+                result.append(ordered.getTtn()).append(" ... не було обновлено ").append("\n");
+            }
+        }
+        return result.toString();
     }
 
     private String updateStatusNotCreatedOrders(List<Ordered> orderedList, Map<Long, List<String>> npAndTtns) {
@@ -320,7 +326,7 @@ public class OrderService {
 
 
     private Ordered updateOrderByTrackingEntity(Ordered ordered, Data data) {
-        if (data != null && ordered != null) {
+        if (data != null && ordered != null && data.getStatusCode() != 1) {
             return updateOrderFields(ordered, data.getStatusCode(), data.getRecipientAddress()
                     , data.getRedeliverySum(), cardService.getOrSaveAndGetCardByName(data.getCardMaskedNumber()));
         }
@@ -367,8 +373,12 @@ public class OrderService {
     }
 
     private Ordered updateOrderFieldBeforeStatusesCheck(Ordered ordered, Double redeliverySum, Card card) {
-        ordered.setReturnSumNP(redeliverySum);
-        ordered.setCard(card);
+        if (redeliverySum != null) {
+            ordered.setReturnSumNP(redeliverySum);
+        }
+        if (card != null) {
+            ordered.setCard(card);
+        }
         return orderRepository.save(ordered);
     }
 
