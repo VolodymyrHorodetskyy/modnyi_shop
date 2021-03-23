@@ -327,7 +327,8 @@ public class OrderService {
 
     private Ordered updateOrderByTrackingEntity(Ordered ordered, Data data) {
         if (data != null && ordered != null && data.getStatusCode() != 1) {
-            return updateOrderFields(ordered, data.getStatusCode(), data.getRecipientAddress()
+            return updateOrderFields(ordered, checkNewStatusAndReturnStatusCode(data, ordered),
+                    data.getRecipientAddress()
                     , data.getRedeliverySum(), cardService.getOrSaveAndGetCardByName(data.getCardMaskedNumber()));
         }
         return ordered;
@@ -382,16 +383,21 @@ public class OrderService {
         return orderRepository.save(ordered);
     }
 
-    private Status checkNewStatus(Data data, Ordered ordered, Status newStatus) {
-        Status result = newStatus;
-        if (newStatus == Status.ЗМІНА_АДРЕСУ) {
-            TrackingEntity trackingEntity = postaRepository.getTracking(ordered.getNpAccountId(), data.getLastCreatedOnTheBasisNumber());
-            if (trackingEntity.getData().size() > 0) {
-                result = convertToStatus(trackingEntity.getData().get(0).getStatusCode());
+    private Integer checkNewStatusAndReturnStatusCode(Data data, Ordered ordered) {
+        Integer result = null;
+        if (data != null) {
+            result = data.getStatusCode();
+            if (convertToStatus(result) == Status.ЗМІНА_АДРЕСУ) {
+                TrackingEntity trackingEntity = postaRepository.getTracking(ordered.getNpAccountId(), data.getLastCreatedOnTheBasisNumber());
+                if (trackingEntity.getData().size() > 0) {
+                    Data addressChangedTtnData = trackingEntity.getData().get(0);
+                    result = addressChangedTtnData.getStatusCode();
+                    ordered.setAddressChangeTtn(data.getNumber());
+                }
             }
-        }
-        if (newStatus == null) {
-            result = Status.ВИДАЛЕНО;
+            if (data.getStatusCode() == null) {
+                result = 2;
+            }
         }
         return result;
     }

@@ -112,6 +112,9 @@ public class Ordered extends Audit {
     @Column
     private Boolean urgent;
 
+    @Column
+    private String addressChangeTtn;
+
     public boolean isNotForDeliveryFile() {
         return notForDeliveryFile;
     }
@@ -382,5 +385,13 @@ public class Ordered extends Audit {
 
     public void setCard(Card card) {
         this.card = card;
+    }
+
+    public String getAddressChangeTtn() {
+        return addressChangeTtn;
+    }
+
+    public void setAddressChangeTtn(String addressChangeTtn) {
+        this.addressChangeTtn = addressChangeTtn;
     }
 }
