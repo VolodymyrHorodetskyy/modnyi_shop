@@ -253,8 +253,7 @@ public class OrderService {
     private List<DataForList> getDataForList(Map<Long, List<String>> npAndTtns) {
         List<DataForList> dataForList = new ArrayList<>();
         for (Map.Entry<Long, List<String>> entry : npAndTtns.entrySet()) {
-            dataForList = Stream.concat(dataForList.stream(), postaRepository.getTrackingEntityList(15, entry.getKey()).getData().stream())
-                    .collect(Collectors.toList());
+            dataForList.addAll(postaRepository.getTrackingEntityList(15, entry.getKey()).getData());
         }
         return dataForList;
     }
@@ -262,8 +261,7 @@ public class OrderService {
     private List<Data> getTrackingEntityByOrders(Map<Long, List<String>> npAndTtns) {
         List<Data> data = new ArrayList<>();
         for (Map.Entry<Long, List<String>> entry : npAndTtns.entrySet()) {
-            data = Stream.concat(data.stream(), postaRepository.getTrackingByTtns(entry.getKey(), entry.getValue()).getData().stream())
-                    .collect(Collectors.toList());
+            data.addAll(postaRepository.getTrackingByTtns(entry.getKey(), entry.getValue()));
         }
         return data;
     }

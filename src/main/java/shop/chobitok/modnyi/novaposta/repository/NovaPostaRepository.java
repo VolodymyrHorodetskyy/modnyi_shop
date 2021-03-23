@@ -22,6 +22,7 @@ import shop.chobitok.modnyi.service.PropsService;
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+ import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -80,8 +81,28 @@ public class NovaPostaRepository {
         return receiveTracking(npHelper.formGetTrackingRequest(npAccountId, ttn));
     }
 
-    public TrackingEntity getTrackingByTtns(Long npAccountId, List<String> ttns) {
-        return receiveTracking(npHelper.formGetTrackingRequest(npAccountId, ttns));
+    public List<Data> getTrackingByTtns(Long npAccountId, List<String> ttns) {
+        List<Data> result;
+        if (ttns.size() < 100) {
+            result = receiveTracking(npHelper.formGetTrackingRequest(npAccountId, ttns)).getData();
+        } else {
+            result = new ArrayList<>();
+            List<List<String>> lists = splitArrayToChunks(ttns);
+            for (List<String> strings : lists) {
+                result.addAll(receiveTracking(npHelper.formGetTrackingRequest(npAccountId, strings)).getData());
+            }
+        }
+        return result;
+    }
+
+    private List<List<String>> splitArrayToChunks(List<String> ttns) {
+        List<List<String>> partitions = new ArrayList<>();
+        int partitionSize = 99;
+        for (int i = 0; i < ttns.size(); i += partitionSize) {
+            partitions.add(ttns.subList(i,
+                    Math.min(i + partitionSize, ttns.size())));
+        }
+        return partitions;
     }
 
     public ListTrackingEntity getTrackingEntityList(LocalDateTime from, LocalDateTime to, Long npAccountId) {

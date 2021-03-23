@@ -14,8 +14,8 @@ import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
 @Service
 public class OurTtnMapper {
 
-    public List<OurTTN> toOurTtn(TrackingEntity trackingEntity, Long npAccountId) {
-        return trackingEntity.getData().stream().map(data -> toOurTtn(data, npAccountId)).collect(Collectors.toList());
+    public List<OurTTN> toOurTtn(List<Data> data, Long npAccountId) {
+        return data.stream().map(data1 -> toOurTtn(data1, npAccountId)).collect(Collectors.toList());
     }
 
     private OurTTN toOurTtn(Data data, Long npAccountId) {
