@@ -43,7 +43,7 @@ public class DateHelper {
     }
 
     public static boolean checkDateStringFromFrontEnd(String s) {
-        if (s.contains("null") || s.isBlank()) {
+        if (s == null || s.contains("null") || s.isBlank()) {
             return false;
         }
         return true;
