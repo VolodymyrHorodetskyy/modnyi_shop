@@ -6,6 +6,7 @@ import shop.chobitok.modnyi.entity.AppOrderStatus;
 import shop.chobitok.modnyi.entity.request.ChangeAppOrderRequest;
 import shop.chobitok.modnyi.entity.response.ChangeAppOrderResponse;
 import shop.chobitok.modnyi.service.AppOrderService;
+import shop.chobitok.modnyi.service.CheckerService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,9 +19,11 @@ import java.util.Set;
 public class AppOrderController {
 
     private AppOrderService appOrderService;
+    private CheckerService checkerService;
 
-    public AppOrderController(AppOrderService appOrderService) {
+    public AppOrderController(AppOrderService appOrderService, CheckerService checkerService) {
         this.appOrderService = appOrderService;
+        this.checkerService = checkerService;
     }
 
     @PostMapping("/catchOrder")
@@ -49,6 +52,12 @@ public class AppOrderController {
             }
         }
         return appOrderStatuses;
+    }
+
+    @PatchMapping("makeAppOrdersNewAgain")
+    public void makeAppOrdersNewAgain() {
+        checkerService.makeAppOrderNewAgain();
+
     }
 
 
