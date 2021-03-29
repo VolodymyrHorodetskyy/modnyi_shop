@@ -4,6 +4,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.response.AmountsInfoResponse;
+import shop.chobitok.modnyi.entity.response.GoogleChartObject;
+import shop.chobitok.modnyi.entity.response.StringDoubleObj;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
@@ -223,7 +225,7 @@ public class StatisticService {
         return stringBuilderWithDesc.toString();
     }
 
-    public Map<Shoe, Integer> getSoldShoes(String dateFrom, String dateTo, Status status) {
+    public Map<Shoe, Integer> getOrderedShoesStats(String dateFrom, String dateTo, Status status) {
         LocalDateTime fromDate = formDateFromOrGetDefault(dateFrom);
         LocalDateTime toDate = formDateToOrGetDefault(dateTo);
         List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate, status, true));
@@ -236,6 +238,23 @@ public class StatisticService {
                                 LinkedHashMap::new));
         return sortedByAmount;
     }
+
+    public GoogleChartObject getShoeOrderChart(String dateFrom, String dateTo, Status status) {
+        return convertToGoogleChartObject(getOrderedShoesStats(dateFrom, dateTo, status));
+    }
+
+
+    private GoogleChartObject convertToGoogleChartObject(Map<Shoe, Integer> shoeIntegerMap) {
+        List<StringDoubleObj> stringDoubleList = new ArrayList<>();
+        for (Map.Entry<Shoe, Integer> entry : shoeIntegerMap.entrySet()) {
+            StringDoubleObj stringDoubleObj = new StringDoubleObj();
+            stringDoubleObj.setString((entry.getKey().getModel() + " " + entry.getKey().getColor()));
+            stringDoubleObj.setaDouble(entry.getValue().doubleValue());
+            stringDoubleList.add(stringDoubleObj);
+        }
+        return new GoogleChartObject(stringDoubleList);
+    }
+
 
     public List<StatShoe> getReceivedPercentage(String dateFrom, String dateTo) {
         LocalDateTime fromDate = formDateFromOrGetDefault(dateFrom);

@@ -3,6 +3,7 @@ package shop.chobitok.modnyi.controller;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.response.AmountsInfoResponse;
+import shop.chobitok.modnyi.entity.response.GoogleChartObject;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.service.CanceledOrderReasonService;
 import shop.chobitok.modnyi.service.OrderService;
@@ -71,7 +72,13 @@ public class StatisticController {
     @GetMapping("/getSoldShoeRating")
     public StringResponse getSoldShoeRating(@RequestParam(required = false) String from, @RequestParam(required = false) String to,
                                             @RequestParam(required = false) Status status) {
-        return StringHelper.fromSoldShoeResponse(statisticService.getSoldShoes(from, to, status));
+        return StringHelper.fromSoldShoeResponse(statisticService.getOrderedShoesStats(from, to, status));
+    }
+
+    @GetMapping("/getStatisticGoogleChart")
+    public GoogleChartObject getGoogleChartObject(@RequestParam(required = false) String from, @RequestParam(required = false) String to,
+                                                   @RequestParam(required = false) Status status) {
+        return statisticService.getShoeOrderChart(from, to, status);
     }
 
     @GetMapping("/getReceivedShoePercentage")
