@@ -22,6 +22,9 @@ public class SpendRec extends Audit {
         this.comment = saveAdsSpends.getDescription();
     }
 
+    public SpendRec() {
+    }
+
     public LocalDate getStart() {
         return start;
     }
