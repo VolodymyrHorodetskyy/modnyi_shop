@@ -3,7 +3,6 @@ package shop.chobitok.modnyi.service;
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.DaySpendRec;
 import shop.chobitok.modnyi.entity.SpendRec;
-import shop.chobitok.modnyi.entity.SpendType;
 import shop.chobitok.modnyi.entity.request.SaveAdsSpends;
 import shop.chobitok.modnyi.entity.response.EarningsResponse;
 import shop.chobitok.modnyi.entity.response.StringResponse;
@@ -13,8 +12,10 @@ import shop.chobitok.modnyi.repository.SpendRecRepository;
 import shop.chobitok.modnyi.service.entity.FinanceStats;
 import shop.chobitok.modnyi.specification.AdsSpendsSpecification;
 
+import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static shop.chobitok.modnyi.util.DateHelper.formDate;
@@ -32,13 +33,15 @@ public class SpendsService {
         this.spendRecRepository = spendRecRepository;
     }
 
+    @Transactional
     public List<DaySpendRec> addOrEditRecord(SaveAdsSpends saveAdsSpends) {
         LocalDate startLocalDate = formDate(saveAdsSpends.getStart());
         LocalDate endLocalDate = formDate(saveAdsSpends.getEnd());
         checkDates(startLocalDate, endLocalDate);
+        SpendRec spendRec = saveSpendRec(saveAdsSpends, startLocalDate, endLocalDate);
         List<DaySpendRec> daySpendRecs = new ArrayList<>();
         if (startLocalDate.isEqual(endLocalDate)) {
-            daySpendRecs.add(saveDaySpendRec(startLocalDate, saveAdsSpends.getSpends()));
+            daySpendRecs.add(saveDaySpendRec(startLocalDate, saveAdsSpends.getSpends(), spendRec));
         } else {
             List<LocalDate> localDates = new ArrayList<>();
             LocalDate temp = startLocalDate;
@@ -52,21 +55,22 @@ public class SpendsService {
             }
             Double amountPerDay = saveAdsSpends.getSpends() / localDates.size();
             for (LocalDate date : localDates) {
-                daySpendRecs.add(saveDaySpendRec(date, amountPerDay));
+                daySpendRecs.add(saveDaySpendRec(date, amountPerDay, spendRec));
             }
         }
-        saveSpendRec(saveAdsSpends, startLocalDate, endLocalDate);
         return daySpendRecs;
     }
 
-    public DaySpendRec saveDaySpendRec(LocalDate localDate, Double amount) {
+    public DaySpendRec saveDaySpendRec(LocalDate localDate, Double amount, SpendRec spendRec) {
         DaySpendRec daySpendRec = daySpendRepository.findBySpendDate(localDate);
         if (daySpendRec == null) {
             daySpendRec = new DaySpendRec();
+            daySpendRec.setSpendRecords(Arrays.asList(spendRec));
             daySpendRec.setSpendDate(localDate);
             daySpendRec.setSpendSum(amount);
         } else {
             daySpendRec.setSpendSum(daySpendRec.getSpendSum() + amount);
+            daySpendRec.getSpendRecords().add(spendRec);
         }
         return daySpendRepository.save(daySpendRec);
     }
