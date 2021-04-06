@@ -133,7 +133,7 @@ public class NPOrderMapper {
                     return null;
                 }
                 pattern = pattern.replace("\\\\", "\\");
-                if (string.toLowerCase().matches(pattern)) {
+                if (string != null && string.toLowerCase().matches(pattern)) {
                     matched.add(shoe);
                     break;
                 }
@@ -149,9 +149,11 @@ public class NPOrderMapper {
 
     private void setShoeAndSizeFromDescriptionNP(Ordered ordered, String string) {
         Integer size = null;
-        for (Integer size1 : sizes) {
-            if (string.contains(size1.toString())) {
-                size = size1;
+        if (string != null) {
+            for (Integer size1 : sizes) {
+                if (string.contains(size1.toString())) {
+                    size = size1;
+                }
             }
         }
         List<Shoe> shoeList = new ArrayList<>();

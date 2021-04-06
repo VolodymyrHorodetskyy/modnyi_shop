@@ -293,34 +293,36 @@ public class StatisticService {
         AppOrder appOrderFromDb = appOrderRepository.findById(id).orElse(null);
         if (appOrderFromDb != null) {
             StringBuilder result = new StringBuilder();
-            String phone = appOrderFromDb.getPhone().substring(appOrderFromDb.getPhone().indexOf("0"));
-            List<Ordered> orderedFromDB = orderRepository.findAll(new OrderedSpecification(phone, appOrderFromDb.getTtn()));
-            List<AppOrder> appOrders = appOrderRepository.findAll(new AppOrderSpecification(phone, appOrderFromDb.getId()));
-            if (orderedFromDB.size() > 0 || appOrders.size() > 0) {
-                Map<Client, List<Ordered>> clientOrderedMap = new HashMap<>();
-                for (Ordered ordered : orderedFromDB) {
-                    List<Ordered> orderedList1 = clientOrderedMap.get(ordered.getClient());
-                    if (orderedList1 == null) {
-                        orderedList1 = new ArrayList<>();
-                        orderedList1.add(ordered);
-                        clientOrderedMap.put(ordered.getClient(), orderedList1);
-                    } else {
-                        orderedList1.add(ordered);
+            if (appOrderFromDb.getPhone().contains("0")) {
+                String phone = appOrderFromDb.getPhone().substring(appOrderFromDb.getPhone().indexOf("0"));
+                List<Ordered> orderedFromDB = orderRepository.findAll(new OrderedSpecification(phone, appOrderFromDb.getTtn()));
+                List<AppOrder> appOrders = appOrderRepository.findAll(new AppOrderSpecification(phone, appOrderFromDb.getId()));
+                if (orderedFromDB.size() > 0 || appOrders.size() > 0) {
+                    Map<Client, List<Ordered>> clientOrderedMap = new HashMap<>();
+                    for (Ordered ordered : orderedFromDB) {
+                        List<Ordered> orderedList1 = clientOrderedMap.get(ordered.getClient());
+                        if (orderedList1 == null) {
+                            orderedList1 = new ArrayList<>();
+                            orderedList1.add(ordered);
+                            clientOrderedMap.put(ordered.getClient(), orderedList1);
+                        } else {
+                            orderedList1.add(ordered);
+                        }
                     }
-                }
-                result.append("Замовлення \n\n");
-                for (Map.Entry<Client, List<Ordered>> entry : clientOrderedMap.entrySet()) {
-                    Client client = entry.getKey();
-                    result.append(client.getName() + " " + client.getLastName() + " " + client.getPhone() + "\n");
-                    for (Ordered ordered : entry.getValue()) {
-                        result.append(ordered.getTtn() + "\n");
+                    result.append("Замовлення \n\n");
+                    for (Map.Entry<Client, List<Ordered>> entry : clientOrderedMap.entrySet()) {
+                        Client client = entry.getKey();
+                        result.append(client.getName() + " " + client.getLastName() + " " + client.getPhone() + "\n");
+                        for (Ordered ordered : entry.getValue()) {
+                            result.append(ordered.getTtn() + "\n");
+                        }
                     }
+                    result.append("\n Заявки\n");
+                    for (AppOrder appOrder : appOrders) {
+                        result.append(appOrder.getId() + ", ");
+                    }
+                    return new StringResponse(result.toString());
                 }
-                result.append("\n Заявки\n");
-                for (AppOrder appOrder : appOrders) {
-                    result.append(appOrder.getId() + ", ");
-                }
-                return new StringResponse(result.toString());
             }
         }
         return new StringResponse();
