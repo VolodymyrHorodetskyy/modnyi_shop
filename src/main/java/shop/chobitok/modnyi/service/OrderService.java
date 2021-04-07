@@ -77,14 +77,27 @@ public class OrderService {
         return orderRepository.findOneByAvailableTrueAndTtn(ttn);
     }
 
+    public GetAllOrderedResponse getAll(String TTN, String phoneOrName, String model, boolean withoutTTN, String orderBy,
+                                        String userId) {
+        return getAll(null, TTN, phoneOrName, model, withoutTTN, orderBy, userId);
+    }
+
     public GetAllOrderedResponse getAll(int page, int size, String TTN, String phoneOrName, String model, boolean withoutTTN, String orderBy,
                                         String userId) {
-        PageRequest pageRequest = PageRequest.of(page, size, createSort(orderBy));
+        return getAll(PageRequest.of(page, size, createSort(orderBy)), TTN, phoneOrName, model, withoutTTN, orderBy, userId);
+    }
+
+    public GetAllOrderedResponse getAll(PageRequest pageRequest, String TTN, String phoneOrName, String model, boolean withoutTTN, String orderBy,
+                                        String userId) {
         GetAllOrderedResponse getAllOrderedResponse = new GetAllOrderedResponse();
-        Page orderedPage = orderRepository.findAll(new OrderedSpecification(model, removeSpaces(TTN), phoneOrName, withoutTTN, userId), pageRequest);
-        getAllOrderedResponse.setOrderedList(orderedPage.getContent());
-        PaginationInfo paginationInfo = new PaginationInfo(orderedPage.getPageable().getPageNumber(), orderedPage.getPageable().getPageSize(), orderedPage.getTotalPages(), orderedPage.getTotalElements());
-        getAllOrderedResponse.setPaginationInfo(paginationInfo);
+        if (pageRequest != null) {
+            Page orderedPage = orderRepository.findAll(new OrderedSpecification(model, removeSpaces(TTN), phoneOrName, withoutTTN, userId), pageRequest);
+            getAllOrderedResponse.setOrderedList(orderedPage.getContent());
+            PaginationInfo paginationInfo = new PaginationInfo(orderedPage.getPageable().getPageNumber(), orderedPage.getPageable().getPageSize(), orderedPage.getTotalPages(), orderedPage.getTotalElements());
+            getAllOrderedResponse.setPaginationInfo(paginationInfo);
+        } else {
+            getAllOrderedResponse.setOrderedList(orderRepository.findAll(new OrderedSpecification(model, removeSpaces(TTN), phoneOrName, withoutTTN, userId)));
+        }
         return getAllOrderedResponse;
     }
 

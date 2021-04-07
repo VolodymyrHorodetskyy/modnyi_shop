@@ -328,37 +328,44 @@ public class StatisticService {
         return new StringResponse();
     }
 
-    public StringResponse getAllOrdersByUser(Long id) {
+    public StringResponse getAllOrdersByUser(String dateFrom, Long id) {
         StringBuilder builder = new StringBuilder();
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndUserId(id);
-        Map<Status, List<Ordered>> statusListMap = new HashMap<>();
+        List<Ordered> allReceivedByUser = orderRepository.findAllByAvailableTrueAndUserIdAndStatusAndPayedForUserFalse(id, Status.ОТРИМАНО);
+        OrderedSpecification orderedSpecification = new OrderedSpecification();
+        orderedSpecification.setUserId(id.toString());
+        LocalDateTime from = formDateFromOrGetDefault(dateFrom);
+        orderedSpecification.setFrom(from);
+        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
+        orderedList.addAll(allReceivedByUser);
+        Map<Status, Set<Ordered>> statusListMap = new HashMap<>();
         for (Ordered ordered : orderedList) {
-            List<Ordered> ordereds = statusListMap.get(ordered.getStatus());
+            Set<Ordered> ordereds = statusListMap.get(ordered.getStatus());
             if (ordereds == null) {
-                ordereds = new ArrayList<>();
+                ordereds = new HashSet<>();
                 ordereds.add(ordered);
                 statusListMap.put(ordered.getStatus(), ordereds);
             } else {
                 ordereds.add(ordered);
             }
         }
-        for (Map.Entry<Status, List<Ordered>> entry : statusListMap.entrySet()) {
+        builder.append("замовлення з ").append(from).append("\n");
+        for (Map.Entry<Status, Set<Ordered>> entry : statusListMap.entrySet()) {
             builder.append(entry.getKey()).append(" = ").append(entry.getValue().size()).append("\n");
         }
         builder.append("\n");
         int notPayed = 0;
-        List<Ordered> received = statusListMap.get(Status.ОТРИМАНО);
+        Set<Ordered> received = statusListMap.get(Status.ОТРИМАНО);
         for (Ordered ordered : received) {
             if (!ordered.isPayedForUser() && ordered.getOrderedShoes() != null && ordered.getOrderedShoes().size() > 0) {
                 notPayed += ordered.getOrderedShoes().size();
             }
         }
-        builder.append("Не оплаченно = " + notPayed);
+        builder.append("Не оплаченно за весь час = " + notPayed);
         return new StringResponse(builder.toString());
     }
 
     public void payAllForOperator(Long userId) {
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndUserIdAndStatus(userId, Status.ОТРИМАНО);
+        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndUserIdAndStatusAndPayedForUserFalse(userId, Status.ОТРИМАНО);
         for (Ordered ordered : orderedList) {
             ordered.setPayedForUser(true);
         }

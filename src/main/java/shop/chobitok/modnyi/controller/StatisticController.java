@@ -77,7 +77,7 @@ public class StatisticController {
 
     @GetMapping("/getStatisticGoogleChart")
     public GoogleChartObject getGoogleChartObject(@RequestParam(required = false) String from, @RequestParam(required = false) String to,
-                                                   @RequestParam(required = false) Status status) {
+                                                  @RequestParam(required = false) Status status) {
         return statisticService.getShoeOrderChart(from, to, status);
     }
 
@@ -97,8 +97,8 @@ public class StatisticController {
     }
 
     @GetMapping("/getAllOrdersByUser")
-    public StringResponse getAllORdersByUser(@RequestParam Long userId) {
-        return statisticService.getAllOrdersByUser(userId);
+    public StringResponse getAllOrdersByUser(@RequestParam(required = false) String dateFrom, @RequestParam Long userId) {
+        return statisticService.getAllOrdersByUser(dateFrom, userId);
     }
 
     @PatchMapping

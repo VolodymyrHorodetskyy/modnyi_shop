@@ -70,7 +70,12 @@ public class SpendsService {
             daySpendRec.setSpendSum(amount);
         } else {
             daySpendRec.setSpendSum(daySpendRec.getSpendSum() + amount);
-            daySpendRec.getSpendRecords().add(spendRec);
+            List<SpendRec> spendRecs = daySpendRec.getSpendRecords();
+            if(spendRecs == null){
+                spendRecs = new ArrayList<>();
+            }
+            spendRecs.add(spendRec);
+            daySpendRec.setSpendRecords(spendRecs);
         }
         return daySpendRepository.save(daySpendRec);
     }

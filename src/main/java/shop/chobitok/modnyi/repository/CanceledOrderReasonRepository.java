@@ -7,7 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import shop.chobitok.modnyi.entity.CancelReason;
 import shop.chobitok.modnyi.entity.CanceledOrderReason;
+import shop.chobitok.modnyi.entity.Status;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -22,6 +24,8 @@ public interface CanceledOrderReasonRepository extends JpaRepository<CanceledOrd
     List<CanceledOrderReason> findByReasonIn(List<CancelReason> canceledOrderReasons);
 
     CanceledOrderReason findFirstByReturnTtn(String ttn);
+
+    List<CanceledOrderReason> findByLastModifiedDateGreaterThanEqualAndStatus(LocalDateTime localDateTime, Status status);
 
 
 }
