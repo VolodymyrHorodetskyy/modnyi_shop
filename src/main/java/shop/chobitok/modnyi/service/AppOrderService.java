@@ -9,10 +9,7 @@ import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.request.ChangeAppOrderRequest;
 import shop.chobitok.modnyi.entity.response.ChangeAppOrderResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
-import shop.chobitok.modnyi.repository.AppOrderRepository;
-import shop.chobitok.modnyi.repository.ClientRepository;
-import shop.chobitok.modnyi.repository.OrderRepository;
-import shop.chobitok.modnyi.repository.UserRepository;
+import shop.chobitok.modnyi.repository.*;
 import shop.chobitok.modnyi.specification.AppOrderSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
 
@@ -33,14 +30,17 @@ public class AppOrderService {
     private OrderRepository orderRepository;
     private UserRepository userRepository;
     private DiscountService discountService;
+    private AppOrderNewProcessedRepository appOrderNewProcessedRepository;
 
-    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService) {
+
+    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService, AppOrderNewProcessedRepository appOrderNewProcessedRepository) {
         this.appOrderRepository = appOrderRepository;
         this.orderService = orderService;
         this.clientRepository = clientRepository;
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.discountService = discountService;
+        this.appOrderNewProcessedRepository = appOrderNewProcessedRepository;
     }
 
     public AppOrder catchOrder(String s) {
@@ -150,6 +150,9 @@ public class AppOrderService {
     }
 
     public AppOrder changeStatus(AppOrder appOrder, AppOrderStatus status) {
+        if (appOrder.getPreviousStatus() == null && appOrder.getStatus() == AppOrderStatus.Новий) {
+            appOrderNewProcessedRepository.save(new AppOrderNewProcessed(appOrder));
+        }
         if (appOrder.getStatus() != status) {
             appOrder.setPreviousStatus(appOrder.getStatus());
         }
