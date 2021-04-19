@@ -122,7 +122,6 @@ public class AppOrderService {
             throw new ConflictException("User not found");
         }
         appOrder.setUser(user);
-        changeStatus(appOrder, request.getStatus());
         String ttn = request.getTtn();
         if (!StringUtils.isEmpty(ttn)) {
             ttn = ttn.replaceAll("\\s+", "");
@@ -130,6 +129,9 @@ public class AppOrderService {
             appOrder.setTtn(ttn);
             String mail = appOrder.getMail();
             Ordered ordered = orderService.findByTTN(ttn);
+            if (ordered == null) {
+                return new ChangeAppOrderResponse(message, appOrder);
+            }
             if (!StringUtils.isEmpty(mail)) {
                 Client client = ordered.getClient();
                 client.setMail(mail);
@@ -144,14 +146,15 @@ public class AppOrderService {
             ordered.setUser(user);
             orderRepository.save(ordered);
         }
+        changeStatus(appOrder, user, request.getStatus());
         appOrder.setTtn(ttn);
         appOrder.setComment(request.getComment());
         return new ChangeAppOrderResponse(message, appOrderRepository.save(appOrder));
     }
 
-    public AppOrder changeStatus(AppOrder appOrder, AppOrderStatus status) {
+    public AppOrder changeStatus(AppOrder appOrder, User user, AppOrderStatus status) {
         if (appOrder.getPreviousStatus() == null && appOrder.getStatus() == AppOrderStatus.Новий) {
-            appOrderNewProcessedRepository.save(new AppOrderNewProcessed(appOrder));
+            appOrderNewProcessedRepository.save(new AppOrderNewProcessed(appOrder, user));
         }
         if (appOrder.getStatus() != status) {
             appOrder.setPreviousStatus(appOrder.getStatus());

@@ -53,11 +53,12 @@ public class OrderService {
     private DiscountService discountService;
     private PayedOrderedService payedOrderedService;
     private CardService cardService;
+    NotificationService notificationService;
 
     @Value("${spring.datasource.username}")
     private String username;
 
-    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService) {
+    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, NotificationService notificationService) {
         this.orderRepository = orderRepository;
         this.shoeRepository = shoeRepository;
         this.clientService = clientService;
@@ -71,6 +72,7 @@ public class OrderService {
         this.discountService = discountService;
         this.payedOrderedService = payedOrderedService;
         this.cardService = cardService;
+        this.notificationService = notificationService;
     }
 
     public Ordered findByTTN(String ttn) {
@@ -199,11 +201,16 @@ public class OrderService {
             try {
                 Ordered ordered = novaPostaService.createOrUpdateOrderFromNP(ttn, null, discount);
                 ordered.setUser(user);
-                orderRepository.save(ordered);
-                if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
-                    result.append(ttn + "  ... взуття або розмір не визначено \n");
+                if (ordered.getStatus() != Status.НЕ_ЗНАЙДЕНО) {
+                    orderRepository.save(ordered);
+                    if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
+                        result.append(ttn + "  ... взуття або розмір не визначено \n");
+                    } else {
+                        result.append(ttn + "  ... імпортовано \n");
+                    }
                 } else {
-                    result.append(ttn + "  ... імпортовано \n");
+                    result.append("  ...  НЕ ІМПОРТОВАНО ... Статус Не знайдено");
+                    notificationService.createNotification("Накладну не імпортовано, " +user.getName(), ttn, null);
                 }
             } catch (ConflictException e) {
                 result.append(ttn + "  ... неможливо знайти ттн \n");

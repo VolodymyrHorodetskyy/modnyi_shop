@@ -58,7 +58,7 @@ public class CheckerService {
             List<AppOrder> updated = new ArrayList<>();
             StringBuilder phones = new StringBuilder();
             for (AppOrder appOrder : appOrders) {
-                updated.add(appOrderService.changeStatus(appOrder, AppOrderStatus.Новий));
+                updated.add(appOrderService.changeStatus(appOrder, null, AppOrderStatus.Новий));
                 phones.append(appOrder.getPhone() + ", ");
             }
 

@@ -9,11 +9,15 @@ public class AppOrderNewProcessed extends Audit {
     @OneToOne
     private AppOrder appOrder;
 
+    @OneToOne
+    private User user;
+
     public AppOrderNewProcessed() {
     }
 
-    public AppOrderNewProcessed(AppOrder appOrder) {
+    public AppOrderNewProcessed(AppOrder appOrder, User user) {
         this.appOrder = appOrder;
+        this.user = user;
     }
 
     public AppOrder getAppOrder() {
@@ -22,5 +26,13 @@ public class AppOrderNewProcessed extends Audit {
 
     public void setAppOrder(AppOrder appOrder) {
         this.appOrder = appOrder;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }
