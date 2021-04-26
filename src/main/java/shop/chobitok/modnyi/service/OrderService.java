@@ -355,7 +355,7 @@ public class OrderService {
     }
 
     private Ordered updateOrderByDataListTrackingEntity(Ordered ordered, DataForList dataForList) {
-        if (dataForList == null && ordered != null) {
+        if (dataForList != null && ordered != null) {
             return updateOrderFields(ordered, 1, dataForList.getRecipientAddressDescription(),
                     Double.valueOf(dataForList.getBackwardDeliveryMoney()), cardService.getOrSaveAndGetCardByName(dataForList.getRedeliveryPaymentCard()));
         }
@@ -400,7 +400,7 @@ public class OrderService {
         if (card != null) {
             ordered.setCard(card);
         }
-        return orderRepository.save(ordered);
+        return ordered;
     }
 
     private Integer checkNewStatusAndReturnStatusCode(Data data, Ordered ordered) {
