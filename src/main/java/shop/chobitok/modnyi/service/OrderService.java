@@ -7,7 +7,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.*;
-import shop.chobitok.modnyi.entity.request.*;
+import shop.chobitok.modnyi.entity.request.AddShoeToOrderRequest;
+import shop.chobitok.modnyi.entity.request.CreateOrderRequest;
+import shop.chobitok.modnyi.entity.request.ImportOrdersFromStringRequest;
+import shop.chobitok.modnyi.entity.request.UpdateOrderRequest;
 import shop.chobitok.modnyi.entity.response.GetAllOrderedResponse;
 import shop.chobitok.modnyi.entity.response.PaginationInfo;
 import shop.chobitok.modnyi.entity.response.StringResponse;
@@ -15,10 +18,10 @@ import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.google.docs.service.GoogleDocsService;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.DataForList;
-import shop.chobitok.modnyi.novaposta.entity.ListTrackingEntity;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
+import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.repository.UserRepository;
@@ -31,7 +34,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
 import static shop.chobitok.modnyi.util.StringHelper.removeSpaces;
@@ -210,7 +212,7 @@ public class OrderService {
                     }
                 } else {
                     result.append("  ...  НЕ ІМПОРТОВАНО ... Статус Не знайдено");
-                    notificationService.createNotification("Накладну не імпортовано, " +user.getName(), ttn, null);
+                    notificationService.createNotification("Накладну не імпортовано, " + user.getName(), ttn, null);
                 }
             } catch (ConflictException e) {
                 result.append(ttn + "  ... неможливо знайти ттн \n");
@@ -349,7 +351,8 @@ public class OrderService {
         if (data != null && ordered != null && data.getStatusCode() != 1) {
             return updateOrderFields(ordered, checkNewStatusAndReturnStatusCode(data, ordered),
                     data.getRecipientAddress()
-                    , data.getRedeliverySum(), cardService.getOrSaveAndGetCardByName(data.getCardMaskedNumber()));
+                    , data.getRedeliverySum(), cardService.getOrSaveAndGetCardByName(data.getCardMaskedNumber()),
+                    ShoeUtil.toLocalDateTime(data.getDatePayedKeeping()));
         }
         return ordered;
     }
@@ -357,17 +360,18 @@ public class OrderService {
     private Ordered updateOrderByDataListTrackingEntity(Ordered ordered, DataForList dataForList) {
         if (dataForList != null && ordered != null) {
             return updateOrderFields(ordered, 1, dataForList.getRecipientAddressDescription(),
-                    Double.valueOf(dataForList.getBackwardDeliveryMoney()), cardService.getOrSaveAndGetCardByName(dataForList.getRedeliveryPaymentCard()));
+                    Double.valueOf(dataForList.getBackwardDeliveryMoney()), cardService.getOrSaveAndGetCardByName(dataForList.getRedeliveryPaymentCard()),
+                    null);
         }
         return ordered;
     }
 
     @Transactional
     private Ordered updateOrderFields(Ordered ordered, Integer statusCode, String recipientAddress
-            , Double redeliverySum, Card card) {
+            , Double redeliverySum, Card card, LocalDateTime datePayedKeeping) {
         Status oldStatus = ordered.getStatus();
         Status newStatus = convertToStatus(statusCode);
-        updateOrderFieldBeforeStatusesCheck(ordered, redeliverySum, card);
+        updateOrderFieldBeforeStatusesCheck(ordered, redeliverySum, card, datePayedKeeping);
         if (oldStatus != newStatus) {
             statusChangeService.createRecord(ordered, oldStatus, newStatus);
             ordered.setStatus(newStatus);
@@ -379,9 +383,6 @@ public class OrderService {
             if (newStatus == Status.ВІДМОВА) {
                 canceledOrderReasonService.createDefaultReasonOnCancel(ordered);
             } else {
-                if (newStatus == Status.ДОСТАВЛЕНО) {
-                    novaPostaService.updateDatePayedKeeping(ordered);
-                }
                 Client client = ordered.getClient();
                 if (client != null) {
                     if (!StringUtils.isEmpty(client.getMail()) && !username.equals("root") && newStatus != Status.ВИДАЛЕНО) {
@@ -393,12 +394,15 @@ public class OrderService {
         return orderRepository.save(ordered);
     }
 
-    private Ordered updateOrderFieldBeforeStatusesCheck(Ordered ordered, Double redeliverySum, Card card) {
+    private Ordered updateOrderFieldBeforeStatusesCheck(Ordered ordered, Double redeliverySum, Card card, LocalDateTime datePayedKeeping) {
         if (redeliverySum != null) {
             ordered.setReturnSumNP(redeliverySum);
         }
         if (card != null) {
             ordered.setCard(card);
+        }
+        if (datePayedKeeping != null && (ordered.getDatePayedKeepingNP() == null || !datePayedKeeping.isEqual(ordered.getDatePayedKeepingNP()))) {
+            ordered.setDatePayedKeepingNP(datePayedKeeping);
         }
         return ordered;
     }
