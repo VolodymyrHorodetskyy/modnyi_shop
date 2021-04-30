@@ -3,7 +3,9 @@ package shop.chobitok.modnyi.service;
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.repository.AppOrderRepository;
+import shop.chobitok.modnyi.repository.StatusChangeRepository;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -17,13 +19,14 @@ public class CheckerService {
     private NotificationService notificationService;
     private AppOrderRepository appOrderRepository;
     private AppOrderService appOrderService;
+    private StatusChangeRepository statusChangeRepository;
 
-
-    public CheckerService(OrderService orderService, NotificationService notificationService, AppOrderRepository appOrderRepository, AppOrderService appOrderService) {
+    public CheckerService(OrderService orderService, NotificationService notificationService, AppOrderRepository appOrderRepository, AppOrderService appOrderService, StatusChangeRepository statusChangeRepository) {
         this.orderService = orderService;
         this.notificationService = notificationService;
         this.appOrderRepository = appOrderRepository;
         this.appOrderService = appOrderService;
+        this.statusChangeRepository = statusChangeRepository;
     }
 
     public List<Notification> checkCanceledOrders() {
@@ -63,6 +66,19 @@ public class CheckerService {
             }
 
             appOrderRepository.saveAll(updated);
+        }
+    }
+
+    public void checkSendOrdersAndTakeMoreFiveDays() {
+        List<StatusChangeRecord> statusChangeRecords = statusChangeRepository.findAllByCreatedDateGreaterThanEqualAndNewStatus(LocalDateTime.now().minusDays(30), Status.ВІДПРАВЛЕНО);
+        for (StatusChangeRecord statusChangeRecord : statusChangeRecords) {
+            List<StatusChangeRecord> statusChangeRecordList = statusChangeRepository.findOneByNewStatusInAndOrderedId(Arrays.asList(Status.ДОСТАВЛЕНО, Status.ОТРИМАНО, Status.ВІДМОВА),
+                    statusChangeRecord.getOrdered().getId());
+            if ((statusChangeRecordList == null || statusChangeRecordList.size() == 0)
+                    && Duration.between(statusChangeRecord.getCreatedDate(), LocalDateTime.now()).toDays() > 4) {
+                notificationService.createNotification("Статус відправлено більше ніж 5 днів",
+                        statusChangeRecord.getOrdered().getTtn(), MessageType.NEED_ATTENTION);
+            }
         }
     }
 
