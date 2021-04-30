@@ -11,6 +11,8 @@ import java.util.List;
 @Repository
 public interface StatusChangeRepository extends JpaRepository<StatusChangeRecord, Long> {
 
-    public List<StatusChangeRecord> findAllByCreatedDateGreaterThanEqualAndNewStatus(LocalDateTime dateTime, Status status);
+    List<StatusChangeRecord> findAllByCreatedDateGreaterThanEqualAndNewStatus(LocalDateTime dateTime, Status status);
+
+    List<StatusChangeRecord> findOneByNewStatusInAndOrderedId(List<Status> statuses, Long id);
 
 }

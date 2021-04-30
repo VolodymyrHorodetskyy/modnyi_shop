@@ -56,15 +56,6 @@ public class NovaPostaService {
         return null;
     }
 
-    public Ordered updateDatePayedKeeping(Ordered ordered) {
-        TrackingEntity trackingEntity = postaRepository.getTracking(ordered);
-        Data data = trackingEntity.getData().get(0);
-        if (data != null) {
-            ordered.setDatePayedKeepingNP(ShoeUtil.toLocalDateTime(trackingEntity.getData().get(0).getDatePayedKeeping()));
-        }
-        return ordered;
-    }
-
     public String returnCargo(Ordered ordered) {
         CheckPossibilityCreateReturnResponse checkPossibilityCreateReturnResponse = postaRepository.checkPossibilityReturn(ordered);
         if (checkPossibilityCreateReturnResponse.isSuccess()) {

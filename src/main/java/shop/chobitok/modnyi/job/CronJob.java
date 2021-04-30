@@ -32,6 +32,7 @@ public class CronJob {
         checkerService.checkPayedKeepingOrders();
         checkerService.makeAppOrderNewAgain();
         orderService.updateCanceled();
+        checkerService.checkSendOrdersAndTakeMoreFiveDays();
     }
 
     @Scheduled(cron = "0 0 */2 * * *")
