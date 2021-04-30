@@ -12,6 +12,7 @@ import java.util.List;
 public class CanceledOrderReasonSpecification implements Specification<CanceledOrderReason> {
 
     private LocalDateTime from;
+    private LocalDateTime lastModifiedDate;
     private boolean statusNotReceived;
     private CancelReason cancelReason;
     private String ttn;
@@ -20,6 +21,9 @@ public class CanceledOrderReasonSpecification implements Specification<CanceledO
     private Boolean withoutReason;
     private boolean hasReturnTtn;
     private String userId;
+
+    public CanceledOrderReasonSpecification() {
+    }
 
     public CanceledOrderReasonSpecification(LocalDateTime from, boolean statusNotReceived, String ttn, String phoneOrName, Boolean manual, Boolean withoutReason, String userId) {
         this.from = from;
@@ -54,6 +58,10 @@ public class CanceledOrderReasonSpecification implements Specification<CanceledO
         if (from != null) {
             Predicate predicateFrom = criteriaBuilder.greaterThanOrEqualTo(root.get("createdDate"), from);
             predicates.add(predicateFrom);
+        }
+        if (lastModifiedDate != null) {
+            Predicate predicateLastModifiedDate = criteriaBuilder.greaterThanOrEqualTo(root.get("lastModifiedDate"), lastModifiedDate);
+            predicates.add(predicateLastModifiedDate);
         }
         if (statusNotReceived) {
             Predicate predicateNotReceived = criteriaBuilder.notEqual(root.get("status"), Status.ОТРИМАНО);
@@ -98,4 +106,83 @@ public class CanceledOrderReasonSpecification implements Specification<CanceledO
         return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
     }
 
+    public LocalDateTime getFrom() {
+        return from;
+    }
+
+    public void setFrom(LocalDateTime from) {
+        this.from = from;
+    }
+
+    public LocalDateTime getLastModifiedDate() {
+        return lastModifiedDate;
+    }
+
+    public void setLastModifiedDate(LocalDateTime lastModifiedDate) {
+        this.lastModifiedDate = lastModifiedDate;
+    }
+
+    public boolean isStatusNotReceived() {
+        return statusNotReceived;
+    }
+
+    public void setStatusNotReceived(boolean statusNotReceived) {
+        this.statusNotReceived = statusNotReceived;
+    }
+
+    public CancelReason getCancelReason() {
+        return cancelReason;
+    }
+
+    public void setCancelReason(CancelReason cancelReason) {
+        this.cancelReason = cancelReason;
+    }
+
+    public String getTtn() {
+        return ttn;
+    }
+
+    public void setTtn(String ttn) {
+        this.ttn = ttn;
+    }
+
+    public String getPhoneOrName() {
+        return phoneOrName;
+    }
+
+    public void setPhoneOrName(String phoneOrName) {
+        this.phoneOrName = phoneOrName;
+    }
+
+    public Boolean getManual() {
+        return manual;
+    }
+
+    public void setManual(Boolean manual) {
+        this.manual = manual;
+    }
+
+    public Boolean getWithoutReason() {
+        return withoutReason;
+    }
+
+    public void setWithoutReason(Boolean withoutReason) {
+        this.withoutReason = withoutReason;
+    }
+
+    public boolean isHasReturnTtn() {
+        return hasReturnTtn;
+    }
+
+    public void setHasReturnTtn(boolean hasReturnTtn) {
+        this.hasReturnTtn = hasReturnTtn;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
 }

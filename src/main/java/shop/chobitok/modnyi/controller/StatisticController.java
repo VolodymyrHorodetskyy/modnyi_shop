@@ -59,9 +59,9 @@ public class StatisticController {
     }
 
     @GetMapping("/returned")
-    public StringResponse returned(@RequestParam(required = false) boolean setNotForDelivery,
-                                   @RequestParam boolean onlyImportant) {
-        return canceledOrderReasonService.getReturned(setNotForDelivery, onlyImportant, false, false);
+    public StringResponse returned(@RequestParam boolean showClientTTN,
+                                   @RequestParam boolean showOnlyDelivered) {
+        return canceledOrderReasonService.getReturned(false, false, showClientTTN, showOnlyDelivered, null);
     }
 
     @GetMapping("/canceled")

@@ -22,7 +22,7 @@ import shop.chobitok.modnyi.service.PropsService;
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
- import java.util.ArrayList;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -61,7 +61,12 @@ public class NovaPostaRepository {
         HttpEntity httpEntity = new HttpEntity(getTrackingRequest, httpHeaders);
         ResponseEntity<TrackingEntity> responseEntity = null;
         //TODO: refactoring
+        int counter = 0;
         while (true) {
+            ++counter;
+            if (counter > 5) {
+                break;
+            }
             try {
                 responseEntity = restTemplate.postForEntity(getTrackingURL, httpEntity, TrackingEntity.class);
                 break;

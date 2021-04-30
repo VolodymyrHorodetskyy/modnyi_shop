@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
+import static shop.chobitok.modnyi.util.DateHelper.formDateTime;
 import static shop.chobitok.modnyi.util.StringHelper.removeSpaces;
 
 @Service
@@ -139,7 +140,6 @@ public class CanceledOrderReasonService {
             }
         }
         List<CanceledOrderReason> done = canceledOrderReasonRepository.saveAll(updated);
-        getReturned(true, true, false, true);
         return done;
     }
 
@@ -186,20 +186,29 @@ public class CanceledOrderReasonService {
     }
 
     public StringResponse getReturned(boolean excludeFromDeliveryFile, boolean showOnlyImportant,
-                                      boolean showClientTtn, boolean showOnlyDelivered) {
+                                      boolean showClientTtn, boolean showOnlyDelivered, String dateFrom) {
         List<Ordered> toSave = new ArrayList<>();
         StringBuilder result = new StringBuilder();
-        List<CanceledOrderReason> canceledOrderReasons = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(true, true));
-        List<Ordered> orderedList = orderRepository.findByNotForDeliveryFileTrue();
+        List<CanceledOrderReason> canceledOrderReasons;
+        if (StringUtils.isEmpty(dateFrom)) {
+            canceledOrderReasons = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(true, true));
+        } else {
+            CanceledOrderReasonSpecification canceledOrderReasonSpecification = new CanceledOrderReasonSpecification();
+            canceledOrderReasonSpecification.setLastModifiedDate(formDateTime(dateFrom));
+            canceledOrderReasons = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(true, true));
+        }
+       /*
+       for find coincidences
+       List<Ordered> orderedList = orderRepository.findByNotForDeliveryFileTrue();
         for (Ordered order : orderedList) {
             order.setNotForDeliveryFile(false);
             toSave.add(order);
-        }
-        List<Ordered> createdList = orderRepository.findAllByAvailableTrueAndStatusInOrderByUrgentDesc(Arrays.asList(Status.СТВОРЕНО));
+        }*/
+        //  List<Ordered> createdList = orderRepository.findAllByAvailableTrueAndStatusInOrderByUrgentDesc(Arrays.asList(Status.СТВОРЕНО));
         Set<CanceledOrderReason> used = new HashSet<>();
         Set<CanceledOrderReason> toFind = new HashSet<>();
         int countArrived = 0;
-        String coincidencesString = getCoincidences(createdList, toFind, used, excludeFromDeliveryFile, toSave);
+
 
         for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
             if (canceledOrderReason.getReason() == CancelReason.БРАК || canceledOrderReason.getReason() == CancelReason.ПОМИЛКА) {
@@ -208,21 +217,17 @@ public class CanceledOrderReasonService {
                 toFind.add(canceledOrderReason);
                 if (!showOnlyImportant && !used.contains(canceledOrderReason)
                         && showOnlyDelivered ? canceledOrderReason.getStatus() == Status.ДОСТАВЛЕНО : true) {
-                    result.append(showClientTtn ? canceledOrderReason.getOrdered().getTtn() : "").append(showClientTtn ? "\n" : "").append(canceledOrderReason.getReturnTtn()).append(" ")
-                            .append(canceledOrderReason.getStatus()).append(" ").append("\n").append(canceledOrderReason.getReason())
-                            .append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
-                            .append("\n").append(canceledOrderReason.getOrdered().getPostComment())
-                            .append("\n\n");
+                    appendReturnTtns(result, showClientTtn, canceledOrderReason);
                 }
             }
             if (canceledOrderReason.getStatus() == Status.ДОСТАВЛЕНО) {
                 ++countArrived;
             }
         }
-
+        //  String coincidencesString = getCoincidences(createdList, toFind, used, excludeFromDeliveryFile, toSave);
         result.append(getPayedKeeping(canceledOrderReasons.stream().filter(canceledOrderReason -> canceledOrderReason.getDatePayedKeeping() != null).collect(Collectors.toList())));
         result.append(getPayAttention(showOnlyImportant, showClientTtn, used));
-        result.append(coincidencesString);
+        //    result.append(coincidencesString);
 
         result.append("Кількість доставлених: ").append(countArrived).append("\n\n");
 
@@ -232,6 +237,15 @@ public class CanceledOrderReasonService {
         String resultString = result.toString();
         googleDocsService.updateReturningsFile(resultString);
         return new StringResponse(resultString);
+    }
+
+    private void appendReturnTtns(StringBuilder stringBuilder, boolean showClientTtn,
+                                  CanceledOrderReason canceledOrderReason) {
+        stringBuilder.append(showClientTtn ? canceledOrderReason.getOrdered().getTtn() : "").append(showClientTtn ? "\n" : "").append(canceledOrderReason.getReturnTtn()).append(" ")
+                .append(canceledOrderReason.getStatus()).append(" ").append("\n").append(canceledOrderReason.getReason())
+                .append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
+                .append("\n").append(canceledOrderReason.getOrdered().getPostComment())
+                .append("\n\n");
     }
 
     private String getCoincidences(List<Ordered> createdList,
