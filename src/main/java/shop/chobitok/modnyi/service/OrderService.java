@@ -343,7 +343,8 @@ public class OrderService {
     }
 
     public String updateOrdersByNovaPosta() {
-        return updateOrdersByStatusesByNovaPosta(Arrays.asList(Status.СТВОРЕНО, Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО, Status.ЗМІНА_АДРЕСУ));
+        updateOrdersByNovaPosta(orderRepository.findAllByStatusInAndCreatedDateGreaterThan(Arrays.asList(Status.НЕ_ЗНАЙДЕНО), LocalDateTime.now().minusDays(20)));
+        return updateOrdersByStatusesByNovaPosta(Arrays.asList(Status.СТВОРЕНО, Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО, Status.ЗМІНА_АДРЕСУ, Status.НЕ_ЗНАЙДЕНО));
     }
 
 
