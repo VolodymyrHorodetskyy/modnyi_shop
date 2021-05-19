@@ -31,6 +31,8 @@ public class ShoeUtil {
                 return Status.ОТРИМАНО;
             } else if (statusCode == 104) {
                 return Status.ЗМІНА_АДРЕСУ;
+            } else if (statusCode == 105) {
+                return Status.ПРИПИНЕНО_ЗБЕРІГАННЯ;
             }
         }
         return null;
