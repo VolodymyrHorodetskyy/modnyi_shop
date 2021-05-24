@@ -7,24 +7,19 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.*;
-import shop.chobitok.modnyi.entity.request.FromNPToOrderRequest;
+import shop.chobitok.modnyi.entity.request.AddShoeToOrderRequest;
+import shop.chobitok.modnyi.entity.request.CreateCompanyRequest;
+import shop.chobitok.modnyi.google.docs.service.GoogleDocsService;
 import shop.chobitok.modnyi.novaposta.entity.Data;
-import shop.chobitok.modnyi.novaposta.entity.DataForList;
-import shop.chobitok.modnyi.novaposta.entity.ListTrackingEntity;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.mapper.DtoMapper;
 import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
-import shop.chobitok.modnyi.novaposta.request.Document;
-import shop.chobitok.modnyi.novaposta.request.GetTrackingRequest;
-import shop.chobitok.modnyi.novaposta.request.MethodProperties;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
-import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
-import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
-import shop.chobitok.modnyi.repository.ClientRepository;
-import shop.chobitok.modnyi.repository.OrderRepository;
-import shop.chobitok.modnyi.repository.ShoeRepository;
+import shop.chobitok.modnyi.repository.*;
 import shop.chobitok.modnyi.service.*;
+import shop.chobitok.modnyi.specification.OrderedSpecification;
+import shop.chobitok.modnyi.util.FileReader;
 
 import javax.mail.internet.AddressException;
 import javax.transaction.Transactional;
@@ -33,8 +28,8 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @RunWith(SpringRunner.class)
@@ -58,6 +53,14 @@ public class NovaPostaTest {
 
     @Autowired
     private FinanceService financeService;
+
+    @Autowired
+    private GoogleDocsService googleDocsService;
+
+    @Test
+    public void googleTest() {
+        googleDocsService.updateReturningsFile("TEST");
+    }
 
 /*    @Test
     public void testGetTracking() {
@@ -204,7 +207,15 @@ public class NovaPostaTest {
 
     @Test
     public void sendMail() {
-        mailService.sendStatusNotificationEmail("horodetskyyv@gmail.com", Status.ВІДПРАВЛЕНО);
+        String mailTemplate = "mail_our_discounts_and_updates_1.html";
+        List<Client> clients = clientRepository.findByMailNotNull();
+        for (Client client : clients) {
+            if (!client.getMail().isEmpty() && sentMailRepository.findByClientId(client.getId()) == null) {
+                mailService.sendEmail("Модний чобіток. Знижки і нова колекція літнього взуття",
+                        FileReader.getHtmlTemplate("mail_our_discounts_and_updates_1.html"), client.getMail());
+                sentMailRepository.save(new SentMail(client.getId(), mailTemplate, client.getMail()));
+            }
+        }
     }
 
     @Autowired
@@ -385,6 +396,173 @@ public class NovaPostaTest {
                         .append(", ").append(ordered.getClient().getLastName())
                         .append("\n");
             }
+        }
+        System.out.println(stringBuilder.toString());
+    }
+
+    @Autowired
+    private DiscountRepository discountRepository;
+
+    @Test
+    public void addDiscount() {
+        Discount discount = new Discount();
+        discount.setDiscountPercentage(10);
+        discount.setMain(true);
+        discount.setName("Знижка10");
+        discount.setShoeNumber(1);
+        discountRepository.save(discount);
+    }
+
+    @Test
+    public void localDateTest() {
+        LocalDate.now();
+    }
+
+    @Autowired
+    private AppOrderRepository appOrderRepository;
+
+    @Test
+    public void appOrders() {
+        LocalDateTime localDateTime = LocalDateTime.now();
+        localDateTime = localDateTime.withMinute(0);
+        localDateTime = localDateTime.withHour(0);
+        localDateTime = localDateTime.withSecond(0);
+        List<AppOrder> appOrders = appOrderRepository.findByCreatedDateLessThanAndStatusIn(localDateTime, Arrays.asList(AppOrderStatus.В_обробці, AppOrderStatus.Не_Відповідає, AppOrderStatus.Чекаємо_оплату));
+        for (AppOrder appOrder : appOrders) {
+            appOrder.setStatus(AppOrderStatus.Новий);
+        }
+        appOrderRepository.saveAll(appOrders);
+    }
+
+    @Test
+    public void testMarking() {
+        postaRepository.getMarking(orderRepository.findOneByAvailableTrueAndTtn("20450335148950"));
+    }
+
+    @Test
+    public void testException() {
+        canceledOrderReasonService.setReturnTtnAndUpdateStatus();
+    }
+
+    @Test
+    public void setCityAndCityRef() {
+        List<Ordered> orderedList = orderRepository.findByCreatedDateGreaterThanAndCityIsNull(LocalDateTime.now().minusMonths(5));
+        for (Ordered ordered : orderedList) {
+            Ordered fromNP = novaPostaService.createOrUpdateOrderFromNP(ordered.getTtn(), ordered.getNpAccountId(), null);
+            ordered.setCity(fromNP.getCity());
+            ordered.setCityRefNP(fromNP.getCityRefNP());
+            orderRepository.save(ordered);
+        }
+    }
+
+    @Autowired
+    CompanyService companyService;
+
+    @Test
+    public void addCompany() {
+        companyService.createCompany(new CreateCompanyRequest("Fenci"));
+    }
+
+    @Autowired
+    private StatusChangeService statusChangeService;
+
+    @Test
+    public void addNPAccount() {
+        LocalDateTime localDateTime = LocalDateTime.of(2021, 3, 19, 0, 0);
+        System.out.println(statusChangeService.getAllFromDateAndNewStatus(localDateTime, Status.ВІДПРАВЛЕНО).size());
+    }
+
+    @Autowired
+    MarkingRepository markingRepository;
+
+    @Test
+    public void getAllPrintedButNotDelivered() {
+        List<Marking> markings = markingRepository.findByOrderedStatusAndPrintedTrue(Status.СТВОРЕНО);
+        for (Marking marking : markings) {
+            System.out.println(marking.getOrdered().getTtn());
+        }
+    }
+
+    @Test
+    public void getAdressChangedOrders() {
+        orderRepository.findAllByStatusInAndCreatedDateGreaterThan(Arrays.asList(Status.ЗМІНА_АДРЕСУ), LocalDateTime.now().minusDays(50));
+    }
+
+    @Test
+    public void getReceivedCanceled() {
+        List<CanceledOrderReason> canceledOrderReasons = canceledOrderReasonRepository.findByLastModifiedDateGreaterThanEqualAndStatus(
+                LocalDateTime.now().minusDays(1), Status.ОТРИМАНО);
+        for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
+            if (canceledOrderReason.getReason() == CancelReason.БРАК ||
+                    canceledOrderReason.getReason() == CancelReason.ПОМИЛКА) {
+                System.out.println(canceledOrderReason.getReason() + "\n"
+                        + canceledOrderReason.getComment() + "\n"
+                        + canceledOrderReason.getReturnTtn()
+                        + "\n");
+            }
+        }
+    }
+
+    @Autowired
+    private StatisticService statisticService;
+
+    @Test
+    public void here() {
+        List<Ordered> orderedList = orderRepository.findAllByStatusInAndLastModifiedDateGreaterThan(Arrays.asList(Status.ОТРИМАНО),
+                LocalDateTime.now().withHour(12));
+        Set<String> stringSet = new HashSet<>();
+        List<Ordered> orderedsFiltered = new ArrayList<>();
+        for (Ordered ordered : orderedList) {
+            if (stringSet.add(ordered.getTtn()) && ordered.isPayed()) {
+                orderedsFiltered.add(ordered);
+            }
+        }
+        //  System.out.println(statisticService.test(orderedsFiltered));
+    }
+
+    @Autowired
+    CardService cardService;
+
+    @Autowired
+    StatusChangeRepository statusChangeRepository;
+
+    @Test
+    public void recalculateCard() {
+      /*  OrderedSpecification orderedSpecification = new OrderedSpecification();
+   //     orderedSpecification.setFrom(LocalDateTime.now().minusDays(25));
+        orderedSpecification.setStatuses(Arrays.asList(Status.ВІДПРАВЛЕНО));
+        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
+        for (Ordered ordered : orderedList) {
+            if (ordered.getDatePayedKeepingNP() == null) {
+                System.out.println(ordered.getTtn());
+            }
+        }*/
+
+        List<StatusChangeRecord> statusChangeRecords = statusChangeRepository.findAllByCreatedDateGreaterThanEqualAndNewStatus(LocalDateTime.now().minusDays(30), Status.ВІДПРАВЛЕНО);
+        for (StatusChangeRecord statusChangeRecord : statusChangeRecords) {
+            List<StatusChangeRecord> statusChangeRecordList = statusChangeRepository.findOneByNewStatusInAndOrderedId(Arrays.asList(Status.ДОСТАВЛЕНО, Status.ОТРИМАНО, Status.ВІДМОВА),
+                    statusChangeRecord.getOrdered().getId());
+            if ((statusChangeRecordList == null || statusChangeRecordList.size() == 0)
+                    && Duration.between(statusChangeRecord.getCreatedDate(), LocalDateTime.now()).toDays() > 4) {
+                System.out.println(statusChangeRecord.getOrdered().getTtn());
+            }
+        }
+    }
+
+    @Test
+    public void getAllClientsCSV() {
+        List<Client> clients = clientRepository.findAll();
+        System.out.println(clients.size());
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Client client : clients) {
+            long count = orderRepository.findByClientId(client.getId())
+                    .stream().filter(ordered -> ordered.getStatus() == Status.ОТРИМАНО).count();
+            stringBuilder.append(client.getMail() == null ? "" : client.getMail()).append(",")
+                    .append(client.getPhone()).append(",")
+                    .append(client.getName()).append(",")
+                    .append(client.getLastName()).append(",")
+                    .append(count)
+                    .append("\n");
         }
         System.out.println(stringBuilder.toString());
     }
