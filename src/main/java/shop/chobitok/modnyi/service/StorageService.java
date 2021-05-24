@@ -48,7 +48,7 @@ public class StorageService {
         return false;
     }
 
-    public StorageRecord setStorage(Ordered ordered) {
+/*    public StorageRecord setStorage(Ordered ordered) {
         if (ordered.getOrderedShoes().size() > 0) {
             List<StorageRecord> storageRecordList = storageRepository.findBySizeAndShoeId(ordered.getSize(), ordered.getOrderedShoes().get(0).getId());
             if (storageRecordList.size() > 0) {
@@ -61,7 +61,7 @@ public class StorageService {
         } else {
             return null;
         }
-    }
+    }*/
 
 
 }

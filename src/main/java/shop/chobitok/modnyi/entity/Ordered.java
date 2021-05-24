@@ -10,8 +10,8 @@ import java.util.List;
 @Entity
 public class Ordered extends Audit {
 
-    @ManyToMany(cascade = CascadeType.ALL)
-    private List<Shoe> orderedShoes;
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<OrderedShoe> orderedShoeList;
 
     @ManyToOne(cascade = CascadeType.ALL)
     private Client client;
@@ -24,9 +24,6 @@ public class Ordered extends Audit {
 
     @ManyToOne(cascade = CascadeType.ALL)
     private Card card;
-
-    @Column
-    private Integer size;
 
     @Column
     private String ttn;
@@ -123,14 +120,6 @@ public class Ordered extends Audit {
         this.notForDeliveryFile = notForDeliveryFile;
     }
 
-    public List<Shoe> getOrderedShoes() {
-        return orderedShoes;
-    }
-
-    public void setOrderedShoes(List<Shoe> orderedShoes) {
-        this.orderedShoes = orderedShoes;
-    }
-
     public Client getClient() {
         return client;
     }
@@ -185,14 +174,6 @@ public class Ordered extends Audit {
 
     public void setAddress(String address) {
         this.address = address;
-    }
-
-    public Integer getSize() {
-        return size;
-    }
-
-    public void setSize(Integer size) {
-        this.size = size;
     }
 
     public String getPostComment() {
@@ -393,5 +374,13 @@ public class Ordered extends Audit {
 
     public void setAddressChangeTtn(String addressChangeTtn) {
         this.addressChangeTtn = addressChangeTtn;
+    }
+
+    public List<OrderedShoe> getOrderedShoeList() {
+        return orderedShoeList;
+    }
+
+    public void setOrderedShoeList(List<OrderedShoe> orderedShoeList) {
+        this.orderedShoeList = orderedShoeList;
     }
 }

@@ -93,11 +93,6 @@ public class OrderController {
         return orderService.returnAllCanceled(updateStatuses);
     }
 
-    @PutMapping("/addShoeToOrder")
-    public Ordered addShoeToOrder(@RequestBody AddShoeToOrderRequest addShoeToOrderRequest) {
-        return orderService.addShoeToOrder(addShoeToOrderRequest);
-    }
-
     @PatchMapping("/makeAllPayed")
     public StringResponse makeAllPayed() {
         return orderService.makeAllPayed();

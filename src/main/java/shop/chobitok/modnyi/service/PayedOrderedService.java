@@ -2,8 +2,8 @@ package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.Ordered;
+import shop.chobitok.modnyi.entity.OrderedShoe;
 import shop.chobitok.modnyi.entity.PayedOrdered;
-import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.repository.PayedOrderedRepository;
 
 import java.util.List;
@@ -26,8 +26,8 @@ public class PayedOrderedService {
         PayedOrdered payedOrdered = new PayedOrdered();
         payedOrdered.setTtn(ordered.getTtn());
         Double sum = 0d;
-        for (Shoe shoe : ordered.getOrderedShoes()) {
-            sum += shoePriceService.getShoePrice(shoe, ordered).getCost();
+        for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
+            sum += shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered).getCost();
         }
         payedOrdered.setSum(sum);
         return payedOrderedRepository.save(payedOrdered);

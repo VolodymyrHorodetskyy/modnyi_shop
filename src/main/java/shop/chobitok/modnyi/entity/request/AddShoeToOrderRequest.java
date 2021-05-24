@@ -4,6 +4,18 @@ public class AddShoeToOrderRequest {
 
     private Long shoeId;
     private Long orderId;
+    private int size;
+    private String comment;
+
+    public AddShoeToOrderRequest() {
+    }
+
+    public AddShoeToOrderRequest(Long orderId, Long shoeId, int size, String comment) {
+        this.shoeId = shoeId;
+        this.orderId = orderId;
+        this.size = size;
+        this.comment = comment;
+    }
 
     public Long getShoeId() {
         return shoeId;
@@ -19,5 +31,21 @@ public class AddShoeToOrderRequest {
 
     public void setOrderId(Long orderId) {
         this.orderId = orderId;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    public void setSize(int size) {
+        this.size = size;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 }

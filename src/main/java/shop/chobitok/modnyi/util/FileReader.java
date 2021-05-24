@@ -19,7 +19,11 @@ public class FileReader {
         if (status == Status.ОТРИМАНО) {
             htmlTemplate = mailWhenReceivedHtmlTemplate;
         }
-        Resource resource = new ClassPathResource(htmlTemplate);
+        return getHtmlTemplate(htmlTemplate);
+    }
+
+    public static String getHtmlTemplate(String path) {
+        Resource resource = new ClassPathResource(path);
         String data = null;
         try {
             InputStream inputStream = resource.getInputStream();

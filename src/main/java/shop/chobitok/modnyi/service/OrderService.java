@@ -133,17 +133,16 @@ public class OrderService {
         } else {
             ordered.setWithoutTTN(true);
         }
-        if (createOrderRequest.getShoes() != null && createOrderRequest.getShoes().size() > 0) {
+     /*   if (createOrderRequest.getShoes() != null && createOrderRequest.getShoes().size() > 0) {
             ordered.setOrderedShoes(shoeRepository.findAllById(createOrderRequest.getShoes()));
         } else {
             throw new ConflictException("Взуття не може бути пусте");
-        }
+        }*/
         setUser(ordered, createOrderRequest.getUserId());
         ordered.setClient(clientService.createClient(createOrderRequest));
         ordered.setTtn(createOrderRequest.getTtn());
         statusChangeService.createRecord(ordered, ordered.getStatus(), createOrderRequest.getStatus());
         ordered.setStatus(createOrderRequest.getStatus());
-        ordered.setSize(createOrderRequest.getSize());
         ordered.setAddress(createOrderRequest.getAddress());
         ordered.setNotes(createOrderRequest.getNotes());
         if (createOrderRequest.isFullpayment()) {
@@ -168,7 +167,6 @@ public class OrderService {
         ordered.setUrgent(updateOrderRequest.getUrgent());
         ordered.setFullPayment(updateOrderRequest.isFull_payment());
         ordered.setNotes(updateOrderRequest.getNotes());
-        updateShoeAndSize(ordered, updateOrderRequest);
         clientService.updateOrCreateClient(ordered.getClient(), updateOrderRequest);
         ordered.setPrePayment(updateOrderRequest.getPrepayment());
         ordered.setPrice(updateOrderRequest.getPrice());
@@ -205,8 +203,8 @@ public class OrderService {
                 ordered.setUser(user);
                 if (ordered.getStatus() != Status.НЕ_ЗНАЙДЕНО) {
                     orderRepository.save(ordered);
-                    if (ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
-                        result.append(ttn + "  ... взуття або розмір не визначено \n");
+                    if (ordered.getOrderedShoeList().size() < 1) {
+                        result.append(ttn + "  ... взуття не визначено \n");
                     } else {
                         result.append(ttn + "  ... імпортовано \n");
                     }
@@ -453,11 +451,6 @@ public class OrderService {
         return new StringResponse(result.toString());
     }
 
-    private void updateShoeAndSize(Ordered ordered, UpdateOrderRequest updateOrderRequest) {
-        ordered.setOrderedShoes(shoeRepository.findAllById(updateOrderRequest.getShoes()));
-        ordered.setSize(updateOrderRequest.getSize());
-    }
-
     public Ordered createOrder(Ordered ordered) {
         return orderRepository.save(ordered);
     }
@@ -466,23 +459,10 @@ public class OrderService {
         return orderRepository.saveAll(orderedList);
     }
 
-    public Ordered addShoeToOrder(AddShoeToOrderRequest addShoeToOrderRequest) {
-        Ordered ordered = orderRepository.getOne(addShoeToOrderRequest.getOrderId());
-        if (ordered == null) {
-            throw new ConflictException("Order not found");
-        }
-        Shoe shoe = shoeRepository.getOne(addShoeToOrderRequest.getShoeId());
-        if (shoe == null) {
-            throw new ConflictException("Shoe not found");
-        }
-        ordered.getOrderedShoes().add(shoe);
-        return orderRepository.save(ordered);
-    }
-
     public StringResponse makeAllPayed() {
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndPayedFalseAndStatusIn(Arrays.asList(Status.ОТРИМАНО));
         for (Ordered ordered : orderedList) {
-            if (ordered.getOrderedShoes().size() > 0) {
+            if (ordered.getOrderedShoeList().size() > 0) {
                 ordered.setPayed(true);
             }
         }
@@ -545,10 +525,10 @@ public class OrderService {
                     result.append(ordered.getSequenceNumber()).append(". ").append(ordered.getTtn()).append("\n").append(ordered.getPostComment()).append("\n\n");
                 } else {
                     result.append(ordered.getSequenceNumber()).append(". ").append("без накладноЇ\n");
-                    for (Shoe shoe : ordered.getOrderedShoes()) {
-                        result.append(shoe.getModel()).append(" ").append(shoe.getColor());
+                    for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
+                        result.append(orderedShoe.getShoe().getModel()).append(" ").append(orderedShoe.getShoe().getColor())
+                        .append(", розмір: ") .append(orderedShoe.getSize());
                     }
-                    result.append(", ").append(ordered.getSize()).append("\n\n");
                 }
             }
         }

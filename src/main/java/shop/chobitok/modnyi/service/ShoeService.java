@@ -5,17 +5,19 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Discount;
+import shop.chobitok.modnyi.entity.Ordered;
+import shop.chobitok.modnyi.entity.OrderedShoe;
 import shop.chobitok.modnyi.entity.Shoe;
-import shop.chobitok.modnyi.entity.request.AddOrRemovePatternRequest;
-import shop.chobitok.modnyi.entity.request.CreateShoeRequest;
-import shop.chobitok.modnyi.entity.request.UpdateShoeRequest;
+import shop.chobitok.modnyi.entity.request.*;
 import shop.chobitok.modnyi.entity.response.ShoeWithPrice;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.mapper.ShoeMapper;
 import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
+import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.specification.ShoeSpecification;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,13 +28,15 @@ public class ShoeService {
     private ShoeMapper shoeMapper;
     private NPOrderMapper npOrderMapper;
     private DiscountService discountService;
+    private OrderRepository orderRepository;
 
 
-    public ShoeService(ShoeRepository shoeRepository, ShoeMapper shoeMapper, NPOrderMapper npOrderMapper, DiscountService discountService) {
+    public ShoeService(ShoeRepository shoeRepository, ShoeMapper shoeMapper, NPOrderMapper npOrderMapper, DiscountService discountService, OrderRepository orderRepository) {
         this.shoeRepository = shoeRepository;
         this.shoeMapper = shoeMapper;
         this.npOrderMapper = npOrderMapper;
         this.discountService = discountService;
+        this.orderRepository = orderRepository;
     }
 
     public List<ShoeWithPrice> getAllShoeWithPrice(int page, int size, String modelAndColor) {
@@ -95,13 +99,47 @@ public class ShoeService {
             if (discountId != 0) {
                 discount = discountService.getById(discountId);
             }
-            List<Shoe> shoes = new ArrayList<>();
+            List<OrderedShoe> orderedShoeList = new ArrayList<>();
             for (Long shoeId : shoeIds) {
-                shoes.add(shoeRepository.getOne(shoeId));
+                orderedShoeList.add(new OrderedShoe(36, shoeRepository.getOne(shoeId)));
             }
-            return npOrderMapper.countDiscount(shoes, discount);
+            return npOrderMapper.countDiscount(orderedShoeList, discount);
         }
         return null;
+    }
+
+    @Transactional
+    public Ordered addShoeToOrder(AddShoeToOrderRequest request) {
+        Ordered ordered = orderRepository.findById(request.getOrderId()).orElse(null);
+        Shoe shoe = shoeRepository.findById(request.getShoeId()).orElse(null);
+        if (ordered == null) {
+            throw new ConflictException("Замовлення не знайдено");
+        }
+        if (shoe == null) {
+            throw new ConflictException("Взуття не знайдено");
+        }
+        OrderedShoe orderedShoe = new OrderedShoe(request.getSize(), shoe, request.getComment());
+        if (ordered.getOrderedShoeList() == null) {
+            ordered.setOrderedShoeList(new ArrayList<>());
+        }
+        ordered.getOrderedShoeList().add(orderedShoe);
+        return orderRepository.save(ordered);
+    }
+
+    @Transactional
+    public Ordered removeShoeFromOrder(RemoveShoeFromOrderRequest request) {
+        Ordered ordered = orderRepository.findById(request.getOrderId()).orElse(null);
+        if (ordered == null) {
+            throw new ConflictException("Замовлення не знайдено");
+        }
+        OrderedShoe orderedShoe = ordered.getOrderedShoeList().stream().filter(o -> o.getId().equals(request.getShoeId())).findFirst().orElse(null);
+        if (orderedShoe == null) {
+            throw new ConflictException("Взуття не знайдено");
+        } else {
+            ordered.getOrderedShoeList().remove(orderedShoe);
+            ordered = orderRepository.save(ordered);
+        }
+        return ordered;
     }
 
 

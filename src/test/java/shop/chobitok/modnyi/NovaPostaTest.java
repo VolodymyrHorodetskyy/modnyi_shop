@@ -26,6 +26,7 @@ import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.service.*;
 
+import javax.mail.internet.AddressException;
 import javax.transaction.Transactional;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -198,6 +199,9 @@ public class NovaPostaTest {
     @Autowired
     private MailService mailService;
 
+    @Autowired
+    private SentMailRepository sentMailRepository;
+
     @Test
     public void sendMail() {
         mailService.sendStatusNotificationEmail("horodetskyyv@gmail.com", Status.ВІДПРАВЛЕНО);
@@ -303,35 +307,6 @@ public class NovaPostaTest {
     }
 
     @Test
-    public void twoPairs() {
-        List<Ordered> orderedList = orderRepository.findAll();
-        List<Ordered> toSave = new ArrayList<>();
-        for (Ordered ordered : orderedList) {
-            if (ordered.getOrderedShoes().size() >= 2) {
-                ordered.getOrderedShoes().sort(Comparator.comparing(o -> shoePriceService.getActualShoePrice(o).getPrice()));
-                double price = 0d;
-                boolean disc = false;
-                for (Shoe shoe : ordered.getOrderedShoes()) {
-                    if (!disc) {
-                        double shoePrice = shoePriceService.getShoePrice(shoe, ordered).getPrice();
-                        if (shoePrice != 0d) {
-                            price += Math.ceil((shoePrice / 100) * 75);
-                        }
-                        disc = true;
-                    } else {
-                        price += shoePriceService.getShoePrice(shoe, ordered).getPrice();
-                    }
-                }
-                if (ordered.getPrice() < price) {
-                    ordered.setPrice(Double.valueOf(price));
-                    toSave.add(ordered);
-                }
-            }
-        }
-        orderRepository.saveAll(toSave);
-    }
-
-    @Test
     public void payedKeepingCheck() {
        /* List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.ДОСТАВЛЕНО));
         for (Ordered ordered : orderedList) {
@@ -413,6 +388,20 @@ public class NovaPostaTest {
         }
         System.out.println(stringBuilder.toString());
     }
+
+    @Autowired
+    private ShoeService shoeService;
+
+/*    @Test
+    public void testOrderedShoe() {
+        List<Ordered> orderedList = orderRepository.findAll();
+        for (Ordered ordered : orderedList) {
+            for (Iterator<Shoe> it = ordered.getOrderedShoes().iterator(); it.hasNext(); ) {
+                Shoe shoe = it.next();
+                shoeService.addShoeToOrder(new AddShoeToOrderRequest(ordered.getId(), shoe.getId(), ordered.getSize(), null));
+            }
+        }
+    }*/
 
 
 }

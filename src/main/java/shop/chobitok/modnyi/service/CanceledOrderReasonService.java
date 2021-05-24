@@ -83,8 +83,8 @@ public class CanceledOrderReasonService {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append(ordered.getTtn());
             Double generalSum = 0d;
-            for (Shoe shoe : ordered.getOrderedShoes()) {
-                generalSum += shoePriceService.getShoePrice(shoe, ordered).getCost();
+            for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
+                generalSum += shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered).getCost();
             }
             stringBuilder.append("\n").append("Сума : ").append(generalSum);
             mailService.sendEmail("Було оплачено", stringBuilder.toString(), "horodetskyyv@gmail.com");
@@ -247,7 +247,7 @@ public class CanceledOrderReasonService {
                 .append("\n").append(canceledOrderReason.getOrdered().getPostComment())
                 .append("\n\n");
     }
-
+/*
     private String getCoincidences(List<Ordered> createdList,
                                    Set<CanceledOrderReason> toFind, Set<CanceledOrderReason> used,
                                    boolean excludeFromDeliveryFile, List<Ordered> toSave) {
@@ -275,7 +275,7 @@ public class CanceledOrderReasonService {
         }
         return result.toString();
     }
-
+*/
     private String getPayedKeeping(List<CanceledOrderReason> canceledOrderReasons) {
         canceledOrderReasons.sort(Comparator.comparing(canceledOrderReason -> canceledOrderReason.getDatePayedKeeping()));
         StringBuilder result = new StringBuilder();

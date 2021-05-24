@@ -59,7 +59,7 @@ public class StatisticService {
         StringBuilder result = new StringBuilder();
         List<Ordered> orderedList = orderRepository.findAll();
         for (Ordered ordered : orderedList) {
-            if (ordered.getOrderedShoes() == null || ordered.getOrderedShoes().size() < 1 || ordered.getSize() == null) {
+            if (ordered.getOrderedShoeList() == null || ordered.getOrderedShoeList().size() < 1) {
                 result.append(ordered.getTtn() + "  ... замовлення без взуття або розміру \n");
             }
         }
@@ -137,19 +137,19 @@ public class StatisticService {
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndPayedFalseAndStatusIn(Arrays.asList(Status.ОТРИМАНО));
 
         for (Ordered ordered : orderedList) {
-            if (ordered.getOrderedShoes().size() < 1) {
+            if (ordered.getOrderedShoeList().size() < 1) {
                 result.append(ordered.getTtn() + " НЕ ВИЗНАЧЕНО\n");
             } else {
-                for (Shoe shoe : ordered.getOrderedShoes()) {
-                    NeedToBePayed needToBePayed = companySumMap.get(shoe.getCompany().getName());
+                for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
+                    NeedToBePayed needToBePayed = companySumMap.get(orderedShoe.getShoe().getCompany().getName());
                     if (needToBePayed == null) {
                         needToBePayed = new NeedToBePayed();
-                        needToBePayed.sum = shoePriceService.getShoePrice(shoe, ordered).getCost();
+                        needToBePayed.sum = shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered).getCost();
                         needToBePayed.ttns = new ArrayList<>();
                         needToBePayed.ttns.add(ordered.getTtn());
-                        companySumMap.put(shoe.getCompany().getName(), needToBePayed);
+                        companySumMap.put(orderedShoe.getShoe().getCompany().getName(), needToBePayed);
                     } else {
-                        needToBePayed.sum += shoePriceService.getShoePrice(shoe, ordered).getCost();
+                        needToBePayed.sum += shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered).getCost();
                         needToBePayed.ttns.add(ordered.getTtn());
                     }
                 }
@@ -356,8 +356,8 @@ public class StatisticService {
         int notPayed = 0;
         Set<Ordered> received = statusListMap.get(Status.ОТРИМАНО);
         for (Ordered ordered : received) {
-            if (!ordered.isPayedForUser() && ordered.getOrderedShoes() != null && ordered.getOrderedShoes().size() > 0) {
-                notPayed += ordered.getOrderedShoes().size();
+            if (!ordered.isPayedForUser() && ordered.getOrderedShoeList() != null && ordered.getOrderedShoeList().size() > 0) {
+                notPayed += ordered.getOrderedShoeList().size();
             }
         }
         builder.append("Не оплаченно за весь час = " + notPayed);
@@ -375,12 +375,12 @@ public class StatisticService {
     private Map<Shoe, Integer> countShoesAmount(List<Ordered> ordereds) {
         final Map<Shoe, Integer> map = new HashMap<>();
         for (Ordered ordered : ordereds) {
-            for (Shoe shoe : ordered.getOrderedShoes()) {
-                Integer amount = map.get(shoe);
+            for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
+                Integer amount = map.get(orderedShoe);
                 if (amount == null) {
-                    map.put(shoe, 1);
+                    map.put(orderedShoe.getShoe(), 1);
                 } else {
-                    map.put(shoe, ++amount);
+                    map.put(orderedShoe.getShoe(), ++amount);
                 }
             }
         }

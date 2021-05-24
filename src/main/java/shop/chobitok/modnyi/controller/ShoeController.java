@@ -1,10 +1,9 @@
 package shop.chobitok.modnyi.controller;
 
 import org.springframework.web.bind.annotation.*;
+import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Shoe;
-import shop.chobitok.modnyi.entity.request.AddOrRemovePatternRequest;
-import shop.chobitok.modnyi.entity.request.CreateShoeRequest;
-import shop.chobitok.modnyi.entity.request.UpdateShoeRequest;
+import shop.chobitok.modnyi.entity.request.*;
 import shop.chobitok.modnyi.entity.response.ShoeWithPrice;
 import shop.chobitok.modnyi.service.ShoeService;
 
@@ -56,5 +55,14 @@ public class ShoeController {
         return shoeService.getShoePrice(shoeIds, discountId);
     }
 
+    @PatchMapping("/addShoeToOrder")
+    public Ordered addShoeToOrder(@RequestBody AddShoeToOrderRequest request) {
+        return shoeService.addShoeToOrder(request);
+    }
+
+    @PatchMapping("/removeShoeFromOrder")
+    public Ordered removeShoeFromOrder(@RequestBody RemoveShoeFromOrderRequest request) {
+        return shoeService.removeShoeFromOrder(request);
+    }
 
 }

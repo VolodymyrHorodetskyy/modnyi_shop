@@ -1,10 +1,7 @@
 package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
-import shop.chobitok.modnyi.entity.Ordered;
-import shop.chobitok.modnyi.entity.Shoe;
-import shop.chobitok.modnyi.entity.ShoePrice;
-import shop.chobitok.modnyi.entity.Status;
+import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.response.EarningsResponse;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
@@ -68,8 +65,8 @@ public class FinanceService {
     public Double getMargin(List<Ordered> ordereds) {
         Double margin = 0d;
         for (Ordered ordered : ordereds) {
-            for (Shoe shoe : ordered.getOrderedShoes()) {
-                ShoePrice shoePrice = shoePriceService.getShoePrice(shoe, ordered);
+            for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
+                ShoePrice shoePrice = shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered);
                 margin += shoePrice.getPrice() - shoePrice.getCost();
             }
         }
