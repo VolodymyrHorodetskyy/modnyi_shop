@@ -376,7 +376,7 @@ public class StatisticService {
         final Map<Shoe, Integer> map = new HashMap<>();
         for (Ordered ordered : ordereds) {
             for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
-                Integer amount = map.get(orderedShoe);
+                Integer amount = map.get(orderedShoe.getShoe());
                 if (amount == null) {
                     map.put(orderedShoe.getShoe(), 1);
                 } else {
