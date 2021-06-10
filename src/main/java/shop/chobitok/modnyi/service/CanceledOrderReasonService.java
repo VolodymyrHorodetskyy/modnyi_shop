@@ -54,6 +54,10 @@ public class CanceledOrderReasonService {
         this.payedOrderedService = payedOrderedService;
     }
 
+    public CanceledOrderReason getCanceledOrderReasonByOrderedId(Long id) {
+        return canceledOrderReasonRepository.findFirstByOrderedId(id);
+    }
+
     public Ordered cancelOrder(CancelOrderWithOrderRequest cancelOrderRequest) {
         Ordered ordered = orderRepository.findById(cancelOrderRequest.getOrderId()).orElse(null);
         if (ordered == null) {
@@ -247,35 +251,36 @@ public class CanceledOrderReasonService {
                 .append("\n").append(canceledOrderReason.getOrdered().getPostComment())
                 .append("\n\n");
     }
-/*
-    private String getCoincidences(List<Ordered> createdList,
-                                   Set<CanceledOrderReason> toFind, Set<CanceledOrderReason> used,
-                                   boolean excludeFromDeliveryFile, List<Ordered> toSave) {
-        StringBuilder result = new StringBuilder();
-        boolean foundFirst = false;
-        for (Ordered ordered : createdList) {
-            for (CanceledOrderReason canceledOrderReason : toFind) {
-                if (formInside(canceledOrderReason.getOrdered().getPostComment()) == formInside(ordered.getPostComment()) &&
-                        compareShoeArrays(canceledOrderReason.getOrdered().getOrderedShoes(), ordered.getOrderedShoes()) &&
-                        ordered.getSize().equals(canceledOrderReason.getOrdered().getSize()) &&
-                        used.add(canceledOrderReason)) {
-                    if (foundFirst) {
-                        result.append("Співпадіння\n\n");
-                        foundFirst = true;
+
+    /*
+        private String getCoincidences(List<Ordered> createdList,
+                                       Set<CanceledOrderReason> toFind, Set<CanceledOrderReason> used,
+                                       boolean excludeFromDeliveryFile, List<Ordered> toSave) {
+            StringBuilder result = new StringBuilder();
+            boolean foundFirst = false;
+            for (Ordered ordered : createdList) {
+                for (CanceledOrderReason canceledOrderReason : toFind) {
+                    if (formInside(canceledOrderReason.getOrdered().getPostComment()) == formInside(ordered.getPostComment()) &&
+                            compareShoeArrays(canceledOrderReason.getOrdered().getOrderedShoes(), ordered.getOrderedShoes()) &&
+                            ordered.getSize().equals(canceledOrderReason.getOrdered().getSize()) &&
+                            used.add(canceledOrderReason)) {
+                        if (foundFirst) {
+                            result.append("Співпадіння\n\n");
+                            foundFirst = true;
+                        }
+                        result.append(ordered.getTtn() + " " + ordered.getPostComment() + "\n");
+                        result.append(canceledOrderReason.getReturnTtn() + " " + canceledOrderReason.getStatus() + " " + canceledOrderReason.getReason() + "\n\n");
+                        if (excludeFromDeliveryFile) {
+                            ordered.setNotForDeliveryFile(true);
+                            toSave.add(ordered);
+                        }
+                        break;
                     }
-                    result.append(ordered.getTtn() + " " + ordered.getPostComment() + "\n");
-                    result.append(canceledOrderReason.getReturnTtn() + " " + canceledOrderReason.getStatus() + " " + canceledOrderReason.getReason() + "\n\n");
-                    if (excludeFromDeliveryFile) {
-                        ordered.setNotForDeliveryFile(true);
-                        toSave.add(ordered);
-                    }
-                    break;
                 }
             }
+            return result.toString();
         }
-        return result.toString();
-    }
-*/
+    */
     private String getPayedKeeping(List<CanceledOrderReason> canceledOrderReasons) {
         canceledOrderReasons.sort(Comparator.comparing(canceledOrderReason -> canceledOrderReason.getDatePayedKeeping()));
         StringBuilder result = new StringBuilder();

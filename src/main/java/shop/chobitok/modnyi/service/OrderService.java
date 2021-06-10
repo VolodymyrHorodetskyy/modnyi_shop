@@ -341,7 +341,17 @@ public class OrderService {
     }
 
     public String updateOrdersByNovaPosta() {
-        updateOrdersByNovaPosta(orderRepository.findAllByStatusInAndCreatedDateGreaterThan(Arrays.asList(Status.НЕ_ЗНАЙДЕНО, Status.ВІДМОВА), LocalDateTime.now().minusDays(30)));
+        List<Ordered> orderedList = orderRepository.findAllByStatusInAndCreatedDateGreaterThan(Arrays.asList(Status.НЕ_ЗНАЙДЕНО, Status.ВІДМОВА), LocalDateTime.now().minusDays(30));
+        List<Ordered> toUpdate = new ArrayList<>();
+        for (Ordered ordered : orderedList) {
+            if (ordered.getStatus() == Status.ВІДМОВА &&
+                    canceledOrderReasonService.getCanceledOrderReasonByOrderedId(ordered.getId()).isManual()) {
+                continue;
+            } else {
+                toUpdate.add(ordered);
+            }
+        }
+        updateOrdersByNovaPosta(toUpdate);
         return updateOrdersByStatusesByNovaPosta(Arrays.asList(Status.СТВОРЕНО, Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО, Status.ЗМІНА_АДРЕСУ));
     }
 
@@ -527,7 +537,7 @@ public class OrderService {
                     result.append(ordered.getSequenceNumber()).append(". ").append("без накладноЇ\n");
                     for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
                         result.append(orderedShoe.getShoe().getModel()).append(" ").append(orderedShoe.getShoe().getColor())
-                        .append(", розмір: ") .append(orderedShoe.getSize());
+                                .append(", розмір: ").append(orderedShoe.getSize());
                     }
                 }
             }
