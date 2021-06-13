@@ -355,9 +355,11 @@ public class StatisticService {
         builder.append("\n");
         int notPayed = 0;
         Set<Ordered> received = statusListMap.get(Status.ОТРИМАНО);
-        for (Ordered ordered : received) {
-            if (!ordered.isPayedForUser() && ordered.getOrderedShoeList() != null && ordered.getOrderedShoeList().size() > 0) {
-                notPayed += ordered.getOrderedShoeList().size();
+        if (received != null) {
+            for (Ordered ordered : received) {
+                if (!ordered.isPayedForUser() && ordered.getOrderedShoeList() != null && ordered.getOrderedShoeList().size() > 0) {
+                    notPayed += ordered.getOrderedShoeList().size();
+                }
             }
         }
         builder.append("Не оплаченно за весь час = " + notPayed);
