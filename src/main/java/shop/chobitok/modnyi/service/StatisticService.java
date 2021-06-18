@@ -40,8 +40,9 @@ public class StatisticService {
     private PayedOrderedService payedOrderedService;
     private ParamsService paramsService;
     private OurTtnService ourTtnService;
+    private HistoryService historyService;
 
-    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, NPOrderMapper npOrderMapper, OrderService orderService, ShoePriceService shoePriceService, AppOrderRepository appOrderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, PayedOrderedService payedOrderedService, ParamsService paramsService, OurTtnService ourTtnService) {
+    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, NPOrderMapper npOrderMapper, OrderService orderService, ShoePriceService shoePriceService, AppOrderRepository appOrderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, PayedOrderedService payedOrderedService, ParamsService paramsService, OurTtnService ourTtnService, HistoryService historyService) {
         this.postaRepository = postaRepository;
         this.orderRepository = orderRepository;
         this.npOrderMapper = npOrderMapper;
@@ -52,6 +53,7 @@ public class StatisticService {
         this.payedOrderedService = payedOrderedService;
         this.paramsService = paramsService;
         this.ourTtnService = ourTtnService;
+        this.historyService = historyService;
     }
 
     public StringResponse getIssueOrders() {
@@ -368,9 +370,12 @@ public class StatisticService {
 
     public void payAllForOperator(Long userId) {
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndUserIdAndStatusAndPayedForUserFalse(userId, Status.ОТРИМАНО);
+        StringBuilder stringBuilder = new StringBuilder();
         for (Ordered ordered : orderedList) {
             ordered.setPayedForUser(true);
+            stringBuilder.append(ordered.getTtn()).append("\n");
         }
+        historyService.addHistoryRecord(HistoryType.PAYMENT_FOR_OPERATOR, stringBuilder.toString());
         orderRepository.saveAll(orderedList);
     }
 
