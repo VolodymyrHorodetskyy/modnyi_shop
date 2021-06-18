@@ -7,7 +7,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.*;
-import shop.chobitok.modnyi.entity.request.AddShoeToOrderRequest;
 import shop.chobitok.modnyi.entity.request.CreateCompanyRequest;
 import shop.chobitok.modnyi.google.docs.service.GoogleDocsService;
 import shop.chobitok.modnyi.novaposta.entity.Data;
@@ -21,7 +20,6 @@ import shop.chobitok.modnyi.service.*;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 import shop.chobitok.modnyi.util.FileReader;
 
-import javax.mail.internet.AddressException;
 import javax.transaction.Transactional;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -551,12 +549,16 @@ public class NovaPostaTest {
 
     @Test
     public void getAllClientsCSV() {
-        List<Client> clients = clientRepository.findAll();
-        System.out.println(clients.size());
+        /*List<Client> clients = clientRepository.findAll();
+        System.out.println(clients.size());*/
         StringBuilder stringBuilder = new StringBuilder();
-        for (Client client : clients) {
+        OrderedSpecification specification = new OrderedSpecification();
+        specification.setFrom(LocalDateTime.now().minusDays(45));
+        List<Ordered> orderedList = orderRepository.findAll(specification);
+        for (Ordered ordered : orderedList) {
+            Client client = ordered.getClient();
             long count = orderRepository.findByClientId(client.getId())
-                    .stream().filter(ordered -> ordered.getStatus() == Status.ОТРИМАНО).count();
+                    .stream().filter(o -> o.getStatus() == Status.ОТРИМАНО).count();
             stringBuilder.append(client.getMail() == null ? "" : client.getMail()).append(",")
                     .append(client.getPhone()).append(",")
                     .append(client.getName()).append(",")
@@ -580,6 +582,18 @@ public class NovaPostaTest {
             }
         }
     }*/
+
+    @Test
+    public void setOrderedCanceledIfCanceledManually() {
+        List<CanceledOrderReason> canceledOrderReasons = canceledOrderReasonRepository.findByCreatedDateGreaterThanEqual(LocalDateTime.now().minusDays(90));
+        for (CanceledOrderReason reason : canceledOrderReasons) {
+            if (reason.isManual() && reason.getOrdered().getStatus() != Status.ВІДМОВА) {
+              //  reason.getOrdered().setStatus(Status.ВІДМОВА);
+               // orderRepository.save(reason.getOrdered());
+               System.out.println(reason.getOrdered().getTtn());
+            }
+        }
+    }
 
 
 }

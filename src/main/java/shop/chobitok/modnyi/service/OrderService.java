@@ -7,7 +7,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.*;
-import shop.chobitok.modnyi.entity.request.AddShoeToOrderRequest;
 import shop.chobitok.modnyi.entity.request.CreateOrderRequest;
 import shop.chobitok.modnyi.entity.request.ImportOrdersFromStringRequest;
 import shop.chobitok.modnyi.entity.request.UpdateOrderRequest;
@@ -55,12 +54,13 @@ public class OrderService {
     private DiscountService discountService;
     private PayedOrderedService payedOrderedService;
     private CardService cardService;
-    NotificationService notificationService;
+    private NotificationService notificationService;
+    private HistoryService historyService;
 
     @Value("${spring.datasource.username}")
     private String username;
 
-    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, NotificationService notificationService) {
+    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, NotificationService notificationService, HistoryService historyService) {
         this.orderRepository = orderRepository;
         this.shoeRepository = shoeRepository;
         this.clientService = clientService;
@@ -75,6 +75,7 @@ public class OrderService {
         this.payedOrderedService = payedOrderedService;
         this.cardService = cardService;
         this.notificationService = notificationService;
+        this.historyService = historyService;
     }
 
     public Ordered findByTTN(String ttn) {
@@ -471,13 +472,18 @@ public class OrderService {
 
     public StringResponse makeAllPayed() {
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndPayedFalseAndStatusIn(Arrays.asList(Status.ОТРИМАНО));
+        StringBuilder stringBuilder = new StringBuilder();
         for (Ordered ordered : orderedList) {
             if (ordered.getOrderedShoeList().size() > 0) {
                 ordered.setPayed(true);
+                stringBuilder.append(ordered.getTtn()).append("\n");
             }
         }
         payedOrderedService.makeAllCounted();
         orderRepository.saveAll(orderedList);
+        if (stringBuilder.length() > 0) {
+            historyService.addHistoryRecord(HistoryType.PAYMENT_FOR_SHOES, stringBuilder.toString());
+        }
         return new StringResponse("готово");
     }
 

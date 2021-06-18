@@ -27,5 +27,5 @@ public interface CanceledOrderReasonRepository extends JpaRepository<CanceledOrd
 
     List<CanceledOrderReason> findByLastModifiedDateGreaterThanEqualAndStatus(LocalDateTime localDateTime, Status status);
 
-
+    List<CanceledOrderReason> findByCreatedDateGreaterThanEqual(LocalDateTime localDateTime);
 }
