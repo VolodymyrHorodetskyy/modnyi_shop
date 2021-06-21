@@ -457,7 +457,9 @@ public class OrderService {
         StringBuilder result = new StringBuilder();
         List<Ordered> canceledOrdereds = getCanceled(updateStatuses);
         for (Ordered ordered : canceledOrdereds) {
-            result.append(novaPostaService.returnCargo(ordered) + "\n");
+            String retunrCargoResponse = novaPostaService.returnCargo(ordered);
+            result.append(retunrCargoResponse + "\n");
+            historyService.addHistoryRecord(HistoryType.CARGO_RETURN, ordered.getTtn(), retunrCargoResponse);
         }
         return new StringResponse(result.toString());
     }

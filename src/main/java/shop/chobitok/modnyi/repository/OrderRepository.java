@@ -55,6 +55,6 @@ public interface OrderRepository extends JpaRepository<Ordered, Long> {
 
     List<Ordered> findByNpAccountId(Long npAccountId);
 
-    List<Ordered> findByCardId(Long id);
+    List<Ordered> findByCardIdAndNpAccountIdAndCreatedDateGreaterThanEqualAndCreatedDateLessThanEqual(Long id, Long npAccountId, LocalDateTime from, LocalDateTime to);
 
 }

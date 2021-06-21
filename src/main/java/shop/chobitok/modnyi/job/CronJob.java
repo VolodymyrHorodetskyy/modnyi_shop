@@ -33,6 +33,7 @@ public class CronJob {
         checkerService.makeAppOrderNewAgain();
         orderService.updateCanceled();
         checkerService.checkSendOrdersAndTakeMoreFiveDays();
+        orderService.returnAllCanceled(true);
     }
 
     @Scheduled(cron = "0 0 */2 * * *")
@@ -41,5 +42,4 @@ public class CronJob {
         canceledOrderReasonService.setReturnTtnAndUpdateStatus();
         orderService.updateOrdersByNovaPosta();
     }
-
 }

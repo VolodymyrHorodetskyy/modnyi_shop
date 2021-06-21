@@ -17,6 +17,8 @@ import shop.chobitok.modnyi.repository.OrderRepository;
 import java.util.List;
 import java.util.Map;
 
+import static shop.chobitok.modnyi.util.DateHelper.formDateFromOrGetDefault;
+import static shop.chobitok.modnyi.util.DateHelper.formDateToOrGetDefault;
 import static shop.chobitok.modnyi.util.OrderHelper.breakdownByStatuses;
 
 @Service
@@ -66,8 +68,11 @@ public class CardService {
     }
 
     @Transactional
-    public EarningsResponse getSumByCardId(Long id) {
-        List<Ordered> orderedList = orderRepository.findByCardId(id);
+    public EarningsResponse getSumByCardIdAndNpAccountId(Long id, Long npAccountId,
+                                                         String from, String to) {
+        List<Ordered> orderedList = orderRepository
+                .findByCardIdAndNpAccountIdAndCreatedDateGreaterThanEqualAndCreatedDateLessThanEqual(id, npAccountId,
+                        formDateFromOrGetDefault(from), formDateToOrGetDefault(to));
         Map<Status, List<Ordered>> statusListMap = breakdownByStatuses(orderedList);
         Double predictedSum = 0d;
         Double sum = 0d;
@@ -86,13 +91,13 @@ public class CardService {
         return new EarningsResponse(sum, predictedSum, realisticSum);
     }
 
-    public EarningsResponse getSumByActualCard() {
+/*    public EarningsResponse getSumByActualCard() {
         Params params = paramsService.getParam(actualCardParamName);
         if (params != null) {
             return getSumByCardId(Long.parseLong(params.getGetting()));
         }
         return null;
-    }
+    }*/
 
     public Card getActualCard() {
         Params params = paramsService.getParam(actualCardParamName);

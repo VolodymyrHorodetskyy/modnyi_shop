@@ -7,6 +7,7 @@ public class History extends Audit {
 
     private HistoryType type;
     private String record;
+    private String ttn;
 
     public History() {
     }
@@ -14,6 +15,12 @@ public class History extends Audit {
     public History(HistoryType type, String record) {
         this.type = type;
         this.record = record;
+    }
+
+    public History(HistoryType type, String record, String ttn) {
+        this.type = type;
+        this.record = record;
+        this.ttn = ttn;
     }
 
     public HistoryType getType() {
@@ -30,5 +37,13 @@ public class History extends Audit {
 
     public void setRecord(String record) {
         this.record = record;
+    }
+
+    public String getTtn() {
+        return ttn;
+    }
+
+    public void setTtn(String ttn) {
+        this.ttn = ttn;
     }
 }

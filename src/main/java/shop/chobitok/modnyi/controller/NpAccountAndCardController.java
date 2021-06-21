@@ -4,7 +4,6 @@ package shop.chobitok.modnyi.controller;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.Card;
 import shop.chobitok.modnyi.entity.NpAccount;
-import shop.chobitok.modnyi.entity.response.EarningsResponse;
 import shop.chobitok.modnyi.entity.response.SavedParamsForNpAccountStats;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.service.CardService;
@@ -38,14 +37,15 @@ public class NpAccountAndCardController {
     }
 
     @GetMapping("/cardSpends")
-    public StringResponse getCardSpends(@RequestParam Long cardId) {
-        return formCardStatsInfo(cardService.getSumByCardId(cardId));
+    public StringResponse getCardSpends(@RequestParam Long cardId, @RequestParam Long npAccountId
+            , @RequestParam String from, @RequestParam String to) {
+        return formCardStatsInfo(cardService.getSumByCardIdAndNpAccountId(cardId, npAccountId, from, to));
     }
 
-    @GetMapping("/getActualCardSum")
+/*    @GetMapping("/getActualCardSum")
     public EarningsResponse getActualCardSum() {
         return cardService.getSumByActualCard();
-    }
+    }*/
 
     @GetMapping("/getActualCard")
     public Card getActualCard() {
