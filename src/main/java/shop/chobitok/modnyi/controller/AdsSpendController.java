@@ -7,6 +7,7 @@ import shop.chobitok.modnyi.entity.request.SaveAdsSpends;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.service.SpendsService;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -39,6 +40,11 @@ public class AdsSpendController {
     @GetMapping("/getSpendTypes")
     public List<SpendType> getSpendTypes(){
         return Arrays.asList(SpendType.values());
+    }
+
+    @GetMapping("/nowTime")
+    public LocalDateTime now(){
+        return LocalDateTime.now();
     }
 
 }
