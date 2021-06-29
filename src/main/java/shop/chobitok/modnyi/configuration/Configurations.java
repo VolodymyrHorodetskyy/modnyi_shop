@@ -12,7 +12,6 @@ import java.time.ZoneOffset;
 import java.util.Optional;
 
 @Configuration
-@EnableJpaAuditing
 public class Configurations extends PropertyNamingStrategy {
 
     @Bean
