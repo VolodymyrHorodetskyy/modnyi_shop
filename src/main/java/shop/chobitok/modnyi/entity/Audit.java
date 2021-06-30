@@ -26,13 +26,13 @@ public class Audit {
 
     @PrePersist
     public void onCreate() {
-        this.createdDate = LocalDateTime.now(ZoneId.of("GMT+3"));
-        this.lastModifiedDate = LocalDateTime.now(ZoneId.of("GMT+3"));
+        this.createdDate = LocalDateTime.now(ZoneId.of("GMT+6"));
+        this.lastModifiedDate = LocalDateTime.now(ZoneId.of("GMT+6"));
     }
 
     @PreUpdate
     public void onUpdate() {
-        this.lastModifiedDate = LocalDateTime.now(ZoneId.of("GMT+3"));
+        this.lastModifiedDate = LocalDateTime.now(ZoneId.of("GMT+6"));
     }
 
     public Long getId() {
