@@ -25,8 +25,8 @@ public class HistoryService {
         return historyRepository.save(new History(type, record, ttn));
     }
 
-    public List<History> getLast20() {
-        return historyRepository.findAll(new PageRequest(0, 20)).getContent();
+    public List<History> getLast20(HistoryType type) {
+        return historyRepository.findAllByType(new PageRequest(0, 20), type).getContent();
     }
 
 }
