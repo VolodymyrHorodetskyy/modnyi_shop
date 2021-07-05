@@ -67,6 +67,7 @@ public class NPOrderMapper {
                 ordered.setLastCreatedOnTheBasisDocumentTypeNP(data.getLastCreatedOnTheBasisDocumentType());
                 ordered.setDatePayedKeepingNP(ShoeUtil.toLocalDateTime(data.getDatePayedKeeping()));
                 ordered.setDateCreated(ShoeUtil.toLocalDateTime(data.getDateCreated()));
+                ordered.setDeliveryCost(Double.valueOf(data.getDocumentCost()));
                 if (ordered.getOrderedShoeList() == null || ordered.getOrderedShoeList().size() == 0) {
                     setShoeAndSizeFromDescriptionNP(ordered, data.getCargoDescriptionString());
                 }
@@ -102,6 +103,8 @@ public class NPOrderMapper {
             ordered.setDateCreated(ShoeUtil.toLocalDateTime(dataForList.getDateTime()));
             ordered.setCard(cardService.getOrSaveAndGetCardByName(dataForList.getRedeliveryPaymentCard()));
             ordered.setDiscount(discount);
+            ordered.setDeliveryCost(dataForList.getCostOnSite() != null ?
+                    Double.valueOf(dataForList.getCostOnSite()) : null);
             //TODO: setLastCreatedOnTheBasisDocumentTypeNP ?
             if (ordered.getOrderedShoeList() == null || ordered.getOrderedShoeList().size() == 0) {
                 setShoeAndSizeFromDescriptionNP(ordered, dataForList.getDescription());

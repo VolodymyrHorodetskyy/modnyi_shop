@@ -129,6 +129,7 @@ public class CanceledOrderReasonService {
                 if (returned != null) {
                     canceledOrderReason.setReturnTtn(returned.getNumber());
                     canceledOrderReason.setStatus(convertToStatus(returned.getStatusCode()));
+                    canceledOrderReason.setDeliveryCost(Double.valueOf(returned.getDocumentCost()));
                     if (returned.getDatePayedKeeping() != null && canceledOrderReason.getDatePayedKeeping() == null) {
                         canceledOrderReason.setDatePayedKeeping(ShoeUtil.toLocalDateTime(returned.getDatePayedKeeping()));
                     }
@@ -137,6 +138,7 @@ public class CanceledOrderReasonService {
             } else if (!StringUtils.isEmpty(canceledOrderReason.getReturnTtn())) {
                 Data returned = postaRepository.getTracking(null, canceledOrderReason.getReturnTtn()).getData().get(0);
                 canceledOrderReason.setStatus(convertToStatus(returned.getStatusCode()));
+                canceledOrderReason.setDeliveryCost(Double.valueOf(returned.getDocumentCost()));
                 if (returned.getDatePayedKeeping() != null && canceledOrderReason.getDatePayedKeeping() == null) {
                     canceledOrderReason.setDatePayedKeeping(ShoeUtil.toLocalDateTime(returned.getDatePayedKeeping()));
                 }
@@ -212,9 +214,12 @@ public class CanceledOrderReasonService {
         Set<CanceledOrderReason> used = new HashSet<>();
         Set<CanceledOrderReason> toFind = new HashSet<>();
         int countArrived = 0;
-
-
+        Double sumToPayForDelivery = 0d;
         for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
+            sumToPayForDelivery += canceledOrderReason.getDeliveryCost() != null ?
+                    canceledOrderReason.getDeliveryCost() : 0;
+            sumToPayForDelivery += canceledOrderReason.getOrdered().getDeliveryCost() != null ?
+                    canceledOrderReason.getDeliveryCost() : 0;
             if (canceledOrderReason.getReason() == CancelReason.БРАК || canceledOrderReason.getReason() == CancelReason.ПОМИЛКА) {
                 used.add(canceledOrderReason);
             } else {
@@ -238,6 +243,7 @@ public class CanceledOrderReasonService {
         if (toSave.size() > 0) {
             orderRepository.saveAll(toSave);
         }
+        result.append("Сума до сплати: ").append(sumToPayForDelivery);
         String resultString = result.toString();
         googleDocsService.updateReturningsFile(resultString);
         return new StringResponse(resultString);

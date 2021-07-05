@@ -2,6 +2,8 @@ package shop.chobitok.modnyi.service;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -30,17 +32,17 @@ public class AppOrderService {
     private OrderRepository orderRepository;
     private UserRepository userRepository;
     private DiscountService discountService;
-    private AppOrderNewProcessedRepository appOrderNewProcessedRepository;
+    private AppOrderProcessingRepository appOrderProcessingRepository;
 
 
-    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService, AppOrderNewProcessedRepository appOrderNewProcessedRepository) {
+    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService, AppOrderProcessingRepository appOrderProcessingRepository) {
         this.appOrderRepository = appOrderRepository;
         this.orderService = orderService;
         this.clientRepository = clientRepository;
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.discountService = discountService;
-        this.appOrderNewProcessedRepository = appOrderNewProcessedRepository;
+        this.appOrderProcessingRepository = appOrderProcessingRepository;
     }
 
     public AppOrder catchOrder(String s) {
@@ -111,7 +113,7 @@ public class AppOrderService {
 
     public ChangeAppOrderResponse changeAppOrder(ChangeAppOrderRequest request) {
         AppOrder appOrder = appOrderRepository.findById(request.getId()).orElse(null);
-        String message = null;
+
         if (appOrder == null) {
             throw new ConflictException("AppOrder not found");
         }
@@ -123,6 +125,17 @@ public class AppOrderService {
         }
         appOrder.setUser(user);
         String ttn = request.getTtn();
+        String message = processAppOrderTtn(ttn, appOrder, request, user);
+        changeStatus(appOrder, user, request.getStatus());
+        appOrder.setTtn(ttn);
+        appOrder.setComment(request.getComment());
+        return new ChangeAppOrderResponse(message, appOrderRepository.save(appOrder));
+    }
+
+
+    public String processAppOrderTtn(String ttn, AppOrder appOrder, ChangeAppOrderRequest request,
+                                     User user) {
+        String message = null;
         if (!StringUtils.isEmpty(ttn)) {
             ttn = ttn.replaceAll("\\s+", "");
             message = orderService.importOrderFromTTNString(ttn, request.getUserId(), discountService.getById(request.getDiscountId()));
@@ -130,7 +143,7 @@ public class AppOrderService {
             String mail = appOrder.getMail();
             Ordered ordered = orderService.findByTTN(ttn);
             if (ordered == null) {
-                return new ChangeAppOrderResponse(message, appOrder);
+                return null;
             }
             if (!StringUtils.isEmpty(mail)) {
                 Client client = ordered.getClient();
@@ -146,18 +159,15 @@ public class AppOrderService {
             ordered.setUser(user);
             orderRepository.save(ordered);
         }
-        changeStatus(appOrder, user, request.getStatus());
-        appOrder.setTtn(ttn);
-        appOrder.setComment(request.getComment());
-        return new ChangeAppOrderResponse(message, appOrderRepository.save(appOrder));
+        return message;
     }
 
     public AppOrder changeStatus(AppOrder appOrder, User user, AppOrderStatus status) {
-        if (appOrder.getPreviousStatus() == null && appOrder.getStatus() == AppOrderStatus.Новий) {
-            appOrderNewProcessedRepository.save(new AppOrderNewProcessed(appOrder, user));
-        }
         if (appOrder.getStatus() != status) {
             appOrder.setPreviousStatus(appOrder.getStatus());
+            appOrderProcessingRepository.save(new AppOrderProcessing(
+                    appOrder, user, appOrder.getStatus(), status, appOrder.getPreviousStatus() == null
+            ));
         }
         appOrder.setStatus(status);
         return appOrder;
@@ -173,4 +183,10 @@ public class AppOrderService {
         }
         return result.toString();
     }
+
+    public List<AppOrderProcessing> getAllAppOrderProcessingsFromDate(String from) {
+        return appOrderProcessingRepository.findAllByCreatedDateGreaterThanEqual(DateHelper.formDateFromOrGetDefault(from),
+                Sort.by(Sort.Direction.DESC, "createdDate"));
+    }
+
 }

@@ -362,7 +362,8 @@ public class OrderService {
             return updateOrderFields(ordered, checkNewStatusAndReturnStatusCode(data, ordered),
                     data.getRecipientAddress()
                     , data.getRedeliverySum(), cardService.getOrSaveAndGetCardByName(data.getCardMaskedNumber()),
-                    ShoeUtil.toLocalDateTime(data.getDatePayedKeeping()));
+                    ShoeUtil.toLocalDateTime(data.getDatePayedKeeping()),
+                    Double.valueOf(data.getDocumentCost()));
         }
         return ordered;
     }
@@ -371,17 +372,18 @@ public class OrderService {
         if (dataForList != null && ordered != null) {
             return updateOrderFields(ordered, 1, dataForList.getRecipientAddressDescription(),
                     Double.valueOf(dataForList.getBackwardDeliveryMoney()), cardService.getOrSaveAndGetCardByName(dataForList.getRedeliveryPaymentCard()),
-                    null);
+                    null, dataForList.getCostOnSite() != null ?
+                    Double.valueOf(dataForList.getCostOnSite()) : null);
         }
         return ordered;
     }
 
     @Transactional
     private Ordered updateOrderFields(Ordered ordered, Integer statusCode, String recipientAddress
-            , Double redeliverySum, Card card, LocalDateTime datePayedKeeping) {
+            , Double redeliverySum, Card card, LocalDateTime datePayedKeeping, Double deliveryCost) {
         Status oldStatus = ordered.getStatus();
         Status newStatus = convertToStatus(statusCode);
-        updateOrderFieldBeforeStatusesCheck(ordered, redeliverySum, card, datePayedKeeping);
+        updateOrderFieldsBeforeStatusesCheck(ordered, redeliverySum, card, datePayedKeeping, deliveryCost);
         if (oldStatus != newStatus) {
             statusChangeService.createRecord(ordered, oldStatus, newStatus);
             ordered.setStatus(newStatus);
@@ -404,7 +406,9 @@ public class OrderService {
         return orderRepository.save(ordered);
     }
 
-    private Ordered updateOrderFieldBeforeStatusesCheck(Ordered ordered, Double redeliverySum, Card card, LocalDateTime datePayedKeeping) {
+    private Ordered updateOrderFieldsBeforeStatusesCheck(Ordered ordered, Double redeliverySum, Card card,
+                                                         LocalDateTime datePayedKeeping, Double deliveryCost) {
+        ordered.setDeliveryCost(deliveryCost);
         if (redeliverySum != null) {
             ordered.setReturnSumNP(redeliverySum);
         }

@@ -112,6 +112,9 @@ public class Ordered extends Audit {
     @Column
     private String addressChangeTtn;
 
+    @Column
+    private Double deliveryCost;
+
     public boolean isNotForDeliveryFile() {
         return notForDeliveryFile;
     }
@@ -382,5 +385,13 @@ public class Ordered extends Audit {
 
     public void setOrderedShoeList(List<OrderedShoe> orderedShoeList) {
         this.orderedShoeList = orderedShoeList;
+    }
+
+    public Double getDeliveryCost() {
+        return deliveryCost;
+    }
+
+    public void setDeliveryCost(Double deliveryCost) {
+        this.deliveryCost = deliveryCost;
     }
 }
