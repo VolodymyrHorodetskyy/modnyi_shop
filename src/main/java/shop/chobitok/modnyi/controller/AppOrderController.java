@@ -2,7 +2,6 @@ package shop.chobitok.modnyi.controller;
 
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.AppOrder;
-import shop.chobitok.modnyi.entity.AppOrderProcessing;
 import shop.chobitok.modnyi.entity.AppOrderStatus;
 import shop.chobitok.modnyi.entity.request.ChangeAppOrderRequest;
 import shop.chobitok.modnyi.entity.response.ChangeAppOrderResponse;
@@ -53,11 +52,6 @@ public class AppOrderController {
             }
         }
         return appOrderStatuses;
-    }
-
-    @GetMapping("getAppOrderProcessingHistory")
-    List<AppOrderProcessing> getAppOrderProcessingHistory(@RequestParam String fromDate) {
-        return appOrderService.getAllAppOrderProcessingsFromDate(fromDate);
     }
 
     @PatchMapping("makeAppOrdersNewAgain")

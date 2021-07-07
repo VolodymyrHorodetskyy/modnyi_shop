@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -35,7 +36,8 @@ public class AppOrder extends Audit {
     private String ttn;
     @ManyToOne(cascade = CascadeType.ALL)
     private User user;
-
+    @Column
+    private LocalDateTime dateAppOrderShouldBeProcessed;
 
     public AppOrder() {
     }
@@ -139,5 +141,13 @@ public class AppOrder extends Audit {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public LocalDateTime getDateAppOrderShouldBeProcessed() {
+        return dateAppOrderShouldBeProcessed;
+    }
+
+    public void setDateAppOrderShouldBeProcessed(LocalDateTime dateAppOrderShouldBeProcessed) {
+        this.dateAppOrderShouldBeProcessed = dateAppOrderShouldBeProcessed;
     }
 }

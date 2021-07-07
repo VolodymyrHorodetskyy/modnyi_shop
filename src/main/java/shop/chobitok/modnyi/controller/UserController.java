@@ -1,11 +1,10 @@
 package shop.chobitok.modnyi.controller;
 
 
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.User;
+import shop.chobitok.modnyi.entity.UserLoggedIn;
+import shop.chobitok.modnyi.entity.request.LogInRequest;
 import shop.chobitok.modnyi.service.UserService;
 
 import java.util.List;
@@ -26,5 +25,9 @@ public class UserController {
         return userService.getAll();
     }
 
+    @PostMapping
+    public UserLoggedIn logIn(@RequestBody LogInRequest request) {
+        return userService.logIn(request);
+    }
 
 }

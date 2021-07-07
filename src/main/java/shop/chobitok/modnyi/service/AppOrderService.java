@@ -2,8 +2,6 @@ package shop.chobitok.modnyi.service;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -18,10 +16,13 @@ import shop.chobitok.modnyi.util.DateHelper;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static shop.chobitok.modnyi.util.DateHelper.formDateFromOrGetDefault;
 
 @Service
 public class AppOrderService {
@@ -33,9 +34,9 @@ public class AppOrderService {
     private UserRepository userRepository;
     private DiscountService discountService;
     private AppOrderProcessingRepository appOrderProcessingRepository;
+    private ParamsService paramsService;
 
-
-    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService, AppOrderProcessingRepository appOrderProcessingRepository) {
+    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService, AppOrderProcessingRepository appOrderProcessingRepository, ParamsService paramsService) {
         this.appOrderRepository = appOrderRepository;
         this.orderService = orderService;
         this.clientRepository = clientRepository;
@@ -43,6 +44,7 @@ public class AppOrderService {
         this.userRepository = userRepository;
         this.discountService = discountService;
         this.appOrderProcessingRepository = appOrderProcessingRepository;
+        this.paramsService = paramsService;
     }
 
     public AppOrder catchOrder(String s) {
@@ -76,6 +78,16 @@ public class AppOrderService {
         }
         appOrder.setStatus(AppOrderStatus.Новий);
         return appOrderRepository.save(appOrder);
+    }
+
+    public void setShouldBeProcessedAppOrderDate(AppOrder appOrder) {
+        //getLastUser
+        User user = null;
+        int minutesAppOrderShouldBeProcessed =
+                Integer.parseInt(paramsService.getParam("minutesAppOrderShouldBeProcessed").getGetting());
+        LocalDateTime appOrderCreatedDate = appOrder.getCreatedDate();
+        int startOfDayWorkingHour = getStartOfWorkingDayHour(appOrderCreatedDate.getDayOfWeek());
+        int endOfDayWorkingHour = getEndOfWorkingDayHour(appOrderCreatedDate.getDayOfWeek());
     }
 
     public Map<AppOrderStatus, Set<AppOrder>> getAll(Long id, String phoneAndName, String comment, String fromForNotReady, String fromForReady
@@ -184,9 +196,65 @@ public class AppOrderService {
         return result.toString();
     }
 
-    public List<AppOrderProcessing> getAllAppOrderProcessingsFromDate(String from) {
-        return appOrderProcessingRepository.findAllByCreatedDateGreaterThanEqual(DateHelper.formDateFromOrGetDefault(from),
-                Sort.by(Sort.Direction.DESC, "createdDate"));
+    public Map<AppOrder, LocalDateTime> getAllAppOrderAndDateTimeWhenShouldBeProcessed(String from) {
+        int minutesAppOrderShouldBeProcessed =
+                Integer.parseInt(paramsService.getParam("minutesAppOrderShouldBeProcessed").getGetting());
+        LocalDateTime fromLocalDateTime = formDateFromOrGetDefault(from);
+        List<AppOrder> appOrders = appOrderRepository.findByCreatedDateGreaterThanEqualOrderByCreatedDateDesc(fromLocalDateTime);
+        Map<AppOrder, LocalDateTime> appOrderDateTimeMap = new LinkedHashMap<>();
+        LocalDateTime lastShouldBeProcessedDate = null;
+        for (AppOrder appOrder : appOrders) {
+            LocalDateTime appOrderCreatedDate = appOrder.getCreatedDate();
+            int startOfDayWorkingHour = getStartOfWorkingDayHour(appOrderCreatedDate.getDayOfWeek());
+            int endOfDayWorkingHour = getEndOfWorkingDayHour(appOrderCreatedDate.getDayOfWeek());
+            if (lastShouldBeProcessedDate == null) {
+                lastShouldBeProcessedDate = appOrderCreatedDate.withMinute(0)
+                        .withSecond(0)
+                        .withHour(startOfDayWorkingHour);
+            } else {
+                int newMinutes = lastShouldBeProcessedDate.getMinute() + minutesAppOrderShouldBeProcessed;
+                if (newMinutes >= 60) {
+                    int newHour = lastShouldBeProcessedDate.getHour() + 1;
+                    if (newHour > endOfDayWorkingHour) {
+                        lastShouldBeProcessedDate.withDayOfYear(lastShouldBeProcessedDate.getDayOfYear() + 1);
+                        lastShouldBeProcessedDate.withSecond(0).withMinute(0)
+                                .withHour(getStartOfWorkingDayHour(lastShouldBeProcessedDate.getDayOfWeek()));
+                    } else {
+                        lastShouldBeProcessedDate = lastShouldBeProcessedDate.withMinute(newMinutes - 60)
+                                .withHour(newHour);
+                    }
+                } else {
+                    lastShouldBeProcessedDate =
+                            lastShouldBeProcessedDate.withMinute(newMinutes);
+                }
+
+            }
+            if (lastShouldBeProcessedDate.getHour() <= endOfDayWorkingHour
+                    && lastShouldBeProcessedDate.getHour() >= startOfDayWorkingHour) {
+                appOrderDateTimeMap.put(appOrder, lastShouldBeProcessedDate);
+            }
+        }
+        return appOrderDateTimeMap;
+    }
+
+    public int getStartOfWorkingDayHour(DayOfWeek dayOfWeek) {
+        if (dayOfWeek == DayOfWeek.SATURDAY) {
+            return Integer.valueOf(paramsService.getParam("workingHoursSaturdayFrom").getGetting()).intValue();
+        } else if (dayOfWeek == DayOfWeek.SUNDAY) {
+            return Integer.valueOf(paramsService.getParam("workingHoursSundayFrom").getGetting()).intValue();
+        } else {
+            return Integer.valueOf(paramsService.getParam("workingHoursWeekDayFrom").getGetting()).intValue();
+        }
+    }
+
+    public int getEndOfWorkingDayHour(DayOfWeek dayOfWeek) {
+        if (dayOfWeek == DayOfWeek.SATURDAY) {
+            return Integer.valueOf(paramsService.getParam("workingHoursSaturdayTo").getGetting()).intValue();
+        } else if (dayOfWeek == DayOfWeek.SUNDAY) {
+            return Integer.valueOf(paramsService.getParam("workingHoursSundayTo").getGetting()).intValue();
+        } else {
+            return Integer.valueOf(paramsService.getParam("workingHoursWeekDayTo").getGetting()).intValue();
+        }
     }
 
 }
