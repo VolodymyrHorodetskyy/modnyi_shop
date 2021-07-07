@@ -8,7 +8,6 @@ import shop.chobitok.modnyi.repository.UserLoggedInRepository;
 import shop.chobitok.modnyi.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -42,6 +41,15 @@ public class UserService {
             }
         }
         return userLoggedIn;
+    }
+
+    public boolean checkIfUserIsLogged(Long id) {
+        boolean logged = false;
+        UserLoggedIn userLoggedIn = userLoggedInRepository.findById(id).orElse(null);
+        if (userLoggedIn != null) {
+            logged = userLoggedIn.isActive();
+        }
+        return logged;
     }
 
 }

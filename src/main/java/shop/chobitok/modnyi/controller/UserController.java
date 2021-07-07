@@ -30,4 +30,9 @@ public class UserController {
         return userService.logIn(request);
     }
 
+    @GetMapping("userLoggedIn")
+    public boolean checkIfUserLoggedIn(@RequestParam Long id) {
+        return userService.checkIfUserIsLogged(id);
+    }
+
 }
