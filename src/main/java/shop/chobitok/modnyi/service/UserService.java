@@ -10,15 +10,19 @@ import shop.chobitok.modnyi.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static java.util.stream.Collectors.toList;
+
 @Service
 public class UserService {
 
     private UserRepository userRepository;
     private UserLoggedInRepository userLoggedInRepository;
+    private AppOrderService appOrderService;
 
-    public UserService(UserRepository userRepository, UserLoggedInRepository userLoggedInRepository) {
+    public UserService(UserRepository userRepository, UserLoggedInRepository userLoggedInRepository, AppOrderService appOrderService) {
         this.userRepository = userRepository;
         this.userLoggedInRepository = userLoggedInRepository;
+        this.appOrderService = appOrderService;
     }
 
     public List<User> getAll() {
@@ -31,14 +35,18 @@ public class UserService {
         LocalDateTime endOfDay = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59);
         UserLoggedIn userLoggedIn = null;
         if (user != null) {
-            userLoggedIn = userLoggedInRepository.findOneByCreatedDateGreaterThanEqualAndCreatedDateLessThanEqual(
-                    beginningOfDay, endOfDay);
+            userLoggedIn = userLoggedInRepository.findOneByCreatedDateGreaterThanEqualAndCreatedDateLessThanEqualAndUserId(
+                    beginningOfDay, endOfDay, request.getId());
             if (userLoggedIn == null) {
                 userLoggedIn = userLoggedInRepository.save(new UserLoggedIn(user));
             } else {
                 userLoggedIn.setActive(true);
                 userLoggedIn = userLoggedInRepository.save(userLoggedIn);
             }
+            appOrderService.setShouldBeProcessedAppOrderDateAndAssignToUser(
+                    userLoggedInRepository.findAllByCreatedDateGreaterThanEqualAndCreatedDateLessThanEqual(
+                            beginningOfDay, endOfDay
+                    ).stream().map(userLoggedIn1 -> userLoggedIn1.getUser()).collect(toList()));
         }
         return userLoggedIn;
     }

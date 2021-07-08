@@ -18,6 +18,8 @@ public interface AppOrderRepository extends JpaRepository<AppOrder, Long> {
 
     List<AppOrder> findByStatusIn(List<AppOrderStatus> statuses);
 
+    List<AppOrder> findByStatusInOrderByCreatedDateDesc(List<AppOrderStatus> statuses);
+
     List<AppOrder> findByPreviousStatus(AppOrderStatus status);
 
     List<AppOrder> findByCreatedDateLessThanAndStatusIn(LocalDateTime localDateTime, List<AppOrderStatus> statuses);
