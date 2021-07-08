@@ -11,4 +11,6 @@ public interface AppOrderProcessingRepository extends JpaRepository<AppOrderProc
 
     List<AppOrderProcessing> findAllByCreatedDateGreaterThanEqualAndOldStatusOrderByCreatedDateDesc(LocalDateTime from, AppOrderStatus status);
 
+    AppOrderProcessing findFirstByUserIdOrderByLastModifiedDateDesc(Long id);
+
 }

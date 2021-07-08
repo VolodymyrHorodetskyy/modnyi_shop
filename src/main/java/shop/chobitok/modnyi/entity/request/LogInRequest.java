@@ -2,15 +2,15 @@ package shop.chobitok.modnyi.entity.request;
 
 public class LogInRequest {
 
-    private Long id;
+    private String name;
     private String password;
 
-    public Long getId() {
-        return id;
+    public String getName() {
+        return name;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getPassword() {

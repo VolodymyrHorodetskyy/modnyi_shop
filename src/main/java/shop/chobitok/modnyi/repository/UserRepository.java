@@ -7,6 +7,6 @@ import shop.chobitok.modnyi.entity.User;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    User findOneByIdAndPassword(Long id, String password);
+    User findOneByNameAndPassword(String name, String password);
 
 }

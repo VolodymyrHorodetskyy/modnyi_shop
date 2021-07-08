@@ -80,16 +80,30 @@ public class AppOrderService {
         return appOrderRepository.save(appOrder);
     }
 
+    public AppOrder findFirstShouldBeProcessedAppOrderByUserId(Long id) {
+        AppOrder appOrder = appOrderRepository.findFirstByStatusInAndPreviousStatusIsNullAndUserIdOrderByCreatedDateDesc(
+                Arrays.asList(AppOrderStatus.Новий), id);
+        if (appOrder == null) {
+            appOrder = appOrderRepository.findFirstByStatusInAndUserIdOrderByCreatedDateDesc(
+                    Arrays.asList(AppOrderStatus.Новий), id);
+        }
+        return appOrder;
+    }
+
+    public List<AppOrder> getAllNewAppOrdersByUserId(Long userId) {
+        return appOrderRepository.findAllByStatusInAndUserId(Arrays.asList(AppOrderStatus.Новий), userId);
+    }
+
     public void setShouldBeProcessedAppOrderDateAndAssignToUser(List<User> users) {
         if (users.size() > 0) {
             int getUserIndex = 0;
             List<AppOrder> appOrders = appOrderRepository.findByStatusInOrderByCreatedDateDesc(
                     Arrays.asList(AppOrderStatus.Новий));
-            int startOfDayWorkingHour = getStartOfWorkingDayHour(LocalDateTime.now().getDayOfWeek());
-            LocalDateTime shouldBeProcessedDate = LocalDateTime.now().withHour(startOfDayWorkingHour).withMinute(0).withSecond(0);
             int endOfDayWorkingHour = getEndOfWorkingDayHour(LocalDateTime.now().getDayOfWeek());
             int minutesAppOrderShouldBeProcessed =
                     Integer.parseInt(paramsService.getParam("minutesAppOrderShouldBeProcessed").getGetting());
+            LocalDateTime shouldBeProcessedDate = findFirstAvailableLocalDateTimeForShouldBeProcessedByUserId(users.get(getUserIndex).getId(),
+                    endOfDayWorkingHour, minutesAppOrderShouldBeProcessed);
             for (AppOrder appOrder : appOrders) {
                 appOrder.setUser(users.get(getUserIndex));
                 appOrder.setDateAppOrderShouldBeProcessed(shouldBeProcessedDate);
@@ -103,6 +117,22 @@ public class AppOrderService {
             }
             appOrderRepository.saveAll(appOrders);
         }
+    }
+
+    public LocalDateTime findFirstAvailableLocalDateTimeForShouldBeProcessedByUserId(Long userId,
+                                                                                     int endOfWorkingDay,
+                                                                                     int minutesAppOrderShouldBeProcessed) {
+        LocalDateTime availableShouldBeProcessedDateTime = null;
+        AppOrderProcessing appOrderProcessing = appOrderProcessingRepository.findFirstByUserIdOrderByLastModifiedDateDesc(userId);
+        int startOfDayWorkingHour = getStartOfWorkingDayHour(LocalDateTime.now().getDayOfWeek());
+        if (appOrderProcessing == null) {
+            availableShouldBeProcessedDateTime = LocalDateTime.now().withHour(startOfDayWorkingHour).withMinute(0).withSecond(0);
+        } else {
+            availableShouldBeProcessedDateTime = getNextShouldBeProcessedLocalDateTime(appOrderProcessing.getAppOrder().getDateAppOrderShouldBeProcessed(),
+                    endOfWorkingDay, minutesAppOrderShouldBeProcessed
+            );
+        }
+        return availableShouldBeProcessedDateTime;
     }
 
     public Map<AppOrderStatus, Set<AppOrder>> getAll(Long id, String phoneAndName, String comment, String fromForNotReady, String fromForReady

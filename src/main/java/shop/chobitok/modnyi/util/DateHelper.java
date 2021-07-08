@@ -53,4 +53,11 @@ public class DateHelper {
         return dateTime.with(LocalTime.of(0, 0, 0));
     }
 
+    public static LocalDateTime makeDateBeginningOfDay(LocalDateTime localDateTime) {
+        return localDateTime.withHour(0).withMinute(0).withSecond(0);
+    }
+
+    public static LocalDateTime makeDateEndOfDay(LocalDateTime localDateTime) {
+        return localDateTime.withHour(23).withMinute(59).withSecond(59);
+    }
 }

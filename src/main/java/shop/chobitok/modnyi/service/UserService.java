@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
+import static shop.chobitok.modnyi.util.DateHelper.makeDateBeginningOfDay;
+import static shop.chobitok.modnyi.util.DateHelper.makeDateEndOfDay;
 
 @Service
 public class UserService {
@@ -30,34 +32,46 @@ public class UserService {
     }
 
     public UserLoggedIn logIn(LogInRequest request) {
-        User user = userRepository.findOneByIdAndPassword(request.getId(), request.getPassword());
+        User user = userRepository.findOneByNameAndPassword(request.getName(), request.getPassword());
         LocalDateTime beginningOfDay = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0);
         LocalDateTime endOfDay = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59);
         UserLoggedIn userLoggedIn = null;
         if (user != null) {
             userLoggedIn = userLoggedInRepository.findOneByCreatedDateGreaterThanEqualAndCreatedDateLessThanEqualAndUserId(
-                    beginningOfDay, endOfDay, request.getId());
+                    beginningOfDay, endOfDay, user.getId());
             if (userLoggedIn == null) {
                 userLoggedIn = userLoggedInRepository.save(new UserLoggedIn(user));
+                setShouldBeProcessed(beginningOfDay, endOfDay);
             } else {
-                userLoggedIn.setActive(true);
-                userLoggedIn = userLoggedInRepository.save(userLoggedIn);
+                if (!userLoggedIn.isActive()) {
+                    setShouldBeProcessed(beginningOfDay, endOfDay);
+                    userLoggedIn.setActive(true);
+                    userLoggedIn = userLoggedInRepository.save(userLoggedIn);
+                }
             }
-            appOrderService.setShouldBeProcessedAppOrderDateAndAssignToUser(
-                    userLoggedInRepository.findAllByCreatedDateGreaterThanEqualAndCreatedDateLessThanEqual(
-                            beginningOfDay, endOfDay
-                    ).stream().map(userLoggedIn1 -> userLoggedIn1.getUser()).collect(toList()));
         }
         return userLoggedIn;
     }
 
-    public boolean checkIfUserIsLogged(Long id) {
-        boolean logged = false;
-        UserLoggedIn userLoggedIn = userLoggedInRepository.findById(id).orElse(null);
-        if (userLoggedIn != null) {
-            logged = userLoggedIn.isActive();
+    public void setShouldBeProcessed(LocalDateTime beginningOfDay, LocalDateTime endOfDay) {
+        appOrderService.setShouldBeProcessedAppOrderDateAndAssignToUser(
+                userLoggedInRepository.findAllByCreatedDateGreaterThanEqualAndCreatedDateLessThanEqual(
+                        beginningOfDay, endOfDay
+                ).stream().map(userLoggedIn1 -> userLoggedIn1.getUser()).collect(toList()));
+    }
+
+    public UserLoggedIn checkIfUserIsLogged(Long id) {
+        UserLoggedIn userLoggedIn = userLoggedInRepository
+                .findOneByCreatedDateGreaterThanEqualAndCreatedDateLessThanEqualAndUserId(makeDateBeginningOfDay(LocalDateTime.now()),
+                        makeDateEndOfDay(LocalDateTime.now()), id);
+        if (userLoggedIn != null && userLoggedIn.isActive()) {
+            return userLoggedIn;
         }
-        return logged;
+        return null;
+    }
+
+    public Object getFirstItemToProcessByUserId(Long id) {
+        return appOrderService.findFirstShouldBeProcessedAppOrderByUserId(id);
     }
 
 }

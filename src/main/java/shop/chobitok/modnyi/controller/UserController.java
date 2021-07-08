@@ -31,8 +31,12 @@ public class UserController {
     }
 
     @GetMapping("userLoggedIn")
-    public boolean checkIfUserLoggedIn(@RequestParam Long id) {
+    public UserLoggedIn checkIfUserLoggedIn(@RequestParam Long id) {
         return userService.checkIfUserIsLogged(id);
     }
 
+    @GetMapping("getFirstItemShouldBeProcessed")
+    public Object getFirstItemShouldBeProcessed(@RequestParam Long userId) {
+        return userService.getFirstItemToProcessByUserId(userId);
+    }
 }

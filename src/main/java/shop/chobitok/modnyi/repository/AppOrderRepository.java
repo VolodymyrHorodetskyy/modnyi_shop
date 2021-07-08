@@ -28,6 +28,12 @@ public interface AppOrderRepository extends JpaRepository<AppOrder, Long> {
 
     List<AppOrder> findByCreatedDateGreaterThanEqualOrderByCreatedDateDesc(LocalDateTime from);
 
+    List<AppOrder> findAllByStatusInAndUserId(List<AppOrderStatus> statuses, Long id);
+
+    AppOrder findFirstByStatusInAndUserIdOrderByCreatedDateDesc(List<AppOrderStatus> statuses, Long id);
+
+    AppOrder findFirstByStatusInAndPreviousStatusIsNullAndUserIdOrderByCreatedDateDesc(List<AppOrderStatus> statuses, Long id);
+
     AppOrder findOneByTtn(String ttn);
 
 }
