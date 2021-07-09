@@ -130,6 +130,7 @@ public class CanceledOrderReasonService {
                     canceledOrderReason.setReturnTtn(returned.getNumber());
                     canceledOrderReason.setStatus(convertToStatus(returned.getStatusCode()));
                     canceledOrderReason.setDeliveryCost(Double.valueOf(returned.getDocumentCost()));
+                    canceledOrderReason.setStoragePrice(!returned.getStoragePrice().isEmpty() ? Double.valueOf(returned.getStoragePrice()) : null);
                     if (returned.getDatePayedKeeping() != null && canceledOrderReason.getDatePayedKeeping() == null) {
                         canceledOrderReason.setDatePayedKeeping(ShoeUtil.toLocalDateTime(returned.getDatePayedKeeping()));
                     }
@@ -139,6 +140,7 @@ public class CanceledOrderReasonService {
                 Data returned = postaRepository.getTracking(null, canceledOrderReason.getReturnTtn()).getData().get(0);
                 canceledOrderReason.setStatus(convertToStatus(returned.getStatusCode()));
                 canceledOrderReason.setDeliveryCost(Double.valueOf(returned.getDocumentCost()));
+                canceledOrderReason.setStoragePrice(!returned.getStoragePrice().isEmpty() ? Double.valueOf(returned.getStoragePrice()) : null);
                 if (returned.getDatePayedKeeping() != null && canceledOrderReason.getDatePayedKeeping() == null) {
                     canceledOrderReason.setDatePayedKeeping(ShoeUtil.toLocalDateTime(returned.getDatePayedKeeping()));
                 }
@@ -215,11 +217,10 @@ public class CanceledOrderReasonService {
         Set<CanceledOrderReason> toFind = new HashSet<>();
         int countArrived = 0;
         Double sumToPayForDelivery = 0d;
+        Double sumToPayPaidKeeping = 0d;
         for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
-            sumToPayForDelivery += canceledOrderReason.getDeliveryCost() != null ?
-                    canceledOrderReason.getDeliveryCost() : 0;
-            sumToPayForDelivery += canceledOrderReason.getOrdered().getDeliveryCost() != null ?
-                    canceledOrderReason.getDeliveryCost() : 0;
+            sumToPayForDelivery += countDeliveryCost(canceledOrderReason);
+            sumToPayPaidKeeping += countPayedKeepingCost(canceledOrderReason);
             if (canceledOrderReason.getReason() == CancelReason.БРАК || canceledOrderReason.getReason() == CancelReason.ПОМИЛКА) {
                 used.add(canceledOrderReason);
             } else {
@@ -243,10 +244,30 @@ public class CanceledOrderReasonService {
         if (toSave.size() > 0) {
             orderRepository.saveAll(toSave);
         }
-        result.append("Сума до сплати: ").append(sumToPayForDelivery);
+        result.append("Сума доставки: ").append(sumToPayForDelivery).append("\n");
+        result.append("Платні зберігання: ").append(sumToPayPaidKeeping).append("\n");
+        result.append("Загальна сума: ").append(sumToPayPaidKeeping + sumToPayPaidKeeping);
         String resultString = result.toString();
         googleDocsService.updateReturningsFile(resultString);
         return new StringResponse(resultString);
+    }
+
+    private Double countDeliveryCost(CanceledOrderReason canceledOrderReason) {
+        Double sumToPayForDelivery = 0d;
+        sumToPayForDelivery += canceledOrderReason.getDeliveryCost() != null ?
+                canceledOrderReason.getDeliveryCost() : 0;
+        sumToPayForDelivery += canceledOrderReason.getOrdered().getDeliveryCost() != null ?
+                canceledOrderReason.getDeliveryCost() : 0;
+        return sumToPayForDelivery;
+    }
+
+    private Double countPayedKeepingCost(CanceledOrderReason canceledOrderReason) {
+        Double sumPayedKeeping = 0d;
+        sumPayedKeeping += canceledOrderReason.getStoragePrice() != null ?
+                canceledOrderReason.getStoragePrice() : 0;
+        sumPayedKeeping += canceledOrderReason.getOrdered().getStoragePrice() != null ?
+                canceledOrderReason.getOrdered().getStoragePrice() : 0;
+        return sumPayedKeeping;
     }
 
     private void appendReturnTtns(StringBuilder stringBuilder, boolean showClientTtn,

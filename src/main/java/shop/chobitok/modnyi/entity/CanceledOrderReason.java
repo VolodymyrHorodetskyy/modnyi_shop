@@ -26,6 +26,8 @@ public class CanceledOrderReason extends Audit {
     private LocalDateTime datePayedKeeping;
     @Column
     private Double deliveryCost;
+    @Column
+    private Double storagePrice;
 
     public CanceledOrderReason() {
     }
@@ -115,5 +117,13 @@ public class CanceledOrderReason extends Audit {
 
     public void setDeliveryCost(Double deliveryCost) {
         this.deliveryCost = deliveryCost;
+    }
+
+    public Double getStoragePrice() {
+        return storagePrice;
+    }
+
+    public void setStoragePrice(Double storagePrice) {
+        this.storagePrice = storagePrice;
     }
 }

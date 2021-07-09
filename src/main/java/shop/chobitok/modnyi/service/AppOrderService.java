@@ -35,8 +35,9 @@ public class AppOrderService {
     private DiscountService discountService;
     private AppOrderProcessingRepository appOrderProcessingRepository;
     private ParamsService paramsService;
+    private UserEfficiencyService userEfficiencyService;
 
-    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService, AppOrderProcessingRepository appOrderProcessingRepository, ParamsService paramsService) {
+    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService, AppOrderProcessingRepository appOrderProcessingRepository, ParamsService paramsService, UserEfficiencyService userEfficiencyService) {
         this.appOrderRepository = appOrderRepository;
         this.orderService = orderService;
         this.clientRepository = clientRepository;
@@ -45,6 +46,7 @@ public class AppOrderService {
         this.discountService = discountService;
         this.appOrderProcessingRepository = appOrderProcessingRepository;
         this.paramsService = paramsService;
+        this.userEfficiencyService = userEfficiencyService;
     }
 
     public AppOrder catchOrder(String s) {
@@ -220,6 +222,7 @@ public class AppOrderService {
     }
 
     public AppOrder changeStatus(AppOrder appOrder, User user, AppOrderStatus status) {
+        userEfficiencyService.determineEfficiency(appOrder, user);
         if (appOrder.getStatus() != status) {
             appOrder.setPreviousStatus(appOrder.getStatus());
             appOrderProcessingRepository.save(new AppOrderProcessing(

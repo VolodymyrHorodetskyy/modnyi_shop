@@ -115,6 +115,9 @@ public class Ordered extends Audit {
     @Column
     private Double deliveryCost;
 
+    @Column
+    private Double storagePrice;
+
     public boolean isNotForDeliveryFile() {
         return notForDeliveryFile;
     }
@@ -393,5 +396,13 @@ public class Ordered extends Audit {
 
     public void setDeliveryCost(Double deliveryCost) {
         this.deliveryCost = deliveryCost;
+    }
+
+    public Double getStoragePrice() {
+        return storagePrice;
+    }
+
+    public void setStoragePrice(Double storagePrice) {
+        this.storagePrice = storagePrice;
     }
 }

@@ -363,7 +363,8 @@ public class OrderService {
                     data.getRecipientAddress()
                     , data.getRedeliverySum(), cardService.getOrSaveAndGetCardByName(data.getCardMaskedNumber()),
                     ShoeUtil.toLocalDateTime(data.getDatePayedKeeping()),
-                    Double.valueOf(data.getDocumentCost()));
+                    Double.valueOf(data.getDocumentCost()),
+                    !data.getStoragePrice().isEmpty() ? Double.valueOf(data.getStoragePrice()) : null);
         }
         return ordered;
     }
@@ -373,17 +374,19 @@ public class OrderService {
             return updateOrderFields(ordered, 1, dataForList.getRecipientAddressDescription(),
                     Double.valueOf(dataForList.getBackwardDeliveryMoney()), cardService.getOrSaveAndGetCardByName(dataForList.getRedeliveryPaymentCard()),
                     null, dataForList.getCostOnSite() != null ?
-                    Double.valueOf(dataForList.getCostOnSite()) : null);
+                            Double.valueOf(dataForList.getCostOnSite()) : null, null);
         }
         return ordered;
     }
 
     @Transactional
     private Ordered updateOrderFields(Ordered ordered, Integer statusCode, String recipientAddress
-            , Double redeliverySum, Card card, LocalDateTime datePayedKeeping, Double deliveryCost) {
+            , Double redeliverySum, Card card, LocalDateTime datePayedKeeping, Double deliveryCost,
+                                      Double storagePrice) {
         Status oldStatus = ordered.getStatus();
         Status newStatus = convertToStatus(statusCode);
-        updateOrderFieldsBeforeStatusesCheck(ordered, redeliverySum, card, datePayedKeeping, deliveryCost);
+        updateOrderFieldsBeforeStatusesCheck(ordered, redeliverySum, card, datePayedKeeping, deliveryCost,
+                storagePrice);
         if (oldStatus != newStatus) {
             statusChangeService.createRecord(ordered, oldStatus, newStatus);
             ordered.setStatus(newStatus);
@@ -407,7 +410,8 @@ public class OrderService {
     }
 
     private Ordered updateOrderFieldsBeforeStatusesCheck(Ordered ordered, Double redeliverySum, Card card,
-                                                         LocalDateTime datePayedKeeping, Double deliveryCost) {
+                                                         LocalDateTime datePayedKeeping, Double deliveryCost,
+                                                         Double storagePrice) {
         ordered.setDeliveryCost(deliveryCost);
         if (redeliverySum != null) {
             ordered.setReturnSumNP(redeliverySum);
@@ -417,6 +421,9 @@ public class OrderService {
         }
         if (datePayedKeeping != null && (ordered.getDatePayedKeepingNP() == null || !datePayedKeeping.isEqual(ordered.getDatePayedKeepingNP()))) {
             ordered.setDatePayedKeepingNP(datePayedKeeping);
+        }
+        if (storagePrice != null) {
+            ordered.setStoragePrice(storagePrice);
         }
         return ordered;
     }
