@@ -246,7 +246,7 @@ public class CanceledOrderReasonService {
         }
         result.append("Сума доставки: ").append(sumToPayForDelivery).append("\n");
         result.append("Платні зберігання: ").append(sumToPayPaidKeeping).append("\n");
-        result.append("Загальна сума: ").append(sumToPayPaidKeeping + sumToPayPaidKeeping);
+        result.append("Загальна сума: ").append(sumToPayForDelivery + sumToPayPaidKeeping);
         String resultString = result.toString();
         googleDocsService.updateReturningsFile(resultString);
         return new StringResponse(resultString);

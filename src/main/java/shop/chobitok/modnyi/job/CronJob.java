@@ -4,8 +4,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.service.CanceledOrderReasonService;
 import shop.chobitok.modnyi.service.CheckerService;
-import shop.chobitok.modnyi.service.NotificationService;
 import shop.chobitok.modnyi.service.OrderService;
+import shop.chobitok.modnyi.service.UserService;
 
 import java.time.LocalDateTime;
 
@@ -13,16 +13,15 @@ import java.time.LocalDateTime;
 public class CronJob {
 
     private CheckerService checkerService;
-    private NotificationService notificationService;
     private OrderService orderService;
     private CanceledOrderReasonService canceledOrderReasonService;
+    private UserService userService;
 
-
-    public CronJob(CheckerService checkerService, NotificationService notificationService, OrderService orderService, CanceledOrderReasonService canceledOrderReasonService) {
+    public CronJob(CheckerService checkerService, OrderService orderService, CanceledOrderReasonService canceledOrderReasonService, UserService userService) {
         this.checkerService = checkerService;
-        this.notificationService = notificationService;
         this.orderService = orderService;
         this.canceledOrderReasonService = canceledOrderReasonService;
+        this.userService = userService;
     }
 
     //  @Scheduled(cron = "0/30 * * * * ?")
@@ -34,6 +33,7 @@ public class CronJob {
         orderService.updateCanceled();
         checkerService.checkSendOrdersAndTakeMoreFiveDays();
         orderService.returnAllCanceled(true);
+        userService.makeUsersInactive();
     }
 
     @Scheduled(cron = "0 0 */2 * * *")

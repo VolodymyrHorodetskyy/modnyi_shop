@@ -9,12 +9,22 @@ public class UserEfficiency extends Audit {
     @OneToOne
     private User user;
 
-    private int minutes;
-
-    private int processingEfficiency;
-
     @OneToOne
     private AppOrder appOrder;
+
+    private int minutes;
+
+    private double processingEfficiency;
+
+    public UserEfficiency() {
+    }
+
+    public UserEfficiency(User user, int minutes, double processingEfficiency, AppOrder appOrder) {
+        this.user = user;
+        this.minutes = minutes;
+        this.processingEfficiency = processingEfficiency;
+        this.appOrder = appOrder;
+    }
 
     public User getUser() {
         return user;
@@ -32,11 +42,11 @@ public class UserEfficiency extends Audit {
         this.minutes = minutes;
     }
 
-    public int getProcessingEfficiency() {
+    public double getProcessingEfficiency() {
         return processingEfficiency;
     }
 
-    public void setProcessingEfficiency(int processingEfficiency) {
+    public void setProcessingEfficiency(double processingEfficiency) {
         this.processingEfficiency = processingEfficiency;
     }
 

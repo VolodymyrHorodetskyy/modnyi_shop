@@ -11,8 +11,8 @@ public interface UserLoggedInRepository extends JpaRepository<UserLoggedIn, Long
     UserLoggedIn findOneByCreatedDateGreaterThanEqualAndCreatedDateLessThanEqualAndUserId(LocalDateTime from,
                                                                                           LocalDateTime to,
                                                                                           Long id);
-
     List<UserLoggedIn> findAllByCreatedDateGreaterThanEqualAndCreatedDateLessThanEqual(LocalDateTime from,
-                                                                               LocalDateTime to);
+                                                                                       LocalDateTime to);
+    List<UserLoggedIn> findAllByActiveTrue();
 
 }

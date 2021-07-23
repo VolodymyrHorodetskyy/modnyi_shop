@@ -32,7 +32,7 @@ public interface AppOrderRepository extends JpaRepository<AppOrder, Long> {
 
     AppOrder findFirstByStatusInAndUserIdOrderByCreatedDateDesc(List<AppOrderStatus> statuses, Long id);
 
-    AppOrder findFirstByStatusInAndPreviousStatusIsNullAndUserIdOrderByCreatedDateDesc(List<AppOrderStatus> statuses, Long id);
+    AppOrder findFirstByStatusInAndPreviousStatusIsNullAndUserIdOrderByDateAppOrderShouldBeProcessedDesc(List<AppOrderStatus> statuses, Long id);
 
     AppOrder findOneByTtn(String ttn);
 

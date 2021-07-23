@@ -26,11 +26,6 @@ public class AdsSpendController {
     public List<DaySpendRec> saveAdsSpendRec(@RequestBody SaveAdsSpends saveAdsSpends) {
         return spendsService.addOrEditRecord(saveAdsSpends);
     }
-/*
-    @GetMapping
-    public FinanceStats getFinanceStats(@RequestParam String from, @RequestParam String to) {
-        return adsSpendsService.getFinanceStats(from, to);
-    }*/
 
     @GetMapping("/getFinanceStatsString")
     public StringResponse getFinanceStatsStringResponse(@RequestParam String from, @RequestParam String to) {

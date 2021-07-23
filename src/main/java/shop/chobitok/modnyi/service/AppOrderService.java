@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static shop.chobitok.modnyi.util.DateHelper.formDateFromOrGetDefault;
+import static shop.chobitok.modnyi.util.DateHelper.makeDateBeginningOfDay;
 
 @Service
 public class AppOrderService {
@@ -82,12 +83,12 @@ public class AppOrderService {
         return appOrderRepository.save(appOrder);
     }
 
-    public AppOrder findFirstShouldBeProcessedAppOrderByUserId(Long id) {
-        AppOrder appOrder = appOrderRepository.findFirstByStatusInAndPreviousStatusIsNullAndUserIdOrderByCreatedDateDesc(
-                Arrays.asList(AppOrderStatus.Новий), id);
+    public AppOrder findFirstShouldBeProcessedAppOrderByUserId(Long userId) {
+        AppOrder appOrder = appOrderRepository.findFirstByStatusInAndPreviousStatusIsNullAndUserIdOrderByDateAppOrderShouldBeProcessedDesc(
+                Arrays.asList(AppOrderStatus.Новий), userId);
         if (appOrder == null) {
             appOrder = appOrderRepository.findFirstByStatusInAndUserIdOrderByCreatedDateDesc(
-                    Arrays.asList(AppOrderStatus.Новий), id);
+                    Arrays.asList(AppOrderStatus.Новий), userId);
         }
         return appOrder;
     }
@@ -125,7 +126,8 @@ public class AppOrderService {
                                                                                      int endOfWorkingDay,
                                                                                      int minutesAppOrderShouldBeProcessed) {
         LocalDateTime availableShouldBeProcessedDateTime = null;
-        AppOrderProcessing appOrderProcessing = appOrderProcessingRepository.findFirstByUserIdOrderByLastModifiedDateDesc(userId);
+        AppOrderProcessing appOrderProcessing = appOrderProcessingRepository.findFirstByUserIdAndLastModifiedDateGreaterThanOrderByLastModifiedDateDesc(
+                userId, makeDateBeginningOfDay(LocalDateTime.now()));
         int startOfDayWorkingHour = getStartOfWorkingDayHour(LocalDateTime.now().getDayOfWeek());
         if (appOrderProcessing == null) {
             availableShouldBeProcessedDateTime = LocalDateTime.now().withHour(startOfDayWorkingHour).withMinute(0).withSecond(0);

@@ -70,8 +70,16 @@ public class UserService {
         return null;
     }
 
-    public Object getFirstItemToProcessByUserId(Long id) {
-        return appOrderService.findFirstShouldBeProcessedAppOrderByUserId(id);
+    public Object getFirstItemToProcessByUserId(Long userId) {
+        return appOrderService.findFirstShouldBeProcessedAppOrderByUserId(userId);
+    }
+
+    public void makeUsersInactive() {
+        List<UserLoggedIn> allLoggedActiveUsers = userLoggedInRepository.findAllByActiveTrue();
+        for (UserLoggedIn userLoggedIn : allLoggedActiveUsers) {
+            userLoggedIn.setActive(false);
+        }
+        userLoggedInRepository.saveAll(allLoggedActiveUsers);
     }
 
 }
