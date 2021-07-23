@@ -61,8 +61,12 @@ public class UserEfficiencyService {
             allEfficiency += userEfficiency.getProcessingEfficiency();
             allMinutes += userEfficiency.getMinutes();
         }
-        result.append("Ефективність = ").append(allEfficiency / userEfficiencyList.size()).append("\n");
-        result.append("Середній час на обробку = ").append(allMinutes / userEfficiencyList.size()).append("\n");
+        if (allEfficiency != 0) {
+            result.append("Ефективність = ").append(allEfficiency / userEfficiencyList.size()).append("\n");
+        }
+        if (allMinutes != 0) {
+            result.append("Середній час на обробку = ").append(allMinutes / userEfficiencyList.size()).append("\n");
+        }
         return new StringResponse(result.toString());
     }
 
