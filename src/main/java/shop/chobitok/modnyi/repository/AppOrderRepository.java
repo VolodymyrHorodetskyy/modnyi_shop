@@ -36,4 +36,9 @@ public interface AppOrderRepository extends JpaRepository<AppOrder, Long> {
 
     AppOrder findOneByTtn(String ttn);
 
+    AppOrder findFirstByOrderByCreatedDateDesc();
+
+    AppOrder findFirstByDateAppOrderShouldBeProcessedGreaterThanEqualAndUserId(LocalDateTime from,
+                                                                               Long id);
+
 }

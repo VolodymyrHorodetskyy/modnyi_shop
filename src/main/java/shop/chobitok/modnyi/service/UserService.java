@@ -1,6 +1,7 @@
 package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
+import shop.chobitok.modnyi.entity.AppOrder;
 import shop.chobitok.modnyi.entity.User;
 import shop.chobitok.modnyi.entity.UserLoggedIn;
 import shop.chobitok.modnyi.entity.request.LogInRequest;
@@ -33,8 +34,8 @@ public class UserService {
 
     public UserLoggedIn logIn(LogInRequest request) {
         User user = userRepository.findOneByNameAndPassword(request.getName(), request.getPassword());
-        LocalDateTime beginningOfDay = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0);
-        LocalDateTime endOfDay = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59);
+        LocalDateTime beginningOfDay = makeDateBeginningOfDay(LocalDateTime.now());
+        LocalDateTime endOfDay = makeDateEndOfDay(LocalDateTime.now());
         UserLoggedIn userLoggedIn = null;
         if (user != null) {
             userLoggedIn = userLoggedInRepository.findOneByCreatedDateGreaterThanEqualAndCreatedDateLessThanEqualAndUserId(

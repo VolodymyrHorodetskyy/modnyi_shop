@@ -8,6 +8,7 @@ import shop.chobitok.modnyi.entity.response.ChangeAppOrderResponse;
 import shop.chobitok.modnyi.service.AppOrderService;
 import shop.chobitok.modnyi.service.CheckerService;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,7 @@ public class AppOrderController {
     }
 
     @PostMapping("/catchOrder")
-    public AppOrder webhook(@RequestBody String s) {
+    public AppOrder webhook(@RequestBody String s) throws UnsupportedEncodingException {
         return appOrderService.catchOrder(s);
     }
 

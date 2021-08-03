@@ -364,7 +364,8 @@ public class OrderService {
                     , data.getRedeliverySum(), cardService.getOrSaveAndGetCardByName(data.getCardMaskedNumber()),
                     ShoeUtil.toLocalDateTime(data.getDatePayedKeeping()),
                     Double.valueOf(data.getDocumentCost()),
-                    !data.getStoragePrice().isEmpty() ? Double.valueOf(data.getStoragePrice()) : null);
+                    data.getStoragePrice() != null ?
+                            !data.getStoragePrice().isEmpty() ? Double.valueOf(data.getStoragePrice()) : null : null);
         }
         return ordered;
     }

@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.time.LocalDateTime.now;
 import static shop.chobitok.modnyi.util.DateHelper.formDateFromOrGetDefault;
 import static shop.chobitok.modnyi.util.DateHelper.makeDateBeginningOfDay;
 
@@ -37,8 +38,9 @@ public class AppOrderService {
     private AppOrderProcessingRepository appOrderProcessingRepository;
     private ParamsService paramsService;
     private UserEfficiencyService userEfficiencyService;
+    private UserLoggedInRepository userLoggedInRepository;
 
-    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService, AppOrderProcessingRepository appOrderProcessingRepository, ParamsService paramsService, UserEfficiencyService userEfficiencyService) {
+    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService, AppOrderProcessingRepository appOrderProcessingRepository, ParamsService paramsService, UserEfficiencyService userEfficiencyService, UserLoggedInRepository userLoggedInRepository) {
         this.appOrderRepository = appOrderRepository;
         this.orderService = orderService;
         this.clientRepository = clientRepository;
@@ -48,39 +50,38 @@ public class AppOrderService {
         this.appOrderProcessingRepository = appOrderProcessingRepository;
         this.paramsService = paramsService;
         this.userEfficiencyService = userEfficiencyService;
+        this.userLoggedInRepository = userLoggedInRepository;
     }
 
-    public AppOrder catchOrder(String s) {
+    public AppOrder catchOrder(String s) throws UnsupportedEncodingException {
         AppOrder appOrder = new AppOrder();
-        try {
-            String decoded = URLDecoder.decode(s, StandardCharsets.UTF_8.name());
-            appOrder.setInfo(decoded);
-            String[] splitted = decoded.split("&");
-            appOrder.setName(splitted[0].substring(splitted[0].indexOf("=") + 1));
-            for (String s1 : splitted) {
-                if (s1.contains("phone")) {
-                    appOrder.setPhone(s1.substring(s1.indexOf("=") + 1).replaceAll("[^0-9]", ""));
-                } else if (s1.contains("Email")) {
-                    appOrder.setMail(s1.substring(s1.indexOf("=") + 1));
-                } else if (s1.contains("dont_call")) {
-                    appOrder.setDontCall(true);
-                } else if (s1.contains("payment")) {
-                    String json = s1.substring(s1.indexOf("=") + 1);
-                    JSONObject jsonObject = new JSONObject(json);
-                    appOrder.setAmount(jsonObject.getDouble("amount"));
-                    JSONArray jsonArray = jsonObject.getJSONArray("products");
-                    List<String> orders = new ArrayList<>();
-                    for (int i = 0; i < jsonArray.length(); i++) {
-                        orders.add(jsonArray.get(i).toString());
-                    }
-                    appOrder.setProducts(orders);
+        String decoded = URLDecoder.decode(s, StandardCharsets.UTF_8.name());
+        appOrder.setInfo(decoded);
+        String[] splitted = decoded.split("&");
+        appOrder.setName(splitted[0].substring(splitted[0].indexOf("=") + 1));
+        for (String s1 : splitted) {
+            if (s1.contains("phone")) {
+                appOrder.setPhone(s1.substring(s1.indexOf("=") + 1).replaceAll("[^0-9]", ""));
+            } else if (s1.contains("Email")) {
+                appOrder.setMail(s1.substring(s1.indexOf("=") + 1));
+            } else if (s1.contains("dont_call")) {
+                appOrder.setDontCall(true);
+            } else if (s1.contains("payment")) {
+                String json = s1.substring(s1.indexOf("=") + 1);
+                JSONObject jsonObject = new JSONObject(json);
+                appOrder.setAmount(jsonObject.getDouble("amount"));
+                JSONArray jsonArray = jsonObject.getJSONArray("products");
+                List<String> orders = new ArrayList<>();
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    orders.add(jsonArray.get(i).toString());
                 }
+                appOrder.setProducts(orders);
             }
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
         }
         appOrder.setStatus(AppOrderStatus.Новий);
-        return appOrderRepository.save(appOrder);
+        appOrder = appOrderRepository.save(appOrder);
+        assignAppOrderToUserAndSetShouldBeProcessedTime(appOrder);
+        return appOrder;
     }
 
     public AppOrder findFirstShouldBeProcessedAppOrderByUserId(Long userId) {
@@ -93,8 +94,22 @@ public class AppOrderService {
         return appOrder;
     }
 
-    public List<AppOrder> getAllNewAppOrdersByUserId(Long userId) {
-        return appOrderRepository.findAllByStatusInAndUserId(Arrays.asList(AppOrderStatus.Новий), userId);
+    public void assignAppOrderToUserAndSetShouldBeProcessedTime(AppOrder appOrder) {
+        AppOrder lastAppOrder = getLastAppOrder();
+        List<UserLoggedIn> usersLoggedIn = userLoggedInRepository.findAllByActiveTrueAndCreatedDateGreaterThanEqual(
+                DateHelper.formLocalDateTimeStartOfTheDay(now()));
+        User userToAssign = usersLoggedIn.stream().filter(userLoggedIn -> userLoggedIn.isActive() &&
+                !userLoggedIn.getUser().getId().equals(lastAppOrder.getUser())).map(userLoggedIn -> userLoggedIn.getUser())
+                .findFirst().orElse(usersLoggedIn.size() > 0 ? usersLoggedIn.get(0).getUser() : null);
+        if (userToAssign != null) {
+            int endOfDayWorkingHour = getEndOfWorkingDayHour(now().getDayOfWeek());
+            int minutesAppOrderShouldBeProcessed =
+                    Integer.parseInt(paramsService.getParam("minutesAppOrderShouldBeProcessed").getGetting());
+            LocalDateTime nextShouldBeProcessedLocalDateTime = getNextShouldBeProcessedLocalDateTime(now(), endOfDayWorkingHour, minutesAppOrderShouldBeProcessed);
+            appOrder.setDateAppOrderShouldBeProcessed(nextShouldBeProcessedLocalDateTime);
+            appOrder.setUser(userToAssign);
+            appOrderRepository.save(appOrder);
+        }
     }
 
     public void setShouldBeProcessedAppOrderDateAndAssignToUser(List<User> users) {
@@ -102,7 +117,7 @@ public class AppOrderService {
             int getUserIndex = 0;
             List<AppOrder> appOrders = appOrderRepository.findByStatusInOrderByCreatedDateDesc(
                     Arrays.asList(AppOrderStatus.Новий));
-            int endOfDayWorkingHour = getEndOfWorkingDayHour(LocalDateTime.now().getDayOfWeek());
+            int endOfDayWorkingHour = getEndOfWorkingDayHour(now().getDayOfWeek());
             int minutesAppOrderShouldBeProcessed =
                     Integer.parseInt(paramsService.getParam("minutesAppOrderShouldBeProcessed").getGetting());
             LocalDateTime shouldBeProcessedDate = findFirstAvailableLocalDateTimeForShouldBeProcessedByUserId(users.get(getUserIndex).getId(),
@@ -122,19 +137,22 @@ public class AppOrderService {
         }
     }
 
-    public LocalDateTime findFirstAvailableLocalDateTimeForShouldBeProcessedByUserId(Long userId,
-                                                                                     int endOfWorkingDay,
-                                                                                     int minutesAppOrderShouldBeProcessed) {
+    private LocalDateTime findFirstAvailableLocalDateTimeForShouldBeProcessedByUserId(Long userId,
+                                                                                      int endOfWorkingDay,
+                                                                                      int minutesAppOrderShouldBeProcessed) {
         LocalDateTime availableShouldBeProcessedDateTime = null;
-        AppOrderProcessing appOrderProcessing = appOrderProcessingRepository.findFirstByUserIdAndLastModifiedDateGreaterThanOrderByLastModifiedDateDesc(
-                userId, makeDateBeginningOfDay(LocalDateTime.now()));
-        int startOfDayWorkingHour = getStartOfWorkingDayHour(LocalDateTime.now().getDayOfWeek());
-        if (appOrderProcessing == null) {
-            availableShouldBeProcessedDateTime = LocalDateTime.now().withHour(startOfDayWorkingHour).withMinute(0).withSecond(0);
+        boolean firstShouldBeProcessedOnNow = Boolean.parseBoolean(paramsService.getParam("firstShouldBeProcessedDateOnNow").getGetting());
+        AppOrder lastShouldBeProcessedAppOrderByUser = appOrderRepository.findFirstByDateAppOrderShouldBeProcessedGreaterThanEqualAndUserId(makeDateBeginningOfDay(now()), userId);
+        if (lastShouldBeProcessedAppOrderByUser == null) {
+            if (firstShouldBeProcessedOnNow) {
+                availableShouldBeProcessedDateTime = now();
+            } else {
+                int startOfDayWorkingHour = getStartOfWorkingDayHour(now().getDayOfWeek());
+                availableShouldBeProcessedDateTime = now().withHour(startOfDayWorkingHour).withMinute(0).withSecond(0);
+            }
         } else {
-            availableShouldBeProcessedDateTime = getNextShouldBeProcessedLocalDateTime(appOrderProcessing.getAppOrder().getDateAppOrderShouldBeProcessed(),
-                    endOfWorkingDay, minutesAppOrderShouldBeProcessed
-            );
+            availableShouldBeProcessedDateTime = getNextShouldBeProcessedLocalDateTime(lastShouldBeProcessedAppOrderByUser.getDateAppOrderShouldBeProcessed(),
+                    endOfWorkingDay, minutesAppOrderShouldBeProcessed);
         }
         return availableShouldBeProcessedDateTime;
     }
@@ -237,7 +255,7 @@ public class AppOrderService {
 
     public String importNotImported() {
         StringBuilder result = new StringBuilder();
-        List<AppOrder> appOrders = appOrderRepository.findByTtnIsNotNullAndLastModifiedDateIsGreaterThan(LocalDateTime.now().minusDays(3));
+        List<AppOrder> appOrders = appOrderRepository.findByTtnIsNotNullAndLastModifiedDateIsGreaterThan(now().minusDays(3));
         for (AppOrder appOrder : appOrders) {
             if (!StringUtils.isEmpty(appOrder.getTtn()) && orderRepository.findOneByAvailableTrueAndTtn(appOrder.getTtn()) == null) {
                 result.append(orderService.importOrderFromTTNString(appOrder.getTtn(), appOrder.getUser().getId(), null));
@@ -326,6 +344,10 @@ public class AppOrderService {
                     lastShouldBeProcessedDate.withMinute(newMinutes);
         }
         return lastShouldBeProcessedDate;
+    }
+
+    public AppOrder getLastAppOrder() {
+        return appOrderRepository.findFirstByOrderByCreatedDateDesc();
     }
 
 }
