@@ -28,7 +28,7 @@ public class ShoePriceService {
     public ShoePrice setNewPrice(Shoe shoe, LocalDateTime from, Double price, Double cost) {
         ShoePrice shoePrice = shoePriceRepository.findOneByToDateIsNullAndShoeId(shoe.getId());
         if (from == null) {
-            from = LocalDateTime.of(2019, 11, 1, 0, 0, 0);
+            from = formLocalDateTimeStartOfTheDay(LocalDateTime.now());
         } else {
             from = formLocalDateTimeStartOfTheDay(from);
         }
