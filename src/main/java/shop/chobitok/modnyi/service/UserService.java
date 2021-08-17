@@ -55,10 +55,10 @@ public class UserService {
     }
 
     public void setShouldBeProcessed(LocalDateTime beginningOfDay, LocalDateTime endOfDay) {
-        appOrderService.setShouldBeProcessedAppOrderDateAndAssignToUser(
+     /*   appOrderService.setShouldBeProcessedAppOrderDateAndAssignToUser(
                 userLoggedInRepository.findAllByCreatedDateGreaterThanEqualAndCreatedDateLessThanEqual(
                         beginningOfDay, endOfDay
-                ).stream().map(userLoggedIn1 -> userLoggedIn1.getUser()).collect(toList()));
+                ).stream().map(userLoggedIn1 -> userLoggedIn1.getUser()).collect(toList()));*/
     }
 
     public UserLoggedIn checkIfUserIsLogged(Long id) {
