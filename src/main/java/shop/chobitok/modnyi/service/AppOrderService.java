@@ -80,7 +80,7 @@ public class AppOrderService {
         }
         appOrder.setStatus(AppOrderStatus.Новий);
         appOrder = appOrderRepository.save(appOrder);
-        assignAppOrderToUserAndSetShouldBeProcessedTime(appOrder);
+       // assignAppOrderToUserAndSetShouldBeProcessedTime(appOrder);
         return appOrder;
     }
 
@@ -113,7 +113,7 @@ public class AppOrderService {
     }
 
     public void setShouldBeProcessedAppOrderDateAndAssignToUser(List<User> users) {
-        if (users.size() > 0) {
+/*        if (users.size() > 0) {
             int getUserIndex = 0;
             List<AppOrder> appOrders = appOrderRepository.findByStatusInOrderByCreatedDateDesc(
                     Arrays.asList(AppOrderStatus.Новий));
@@ -134,6 +134,29 @@ public class AppOrderService {
                 }
             }
             appOrderRepository.saveAll(appOrders);
+        }*/
+        int endOfDayWorkingHour = getEndOfWorkingDayHour(now().getDayOfWeek());
+        int minutesAppOrderShouldBeProcessed =
+                Integer.parseInt(paramsService.getParam("minutesAppOrderShouldBeProcessed").getGetting());
+        List<AppOrder> appOrders = appOrderRepository.findByStatusInOrderByCreatedDateDesc(
+                Arrays.asList(AppOrderStatus.Новий));
+        Map<User, LocalDateTime> userLocalDateTimeMap = new HashMap<>();
+        Iterator<AppOrder> appOrderIterator = appOrders.iterator();
+        while (appOrderIterator.hasNext()) {
+            for (User user : users) {
+                LocalDateTime lastDateTimeForUser = userLocalDateTimeMap.get(user);
+                if (lastDateTimeForUser == null) {
+                    lastDateTimeForUser = getNextShouldBeProcessedLocalDateTime(now(), endOfDayWorkingHour,
+                            minutesAppOrderShouldBeProcessed);
+                } else {
+                    lastDateTimeForUser = getNextShouldBeProcessedLocalDateTime(lastDateTimeForUser, endOfDayWorkingHour,
+                            minutesAppOrderShouldBeProcessed);
+                }
+                userLocalDateTimeMap.put(user, lastDateTimeForUser);
+                AppOrder appOrder = appOrderIterator.next();
+                if (appOrder.getPreviousStatus() == null) {
+                }
+            }
         }
     }
 
@@ -242,7 +265,7 @@ public class AppOrderService {
     }
 
     public AppOrder changeStatus(AppOrder appOrder, User user, AppOrderStatus status) {
-        userEfficiencyService.determineEfficiency(appOrder, user);
+         // userEfficiencyService.determineEfficiency(appOrder, user);
         if (appOrder.getStatus() != status) {
             appOrder.setPreviousStatus(appOrder.getStatus());
             appOrderProcessingRepository.save(new AppOrderProcessing(
