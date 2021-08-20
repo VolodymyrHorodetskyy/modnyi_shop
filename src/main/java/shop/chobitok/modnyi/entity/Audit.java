@@ -6,7 +6,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
@@ -23,17 +22,6 @@ public class Audit {
     @LastModifiedDate
     @Column
     private LocalDateTime lastModifiedDate;
-
-    @PrePersist
-    public void onCreate() {
-        this.createdDate = LocalDateTime.now(ZoneId.of("GMT+6"));
-        this.lastModifiedDate = LocalDateTime.now(ZoneId.of("GMT+6"));
-    }
-
-    @PreUpdate
-    public void onUpdate() {
-        this.lastModifiedDate = LocalDateTime.now(ZoneId.of("GMT+6"));
-    }
 
     public Long getId() {
         return id;
