@@ -16,6 +16,7 @@ import shop.chobitok.modnyi.util.DateHelper;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.AbstractMap.SimpleImmutableEntry;
@@ -56,9 +57,9 @@ public class AppOrderService {
         this.userLoggedInRepository = userLoggedInRepository;
     }
 
-    public AppOrder catchOrder(String s) {
+    public AppOrder catchOrder(String s) throws UnsupportedEncodingException {
         AppOrder appOrder = new AppOrder();
-        String decoded = s;
+        String decoded = URLDecoder.decode(s, StandardCharsets.UTF_8.name());
         appOrder.setInfo(decoded);
         Map<String, List<String>> splittedUrl = splitQuery(decoded);
         appOrder.setName(getValue(splittedUrl.get("\"name")));
