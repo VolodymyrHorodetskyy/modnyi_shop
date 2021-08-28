@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.service;
 
+import com.google.api.client.util.Strings;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.data.domain.Sort;
@@ -15,14 +16,16 @@ import shop.chobitok.modnyi.util.DateHelper;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.time.LocalDateTime.now;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
 import static shop.chobitok.modnyi.util.DateHelper.formDateFromOrGetDefault;
 import static shop.chobitok.modnyi.util.DateHelper.makeDateBeginningOfDay;
 
@@ -53,35 +56,60 @@ public class AppOrderService {
         this.userLoggedInRepository = userLoggedInRepository;
     }
 
-    public AppOrder catchOrder(String s) throws UnsupportedEncodingException {
+    public AppOrder catchOrder(String s) {
         AppOrder appOrder = new AppOrder();
-        String decoded = URLDecoder.decode(s, StandardCharsets.UTF_8.name());
+        String decoded = s;
         appOrder.setInfo(decoded);
-        String[] splitted = decoded.split("&");
-        appOrder.setName(splitted[0].substring(splitted[0].indexOf("=") + 1));
-        for (String s1 : splitted) {
-            if (s1.contains("phone")) {
-                appOrder.setPhone(s1.substring(s1.indexOf("=") + 1).replaceAll("[^0-9]", ""));
-            } else if (s1.contains("Email")) {
-                appOrder.setMail(s1.substring(s1.indexOf("=") + 1));
-            } else if (s1.contains("dont_call")) {
-                appOrder.setDontCall(true);
-            } else if (s1.contains("payment")) {
-                String json = s1.substring(s1.indexOf("=") + 1);
-                JSONObject jsonObject = new JSONObject(json);
-                appOrder.setAmount(jsonObject.getDouble("amount"));
-                JSONArray jsonArray = jsonObject.getJSONArray("products");
-                List<String> orders = new ArrayList<>();
-                for (int i = 0; i < jsonArray.length(); i++) {
-                    orders.add(jsonArray.get(i).toString());
-                }
-                appOrder.setProducts(orders);
-            }
+        Map<String, List<String>> splittedUrl = splitQuery(decoded);
+        appOrder.setName(getValue(splittedUrl.get("\"name")));
+        appOrder.setPhone(getValue(splittedUrl.get("phone")));
+        appOrder.setMail(getValue(splittedUrl.get("Email")));
+        appOrder.setDontCall(!getValue(splittedUrl.get("dont_call")).isEmpty());
+        //set products ordered
+        JSONObject jsonObject = new JSONObject(getValue(splittedUrl.get("payment")));
+        appOrder.setAmount(jsonObject.getDouble("amount"));
+        JSONArray jsonArray = jsonObject.getJSONArray("products");
+        List<String> orders = new ArrayList<>();
+        for (int i = 0; i < jsonArray.length(); i++) {
+            orders.add(jsonArray.get(i).toString());
         }
+        appOrder.setProducts(orders);
         appOrder.setStatus(AppOrderStatus.Новий);
         appOrder = appOrderRepository.save(appOrder);
-       // assignAppOrderToUserAndSetShouldBeProcessedTime(appOrder);
+        // assignAppOrderToUserAndSetShouldBeProcessedTime(appOrder);
         return appOrder;
+    }
+
+    private String getValue(List<String> values) {
+        if (values != null && values.size() > 0) {
+            return values.get(0);
+        }
+        return "";
+    }
+
+    private Map<String, List<String>> splitQuery(String params) {
+        if (Strings.isNullOrEmpty(params)) {
+            return Collections.emptyMap();
+        }
+        return Arrays.stream(params.split("&"))
+                .map(this::splitQueryParameter)
+                .collect(Collectors.groupingBy(SimpleImmutableEntry::getKey, LinkedHashMap::new, mapping(Map.Entry::getValue, toList())));
+    }
+
+    private SimpleImmutableEntry<String, String> splitQueryParameter(String it) {
+        SimpleImmutableEntry simpleImmutableEntry = null;
+        final int idx = it.indexOf("=");
+        final String key = idx > 0 ? it.substring(0, idx) : it;
+        final String value = idx > 0 && it.length() > idx + 1 ? it.substring(idx + 1) : null;
+        try {
+            simpleImmutableEntry = new SimpleImmutableEntry<>(
+                    URLDecoder.decode(key, "UTF-8"),
+                    URLDecoder.decode(value, "UTF-8")
+            );
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return simpleImmutableEntry;
     }
 
     public AppOrder findFirstShouldBeProcessedAppOrderByUserId(Long userId) {
@@ -193,10 +221,10 @@ public class AppOrderService {
         List<AppOrder> combinedAppOrders;
         if (!StringUtils.isEmpty(userId)) {
             List<AppOrder> newAppOrders = appOrderRepository.findAll(new AppOrderSpecification(phoneAndName, comment, Arrays.asList(AppOrderStatus.Новий), true));
-            combinedAppOrders = Stream.concat(appOrdersNotReady.stream(), appOrdersReady.stream()).collect(Collectors.toList());
-            combinedAppOrders = Stream.concat(newAppOrders.stream(), combinedAppOrders.stream()).collect(Collectors.toList());
+            combinedAppOrders = Stream.concat(appOrdersNotReady.stream(), appOrdersReady.stream()).collect(toList());
+            combinedAppOrders = Stream.concat(newAppOrders.stream(), combinedAppOrders.stream()).collect(toList());
         } else {
-            combinedAppOrders = Stream.concat(appOrdersNotReady.stream(), appOrdersReady.stream()).collect(Collectors.toList());
+            combinedAppOrders = Stream.concat(appOrdersNotReady.stream(), appOrdersReady.stream()).collect(toList());
         }
         combinedAppOrders.sort(Comparator.comparing(AppOrder::getCreatedDate).reversed());
         Map<AppOrderStatus, Set<AppOrder>> appOrderMap = new LinkedHashMap<>();
@@ -265,7 +293,7 @@ public class AppOrderService {
     }
 
     public AppOrder changeStatus(AppOrder appOrder, User user, AppOrderStatus status) {
-         // userEfficiencyService.determineEfficiency(appOrder, user);
+        // userEfficiencyService.determineEfficiency(appOrder, user);
         if (appOrder.getStatus() != status) {
             appOrder.setPreviousStatus(appOrder.getStatus());
             appOrderProcessingRepository.save(new AppOrderProcessing(
