@@ -65,7 +65,8 @@ public class AppOrderService {
         appOrder.setName(getValue(splittedUrl.get("name")));
         appOrder.setPhone(getValue(splittedUrl.get("phone")));
         appOrder.setMail(getValue(splittedUrl.get("Email")));
-        appOrder.setDontCall(!getValue(splittedUrl.get("dont_call")).isEmpty());
+        appOrder.setDontCall(getValue(splittedUrl.get("dont_call")) != null
+                && !getValue(splittedUrl.get("dont_call")).isEmpty());
         //set products ordered
         JSONObject jsonObject = new JSONObject(getValue(splittedUrl.get("payment")));
         appOrder.setAmount(jsonObject.getDouble("amount"));
