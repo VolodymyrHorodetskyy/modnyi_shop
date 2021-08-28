@@ -62,7 +62,7 @@ public class AppOrderService {
         String decoded = URLDecoder.decode(s, StandardCharsets.UTF_8.name());
         appOrder.setInfo(decoded);
         Map<String, List<String>> splittedUrl = splitQuery(decoded);
-        appOrder.setName(getValue(splittedUrl.get("\"name")));
+        appOrder.setName(getValue(splittedUrl.get("name")));
         appOrder.setPhone(getValue(splittedUrl.get("phone")));
         appOrder.setMail(getValue(splittedUrl.get("Email")));
         appOrder.setDontCall(!getValue(splittedUrl.get("dont_call")).isEmpty());
