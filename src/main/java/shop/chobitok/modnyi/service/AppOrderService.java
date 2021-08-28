@@ -85,7 +85,7 @@ public class AppOrderService {
         if (values != null && values.size() > 0) {
             return values.get(0);
         }
-        return "";
+        return null;
     }
 
     private Map<String, List<String>> splitQuery(String params) {
