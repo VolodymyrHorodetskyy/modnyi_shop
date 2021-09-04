@@ -1,6 +1,7 @@
 package shop.chobitok.modnyi.service;
 
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.History;
 import shop.chobitok.modnyi.entity.HistoryType;
@@ -26,7 +27,9 @@ public class HistoryService {
     }
 
     public List<History> getLast20(HistoryType type) {
-        return historyRepository.findAllByType(new PageRequest(0, 20), type).getContent();
+
+        return historyRepository.findAllByType(PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdDate")), type)
+                .getContent();
     }
 
 }
