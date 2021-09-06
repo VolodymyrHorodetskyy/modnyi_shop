@@ -198,13 +198,17 @@ public class CanceledOrderReasonService {
         List<Ordered> toSave = new ArrayList<>();
         StringBuilder result = new StringBuilder();
         List<CanceledOrderReason> canceledOrderReasons;
-        if (StringUtils.isEmpty(dateFrom)) {
-            canceledOrderReasons = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(true, true));
-        } else {
-            CanceledOrderReasonSpecification canceledOrderReasonSpecification = new CanceledOrderReasonSpecification();
-            canceledOrderReasonSpecification.setLastModifiedDate(formDateTime(dateFrom));
-            canceledOrderReasons = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(true, true));
+        CanceledOrderReasonSpecification canceledOrderReasonSpecification = new CanceledOrderReasonSpecification();
+        canceledOrderReasonSpecification.setStatusNotReceived(true);
+        canceledOrderReasonSpecification.setHasReturnTtn(true);
+        if (showOnlyDelivered) {
+            canceledOrderReasonSpecification.setStatus(Status.ДОСТАВЛЕНО);
         }
+        if (!StringUtils.isEmpty(dateFrom)) {
+            canceledOrderReasonSpecification.setLastModifiedDate(formDateTime(dateFrom));
+        }
+        canceledOrderReasons = canceledOrderReasonRepository.findAll(canceledOrderReasonSpecification);
+
        /*
        for find coincidences
        List<Ordered> orderedList = orderRepository.findByNotForDeliveryFileTrue();

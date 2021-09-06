@@ -21,6 +21,7 @@ public class CanceledOrderReasonSpecification implements Specification<CanceledO
     private Boolean withoutReason;
     private boolean hasReturnTtn;
     private String userId;
+    private Status status;
 
     public CanceledOrderReasonSpecification() {
     }
@@ -103,6 +104,10 @@ public class CanceledOrderReasonSpecification implements Specification<CanceledO
             Predicate userPredicate = criteriaBuilder.equal(userJoin.get("id"), userId);
             predicates.add(userPredicate);
         }
+        if (status != null) {
+            Predicate statusPredicate = criteriaBuilder.equal(root.get("status"), status);
+            predicates.add(statusPredicate);
+        }
         return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
     }
 
@@ -184,5 +189,13 @@ public class CanceledOrderReasonSpecification implements Specification<CanceledO
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
     }
 }
