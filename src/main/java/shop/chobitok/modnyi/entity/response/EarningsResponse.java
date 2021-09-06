@@ -9,6 +9,8 @@ public class EarningsResponse {
 
     private LocalDateTime from;
     private LocalDateTime to;
+    private Integer appOrderAmount;
+    private Integer orderedAmount;
     private Double sum;
     private Double predictedSum;
     private Double realisticSum;
@@ -98,5 +100,21 @@ public class EarningsResponse {
 
     public void setAll(int all) {
         this.all = all;
+    }
+
+    public Integer getAppOrderAmount() {
+        return appOrderAmount;
+    }
+
+    public void setAppOrderAmount(Integer appOrderAmount) {
+        this.appOrderAmount = appOrderAmount;
+    }
+
+    public Integer getOrderedAmount() {
+        return orderedAmount;
+    }
+
+    public void setOrderedAmount(Integer orderedAmount) {
+        this.orderedAmount = orderedAmount;
     }
 }

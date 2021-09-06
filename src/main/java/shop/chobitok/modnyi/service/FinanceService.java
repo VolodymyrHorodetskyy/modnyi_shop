@@ -51,8 +51,9 @@ public class FinanceService {
             e.printStackTrace();
         }
         realisticSum = (predictedSum / 100) * receivedPercentage;
-
-        return new EarningsResponse(fromDate, toDate, sum, predictedSum, realisticSum, amountByStatus, receivedPercentage, all);
+        EarningsResponse earningsResponse = new EarningsResponse(fromDate, toDate, sum, predictedSum, realisticSum, amountByStatus, receivedPercentage, all);
+        earningsResponse.setOrderedAmount(orderedList.size());
+        return earningsResponse;
     }
 
     public EarningsResponse getEarnings(String dateTime1, String dateTime2) {

@@ -107,8 +107,10 @@ public class SpendsService {
         Double spends = countSpends(daySpendRecList);
         Double cleanEarning = sum - spends;
         Double projectedEarningMinusSpends = sum + predictedSum - spends;
-        return new FinanceStats(sum, predictedSum, earningsResponse.getReceivedPercentage(), sum + predictedSum, spends,
+        FinanceStats financeStats = new FinanceStats(sum, predictedSum, earningsResponse.getReceivedPercentage(), sum + predictedSum, spends,
                 cleanEarning, projectedEarningMinusSpends);
+        financeStats.setOrderedAmount(earningsResponse.getOrderedAmount());
+        return financeStats;
     }
 
     public StringResponse getFinanceStatsStringResponse(String from, String to) {
@@ -121,6 +123,8 @@ public class SpendsService {
                 .append("Відсоток отримань : ").append(financeStats.getReceivedPercentage()).append("\n")
                 .append("Чистий + прогноз : ").append(financeStats.getEarningsPlusProjected()).append("\n")
                 .append("Витрати : ").append(financeStats.getSpends()).append("\n")
+                .append("Кількість замовлень : ").append(financeStats.getOrderedAmount()).append("\n")
+                .append("Ціна замовлення : ").append(financeStats.getSpends() / financeStats.getOrderedAmount()).append("\n")
                 .append("Дохід - витрати : ").append(financeStats.getEarningMinusSpends()).append("\n")
                 .append("Дохід + прогноз - витрати : ").append(financeStats.getProjectedEarningsMinusSpends()).append("\n");
         return new StringResponse(stringBuilder.toString());
