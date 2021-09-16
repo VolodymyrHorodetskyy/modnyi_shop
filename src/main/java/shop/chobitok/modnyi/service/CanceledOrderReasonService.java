@@ -42,8 +42,9 @@ public class CanceledOrderReasonService {
     private ShoePriceService shoePriceService;
     private GoogleDocsService googleDocsService;
     private PayedOrderedService payedOrderedService;
+    private ImportService importService;
 
-    public CanceledOrderReasonService(OrderRepository orderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, NovaPostaRepository postaRepository, MailService mailService, StatusChangeService statusChangeService, ShoePriceService shoePriceService, GoogleDocsService googleDocsService, PayedOrderedService payedOrderedService) {
+    public CanceledOrderReasonService(OrderRepository orderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, NovaPostaRepository postaRepository, MailService mailService, StatusChangeService statusChangeService, ShoePriceService shoePriceService, GoogleDocsService googleDocsService, PayedOrderedService payedOrderedService, ImportService importService) {
         this.orderRepository = orderRepository;
         this.canceledOrderReasonRepository = canceledOrderReasonRepository;
         this.postaRepository = postaRepository;
@@ -52,6 +53,7 @@ public class CanceledOrderReasonService {
         this.shoePriceService = shoePriceService;
         this.googleDocsService = googleDocsService;
         this.payedOrderedService = payedOrderedService;
+        this.importService = importService;
     }
 
     public CanceledOrderReason getCanceledOrderReasonByOrderedId(Long id) {
@@ -63,23 +65,35 @@ public class CanceledOrderReasonService {
         if (ordered == null) {
             throw new ConflictException("Немає такого замовлення");
         }
+        String newTTN = cancelOrderRequest.getNewTTN();
+        importNewTtnFromCanceled(newTTN, ordered.getUser().getId());
         statusChangeService.createRecord(ordered, ordered.getStatus(), Status.ВІДМОВА);
         payedOrderedService.createPayedOrdered(ordered);
         ordered.setStatus(Status.ВІДМОВА);
         CanceledOrderReason canceledOrderReason = canceledOrderReasonRepository.findFirstByOrderedId(cancelOrderRequest.getOrderId());
         if (canceledOrderReason == null) {
             canceledOrderReason = new CanceledOrderReason(ordered, cancelOrderRequest.getReason(), cancelOrderRequest.getComment(),
-                    cancelOrderRequest.getNewTTN(), cancelOrderRequest.getReturnTTN());
+                    newTTN, cancelOrderRequest.getReturnTTN());
         } else {
             canceledOrderReason.setComment(cancelOrderRequest.getComment());
             canceledOrderReason.setReason(cancelOrderRequest.getReason());
-            canceledOrderReason.setNewTtn(cancelOrderRequest.getNewTTN());
+            canceledOrderReason.setNewTtn(newTTN);
             canceledOrderReason.setReturnTtn(cancelOrderRequest.getReturnTTN());
         }
         canceledOrderReason.setManual(true);
         orderRepository.save(ordered);
         canceledOrderReasonRepository.save(canceledOrderReason);
         return ordered;
+    }
+
+    private String importNewTtnFromCanceled(String newTtn, Long userId) {
+        String result = null;
+        if (newTtn != null && !newTtn.isBlank()) {
+            if (orderRepository.findOneByAvailableTrueAndTtn(newTtn) == null) {
+                result = importService.importOrderFromTTNString(newTtn, userId, null);
+            }
+        }
+        return result;
     }
 
     private void sendMailIfPayed(Ordered ordered) {
@@ -178,7 +192,9 @@ public class CanceledOrderReasonService {
         if (canceledOrderReason == null) {
             throw new ConflictException("CancelOrderReason не існує");
         }
-        canceledOrderReason.setNewTtn(cancelOrderWithIdRequest.getNewTTN());
+        String newTTN = cancelOrderWithIdRequest.getNewTTN();
+        importNewTtnFromCanceled(newTTN, canceledOrderReason.getOrdered().getUser().getId());
+        canceledOrderReason.setNewTtn(newTTN);
         canceledOrderReason.setReason(cancelOrderWithIdRequest.getReason());
         canceledOrderReason.setComment(cancelOrderWithIdRequest.getComment());
         canceledOrderReason.setReturnTtn(cancelOrderWithIdRequest.getReturnTTN());

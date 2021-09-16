@@ -56,11 +56,12 @@ public class OrderService {
     private CardService cardService;
     private NotificationService notificationService;
     private HistoryService historyService;
+    private ImportService importService;
 
     @Value("${spring.datasource.username}")
     private String username;
 
-    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, NotificationService notificationService, HistoryService historyService) {
+    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, NotificationService notificationService, HistoryService historyService, ImportService importService) {
         this.orderRepository = orderRepository;
         this.shoeRepository = shoeRepository;
         this.clientService = clientService;
@@ -76,6 +77,7 @@ public class OrderService {
         this.cardService = cardService;
         this.notificationService = notificationService;
         this.historyService = historyService;
+        this.importService = importService;
     }
 
     public Ordered findByTTN(String ttn) {
@@ -187,40 +189,11 @@ public class OrderService {
         List<String> splitted = splitTTNString(request.getTtns());
         StringBuilder result = new StringBuilder();
         for (String ttn : splitted) {
-            result.append(importOrderFromTTNString(ttn, request.getUserId(), discountService.getById(request.getDiscountId())));
+            result.append(importService.importOrderFromTTNString(ttn, request.getUserId(), discountService.getById(request.getDiscountId())));
         }
         return new StringResponse(result.toString());
     }
 
-    public String importOrderFromTTNString(String ttn, Long userId, Discount discount) {
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) {
-            throw new ConflictException("User not found");
-        }
-        StringBuilder result = new StringBuilder();
-        if (orderRepository.findOneByAvailableTrueAndTtn(ttn) == null) {
-            try {
-                Ordered ordered = novaPostaService.createOrUpdateOrderFromNP(ttn, null, discount);
-                ordered.setUser(user);
-                if (ordered.getStatus() != Status.НЕ_ЗНАЙДЕНО) {
-                    orderRepository.save(ordered);
-                    if (ordered.getOrderedShoeList().size() < 1) {
-                        result.append(ttn + "  ... взуття не визначено \n");
-                    } else {
-                        result.append(ttn + "  ... імпортовано \n");
-                    }
-                } else {
-                    result.append("  ...  НЕ ІМПОРТОВАНО ... Статус Не знайдено");
-                    notificationService.createNotification("Накладну не імпортовано, " + user.getName(), ttn, null);
-                }
-            } catch (ConflictException e) {
-                result.append(ttn + "  ... неможливо знайти ттн \n");
-            }
-        } else {
-            result.append(ttn + "  ... вже існує в базі \n");
-        }
-        return result.toString();
-    }
 
     public String updateOrdersByStatusesByNovaPosta(List<Status> statuses) {
         return updateOrdersByNovaPosta(orderRepository.findAllByAvailableTrueAndStatusIn(statuses));

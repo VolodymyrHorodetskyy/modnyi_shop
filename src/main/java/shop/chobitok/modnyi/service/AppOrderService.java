@@ -41,10 +41,10 @@ public class AppOrderService {
     private DiscountService discountService;
     private AppOrderProcessingRepository appOrderProcessingRepository;
     private ParamsService paramsService;
-    private UserEfficiencyService userEfficiencyService;
     private UserLoggedInRepository userLoggedInRepository;
+    private ImportService importService;
 
-    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService, AppOrderProcessingRepository appOrderProcessingRepository, ParamsService paramsService, UserEfficiencyService userEfficiencyService, UserLoggedInRepository userLoggedInRepository) {
+    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService, AppOrderProcessingRepository appOrderProcessingRepository, ParamsService paramsService, UserLoggedInRepository userLoggedInRepository, ImportService importService) {
         this.appOrderRepository = appOrderRepository;
         this.orderService = orderService;
         this.clientRepository = clientRepository;
@@ -53,8 +53,8 @@ public class AppOrderService {
         this.discountService = discountService;
         this.appOrderProcessingRepository = appOrderProcessingRepository;
         this.paramsService = paramsService;
-        this.userEfficiencyService = userEfficiencyService;
         this.userLoggedInRepository = userLoggedInRepository;
+        this.importService = importService;
     }
 
     public AppOrder catchOrder(String s) throws UnsupportedEncodingException {
@@ -270,7 +270,7 @@ public class AppOrderService {
         String message = null;
         if (!StringUtils.isEmpty(ttn)) {
             ttn = ttn.replaceAll("\\s+", "");
-            message = orderService.importOrderFromTTNString(ttn, request.getUserId(), discountService.getById(request.getDiscountId()));
+            message = importService.importOrderFromTTNString(ttn, request.getUserId(), discountService.getById(request.getDiscountId()));
             appOrder.setTtn(ttn);
             String mail = appOrder.getMail();
             Ordered ordered = orderService.findByTTN(ttn);
@@ -311,7 +311,7 @@ public class AppOrderService {
         List<AppOrder> appOrders = appOrderRepository.findByTtnIsNotNullAndLastModifiedDateIsGreaterThan(now().minusDays(3));
         for (AppOrder appOrder : appOrders) {
             if (!StringUtils.isEmpty(appOrder.getTtn()) && orderRepository.findOneByAvailableTrueAndTtn(appOrder.getTtn()) == null) {
-                result.append(orderService.importOrderFromTTNString(appOrder.getTtn(), appOrder.getUser().getId(), null));
+                result.append(importService.importOrderFromTTNString(appOrder.getTtn(), appOrder.getUser().getId(), null));
             }
         }
         return result.toString();
