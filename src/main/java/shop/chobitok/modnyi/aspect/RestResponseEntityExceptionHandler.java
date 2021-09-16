@@ -21,7 +21,8 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
     @ExceptionHandler(Throwable.class)
     public void handleConflict(HttpServletRequest request, Throwable throwable) {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Request URI: ").append(request.getRequestURI()).append("\n");
+        stringBuilder.append("Request URI: ").append(request.getRequestURI()).append("\n\n");
+        stringBuilder.append("Message: ").append(throwable.getMessage()).append("\n\n");
         stringBuilder.append("Stack trace:").append("\n\n");
         stringBuilder.append(String.join("\n",
                 Arrays.stream(throwable.getStackTrace()).map(s -> s.toString()).collect(toList())));
