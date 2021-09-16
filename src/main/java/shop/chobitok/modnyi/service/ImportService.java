@@ -26,33 +26,37 @@ public class ImportService {
     }
 
     public String importOrderFromTTNString(String ttn, Long userId, Discount discount) {
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) {
-            throw new ConflictException("User not found");
-        }
-        StringBuilder result = new StringBuilder();
-        if (orderRepository.findOneByAvailableTrueAndTtn(ttn) == null) {
-            try {
-                Ordered ordered = novaPostaService.createOrUpdateOrderFromNP(ttn, null, discount);
-                ordered.setUser(user);
-                if (ordered.getStatus() != Status.НЕ_ЗНАЙДЕНО) {
-                    orderRepository.save(ordered);
-                    if (ordered.getOrderedShoeList().size() < 1) {
-                        result.append(ttn + "  ... взуття не визначено \n");
-                    } else {
-                        result.append(ttn + "  ... імпортовано \n");
-                    }
-                } else {
-                    result.append("  ...  НЕ ІМПОРТОВАНО ... Статус Не знайдено");
-                    notificationService.createNotification("Накладну не імпортовано, " + user.getName(), ttn, null);
-                }
-            } catch (ConflictException e) {
-                result.append(ttn + "  ... неможливо знайти ттн \n");
-            }
+        if (userId == null) {
+            throw new ConflictException("UserId must not be null");
         } else {
-            result.append(ttn + "  ... вже існує в базі \n");
+            User user = userRepository.findById(userId).orElse(null);
+            if (user == null) {
+                throw new ConflictException("User not found");
+            }
+            StringBuilder result = new StringBuilder();
+            if (orderRepository.findOneByAvailableTrueAndTtn(ttn) == null) {
+                try {
+                    Ordered ordered = novaPostaService.createOrUpdateOrderFromNP(ttn, null, discount);
+                    ordered.setUser(user);
+                    if (ordered.getStatus() != Status.НЕ_ЗНАЙДЕНО) {
+                        orderRepository.save(ordered);
+                        if (ordered.getOrderedShoeList().size() < 1) {
+                            result.append(ttn + "  ... взуття не визначено \n");
+                        } else {
+                            result.append(ttn + "  ... імпортовано \n");
+                        }
+                    } else {
+                        result.append("  ...  НЕ ІМПОРТОВАНО ... Статус Не знайдено");
+                        notificationService.createNotification("Накладну не імпортовано, " + user.getName(), ttn, null);
+                    }
+                } catch (ConflictException e) {
+                    result.append(ttn + "  ... неможливо знайти ттн \n");
+                }
+            } else {
+                result.append(ttn + "  ... вже існує в базі \n");
+            }
+            return result.toString();
         }
-        return result.toString();
     }
 
 }
