@@ -22,7 +22,6 @@ import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.OrderRepository;
-import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.repository.UserRepository;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
@@ -34,6 +33,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Collections.singletonList;
 import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
 import static shop.chobitok.modnyi.util.StringHelper.removeSpaces;
 import static shop.chobitok.modnyi.util.StringHelper.splitTTNString;
@@ -42,7 +42,6 @@ import static shop.chobitok.modnyi.util.StringHelper.splitTTNString;
 public class OrderService {
 
     private OrderRepository orderRepository;
-    private ShoeRepository shoeRepository;
     private ClientService clientService;
     private NovaPostaService novaPostaService;
     private MailService mailService;
@@ -54,16 +53,14 @@ public class OrderService {
     private DiscountService discountService;
     private PayedOrderedService payedOrderedService;
     private CardService cardService;
-    private NotificationService notificationService;
     private HistoryService historyService;
     private ImportService importService;
 
     @Value("${spring.datasource.username}")
     private String username;
 
-    public OrderService(OrderRepository orderRepository, ShoeRepository shoeRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, NotificationService notificationService, HistoryService historyService, ImportService importService) {
+    public OrderService(OrderRepository orderRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, HistoryService historyService, ImportService importService) {
         this.orderRepository = orderRepository;
-        this.shoeRepository = shoeRepository;
         this.clientService = clientService;
         this.novaPostaService = novaPostaService;
         this.mailService = mailService;
@@ -75,7 +72,6 @@ public class OrderService {
         this.discountService = discountService;
         this.payedOrderedService = payedOrderedService;
         this.cardService = cardService;
-        this.notificationService = notificationService;
         this.historyService = historyService;
         this.importService = importService;
     }
@@ -84,17 +80,17 @@ public class OrderService {
         return orderRepository.findOneByAvailableTrueAndTtn(ttn);
     }
 
-    public GetAllOrderedResponse getAll(String TTN, String phoneOrName, String model, boolean withoutTTN, String orderBy,
+    public GetAllOrderedResponse getAll(String TTN, String phoneOrName, String model, boolean withoutTTN,
                                         String userId) {
-        return getAll(null, TTN, phoneOrName, model, withoutTTN, orderBy, userId);
+        return getAll(null, TTN, phoneOrName, model, withoutTTN, userId);
     }
 
     public GetAllOrderedResponse getAll(int page, int size, String TTN, String phoneOrName, String model, boolean withoutTTN, String orderBy,
                                         String userId) {
-        return getAll(PageRequest.of(page, size, createSort(orderBy)), TTN, phoneOrName, model, withoutTTN, orderBy, userId);
+        return getAll(PageRequest.of(page, size, createSort(orderBy)), TTN, phoneOrName, model, withoutTTN, userId);
     }
 
-    public GetAllOrderedResponse getAll(PageRequest pageRequest, String TTN, String phoneOrName, String model, boolean withoutTTN, String orderBy,
+    public GetAllOrderedResponse getAll(PageRequest pageRequest, String TTN, String phoneOrName, String model, boolean withoutTTN,
                                         String userId) {
         GetAllOrderedResponse getAllOrderedResponse = new GetAllOrderedResponse();
         if (pageRequest != null) {
@@ -114,7 +110,7 @@ public class OrderService {
 
     public List<Ordered> getOrdersByStatus(Status status) {
         updateOrdersByNovaPosta();
-        return orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(status));
+        return orderRepository.findAllByAvailableTrueAndStatusIn(singletonList(status));
     }
 
     private Sort createSort(String orderBy) {
@@ -291,7 +287,7 @@ public class OrderService {
         for (Ordered ordered : canceledAndDeniedOrders) {
             CanceledOrderReason canceledOrderReason = canceledOrderReasonService.getCanceledOrderReasonByOrderId(ordered.getId());
             if (canceledOrderReason == null || !canceledOrderReason.isManual()) {
-                updateOrdersByNovaPosta(Arrays.asList(ordered));
+                updateOrdersByNovaPosta(singletonList(ordered));
             }
         }
     }
@@ -318,10 +314,8 @@ public class OrderService {
         List<Ordered> orderedList = orderRepository.findAllByStatusInAndCreatedDateGreaterThan(Arrays.asList(Status.НЕ_ЗНАЙДЕНО, Status.ВІДМОВА), LocalDateTime.now().minusDays(30));
         List<Ordered> toUpdate = new ArrayList<>();
         for (Ordered ordered : orderedList) {
-            if (ordered.getStatus() == Status.ВІДМОВА &&
-                    canceledOrderReasonService.getCanceledOrderReasonByOrderedId(ordered.getId()).isManual()) {
-                continue;
-            } else {
+            if (!(ordered.getStatus() == Status.ВІДМОВА &&
+                    canceledOrderReasonService.getCanceledOrderReasonByOrderedId(ordered.getId()).isManual())) {
                 toUpdate.add(ordered);
             }
         }
@@ -336,7 +330,7 @@ public class OrderService {
                     data.getRecipientAddress()
                     , data.getRedeliverySum(), cardService.getOrSaveAndGetCardByName(data.getCardMaskedNumber()),
                     ShoeUtil.toLocalDateTime(data.getDatePayedKeeping()),
-                    Double.valueOf(data.getDocumentCost()),
+                    (double) data.getDocumentCost(),
                     data.getStoragePrice() != null ?
                             !data.getStoragePrice().isEmpty() ? Double.valueOf(data.getStoragePrice()) : null : null);
         }
@@ -346,7 +340,7 @@ public class OrderService {
     private Ordered updateOrderByDataListTrackingEntity(Ordered ordered, DataForList dataForList) {
         if (dataForList != null && ordered != null) {
             return updateOrderFields(ordered, 1, dataForList.getRecipientAddressDescription(),
-                    Double.valueOf(dataForList.getBackwardDeliveryMoney()), cardService.getOrSaveAndGetCardByName(dataForList.getRedeliveryPaymentCard()),
+                    (double) dataForList.getBackwardDeliveryMoney(), cardService.getOrSaveAndGetCardByName(dataForList.getRedeliveryPaymentCard()),
                     null, dataForList.getCostOnSite() != null ?
                             Double.valueOf(dataForList.getCostOnSite()) : null, null);
         }
@@ -425,15 +419,14 @@ public class OrderService {
         if (updateStatuses) {
             updateOrdersByNovaPosta();
         }
-        List<Ordered> canceledOrdereds = orderRepository.findBystatusNP(103);
-        return canceledOrdereds;
+        return orderRepository.findBystatusNP(103);
     }
 
     public StringResponse getCanceledString(boolean updateStatuses) {
         StringBuilder result = new StringBuilder();
         List<Ordered> orderedList = getCanceled(updateStatuses);
         for (Ordered ordered : orderedList) {
-            result.append(ordered.getTtn() + "\n" + ordered.getPostComment() + "\n\n");
+            result.append(ordered.getTtn()).append("\n").append(ordered.getPostComment()).append("\n\n");
         }
         return new StringResponse(result.toString());
     }
@@ -443,22 +436,14 @@ public class OrderService {
         List<Ordered> canceledOrdereds = getCanceled(updateStatuses);
         for (Ordered ordered : canceledOrdereds) {
             String retunrCargoResponse = novaPostaService.returnCargo(ordered);
-            result.append(retunrCargoResponse + "\n");
+            result.append(retunrCargoResponse).append("\n");
             historyService.addHistoryRecord(HistoryType.CARGO_RETURN, ordered.getTtn(), retunrCargoResponse);
         }
         return new StringResponse(result.toString());
     }
 
-    public Ordered createOrder(Ordered ordered) {
-        return orderRepository.save(ordered);
-    }
-
-    public List<Ordered> createOrders(List<Ordered> orderedList) {
-        return orderRepository.saveAll(orderedList);
-    }
-
     public StringResponse makeAllPayed() {
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndPayedFalseAndStatusIn(Arrays.asList(Status.ОТРИМАНО));
+        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndPayedFalseAndStatusIn(singletonList(Status.ОТРИМАНО));
         StringBuilder stringBuilder = new StringBuilder();
         for (Ordered ordered : orderedList) {
             if (ordered.getOrderedShoeList().size() > 0) {
@@ -482,11 +467,11 @@ public class OrderService {
     public StringResponse countNeedDeliveryFromDB(boolean updateStatuses) {
         StringBuilder stringBuilder = new StringBuilder();
         if (updateStatuses) {
-            updateOrdersByStatusesByNovaPosta(Arrays.asList(Status.СТВОРЕНО));
+            updateOrdersByStatusesByNovaPosta(singletonList(Status.СТВОРЕНО));
         }
         List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(Status.СТВОРЕНО, false), Sort.by("dateCreated"));
         stringBuilder.append(countNeedDelivery(orderedList));
-        stringBuilder.append("Кількість : " + orderedList.size());
+        stringBuilder.append("Кількість : ").append(orderedList.size());
         return new StringResponse(stringBuilder.toString());
     }
 

@@ -16,24 +16,28 @@ public class AppOrderSpecification implements Specification<AppOrder> {
     private Long id;
     private String phoneAndName;
     private String comment;
-    private LocalDateTime from;
+    private LocalDateTime fromLastModifiedDate;
+    private LocalDateTime fromCreatedDate;
+    private LocalDateTime toCreatedDate;
     private List<AppOrderStatus> statuses;
     private String phone;
     private Long isNotEqualId;
     private String userId;
     private boolean previousStatusNull;
 
+    public AppOrderSpecification() {
+    }
 
     public AppOrderSpecification(String phone, Long isNotEqualId) {
         this.phone = phone;
         this.isNotEqualId = isNotEqualId;
     }
 
-    public AppOrderSpecification(Long id, String phoneAndName, String comment, LocalDateTime from, List<AppOrderStatus> statuses, String userId) {
+    public AppOrderSpecification(Long id, String phoneAndName, String comment, LocalDateTime fromLastModifiedDate, List<AppOrderStatus> statuses, String userId) {
         this.id = id;
         this.phoneAndName = phoneAndName;
         this.comment = comment;
-        this.from = from;
+        this.fromLastModifiedDate = fromLastModifiedDate;
         this.statuses = statuses;
         this.userId = userId;
     }
@@ -57,8 +61,8 @@ public class AppOrderSpecification implements Specification<AppOrder> {
             Predicate namePredicate = criteriaBuilder.like(root.get("name"), "%" + phoneAndName + "%");
             predicateList.add(criteriaBuilder.or(phonePredicate, namePredicate));
         }
-        if (from != null) {
-            Predicate fromPredicate = criteriaBuilder.greaterThanOrEqualTo(root.get("lastModifiedDate"), from);
+        if (fromLastModifiedDate != null) {
+            Predicate fromPredicate = criteriaBuilder.greaterThanOrEqualTo(root.get("lastModifiedDate"), fromLastModifiedDate);
             predicateList.add(fromPredicate);
         }
         if (statuses != null && statuses.size() > 0) {
@@ -85,7 +89,58 @@ public class AppOrderSpecification implements Specification<AppOrder> {
             Predicate previousStatusIsNullPredicate = criteriaBuilder.isNull(root.get("previousStatus"));
             predicateList.add(previousStatusIsNullPredicate);
         }
+        if (fromCreatedDate != null) {
+            Predicate fromCreatedDatePredicate = criteriaBuilder.greaterThanOrEqualTo(root.get("createdDate"), fromCreatedDate);
+            predicateList.add(fromCreatedDatePredicate);
+        }
+        if (toCreatedDate != null) {
+            Predicate toCreatedDatePredicate = criteriaBuilder.lessThanOrEqualTo(root.get("createdDate"), toCreatedDate);
+            predicateList.add(toCreatedDatePredicate);
+        }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setPhoneAndName(String phoneAndName) {
+        this.phoneAndName = phoneAndName;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    public void setFromLastModifiedDate(LocalDateTime fromLastModifiedDate) {
+        this.fromLastModifiedDate = fromLastModifiedDate;
+    }
+
+    public void setFromCreatedDate(LocalDateTime fromCreatedDate) {
+        this.fromCreatedDate = fromCreatedDate;
+    }
+
+    public void setStatuses(List<AppOrderStatus> statuses) {
+        this.statuses = statuses;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void setIsNotEqualId(Long isNotEqualId) {
+        this.isNotEqualId = isNotEqualId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public void setPreviousStatusNull(boolean previousStatusNull) {
+        this.previousStatusNull = previousStatusNull;
+    }
+
+    public void setToCreatedDate(LocalDateTime toCreatedDate) {
+        this.toCreatedDate = toCreatedDate;
+    }
 }
