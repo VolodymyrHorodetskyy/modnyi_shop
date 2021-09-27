@@ -245,11 +245,14 @@ public class AppOrderService {
 
     public ChangeAppOrderResponse changeAppOrder(ChangeAppOrderRequest request) {
         AppOrder appOrder = appOrderRepository.findById(request.getId()).orElse(null);
-
         if (appOrder == null) {
             throw new ConflictException("AppOrder not found");
         }
-        User user = null;
+        if (request.getStatus() == AppOrderStatus.Скасовано &&
+                request.getCancellationReason() == null) {
+            throw new ConflictException("Причина скасування не вказана");
+        }
+        User user;
         if (request.getUserId() != null) {
             user = userRepository.findById(request.getUserId()).orElse(null);
         } else {
@@ -257,9 +260,19 @@ public class AppOrderService {
         }
         appOrder.setUser(user);
         String ttn = request.getTtn();
-        String message = processAppOrderTtn(ttn, appOrder, request, user);
+        String message = null;
+        if (!StringUtils.isEmpty(ttn)) {
+            ttn = ttn.replaceAll("\\s+", "");
+            AppOrder appOrder1 = appOrderRepository.findByTtn(ttn);
+            if (appOrder1 != null) {
+                throw new ConflictException("Накладна вже додана в заявку, id = " + appOrder1.getId());
+            } else {
+                appOrder.setTtn(ttn);
+            }
+            processAppOrderTtn(ttn, appOrder, request, user);
+        }
         changeStatus(appOrder, user, request.getStatus());
-        appOrder.setTtn(ttn);
+        appOrder.setCancellationReason(request.getCancellationReason());
         appOrder.setComment(request.getComment());
         return new ChangeAppOrderResponse(message, appOrderRepository.save(appOrder));
     }
@@ -267,30 +280,27 @@ public class AppOrderService {
 
     public String processAppOrderTtn(String ttn, AppOrder appOrder, ChangeAppOrderRequest request,
                                      User user) {
-        String message = null;
-        if (!StringUtils.isEmpty(ttn)) {
-            ttn = ttn.replaceAll("\\s+", "");
-            message = importService.importOrderFromTTNString(ttn, request.getUserId(), discountService.getById(request.getDiscountId()));
-            appOrder.setTtn(ttn);
-            String mail = appOrder.getMail();
-            Ordered ordered = orderService.findByTTN(ttn);
-            if (ordered == null) {
-                return null;
-            }
-            if (!StringUtils.isEmpty(mail)) {
-                Client client = ordered.getClient();
-                client.setMail(mail);
-                clientRepository.save(client);
-            }
-            if (!StringUtils.isEmpty(request.getComment())) {
-                if (StringUtils.isEmpty(ordered.getNotes())) {
-                    ordered.setNotes(request.getComment());
-                    orderRepository.save(ordered);
-                }
-            }
-            ordered.setUser(user);
-            orderRepository.save(ordered);
+        String message;
+        message = importService.importOrderFromTTNString(ttn, request.getUserId(), discountService.getById(request.getDiscountId()));
+        appOrder.setTtn(ttn);
+        String mail = appOrder.getMail();
+        Ordered ordered = orderService.findByTTN(ttn);
+        if (ordered == null) {
+            return null;
         }
+        if (!StringUtils.isEmpty(mail)) {
+            Client client = ordered.getClient();
+            client.setMail(mail);
+            clientRepository.save(client);
+        }
+        if (!StringUtils.isEmpty(request.getComment())) {
+            if (StringUtils.isEmpty(ordered.getNotes())) {
+                ordered.setNotes(request.getComment());
+                orderRepository.save(ordered);
+            }
+        }
+        ordered.setUser(user);
+        orderRepository.save(ordered);
         return message;
     }
 

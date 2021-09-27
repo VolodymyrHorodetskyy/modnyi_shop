@@ -1,6 +1,7 @@
 package shop.chobitok.modnyi.controller;
 
 import org.springframework.web.bind.annotation.*;
+import shop.chobitok.modnyi.entity.AppOrderCancellationReason;
 import shop.chobitok.modnyi.entity.CanceledOrderReason;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.request.CancelOrderWithIdRequest;
@@ -10,6 +11,8 @@ import shop.chobitok.modnyi.service.CanceledOrderReasonService;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
+import static java.util.Arrays.asList;
 
 @RestController
 @CrossOrigin
@@ -55,4 +58,8 @@ public class CanceledOrderController {
         return canceledOrderReasonService.setReturnTtnAndUpdateStatus();
     }
 
+    @GetMapping("getAppOrderCancellationReasons")
+    public List<AppOrderCancellationReason> getAppOrderCancellationReasons() {
+        return asList(AppOrderCancellationReason.values());
+    }
 }

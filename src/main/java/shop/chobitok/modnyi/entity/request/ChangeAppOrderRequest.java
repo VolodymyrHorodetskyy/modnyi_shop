@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.entity.request;
 
+import shop.chobitok.modnyi.entity.AppOrderCancellationReason;
 import shop.chobitok.modnyi.entity.AppOrderStatus;
 
 public class ChangeAppOrderRequest {
@@ -10,6 +11,7 @@ public class ChangeAppOrderRequest {
     private String ttn;
     private Long userId;
     private Long discountId;
+    private AppOrderCancellationReason cancellationReason;
 
     public Long getId() {
         return id;
@@ -57,5 +59,13 @@ public class ChangeAppOrderRequest {
 
     public void setDiscountId(Long discountId) {
         this.discountId = discountId;
+    }
+
+    public AppOrderCancellationReason getCancellationReason() {
+        return cancellationReason;
+    }
+
+    public void setCancellationReason(AppOrderCancellationReason cancellationReason) {
+        this.cancellationReason = cancellationReason;
     }
 }

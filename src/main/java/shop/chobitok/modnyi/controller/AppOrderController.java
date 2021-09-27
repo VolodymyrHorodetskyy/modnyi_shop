@@ -58,8 +58,5 @@ public class AppOrderController {
     @PatchMapping("makeAppOrdersNewAgain")
     public void makeAppOrdersNewAgain() {
         checkerService.makeAppOrderNewAgain();
-
     }
-
-
 }

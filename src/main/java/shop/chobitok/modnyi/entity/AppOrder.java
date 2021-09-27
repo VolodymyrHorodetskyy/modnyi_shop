@@ -38,6 +38,8 @@ public class AppOrder extends Audit {
     private User user;
     @Column
     private LocalDateTime dateAppOrderShouldBeProcessed;
+    @Column
+    private AppOrderCancellationReason cancellationReason;
 
     public AppOrder() {
     }
@@ -149,5 +151,13 @@ public class AppOrder extends Audit {
 
     public void setDateAppOrderShouldBeProcessed(LocalDateTime dateAppOrderShouldBeProcessed) {
         this.dateAppOrderShouldBeProcessed = dateAppOrderShouldBeProcessed;
+    }
+
+    public AppOrderCancellationReason getCancellationReason() {
+        return cancellationReason;
+    }
+
+    public void setCancellationReason(AppOrderCancellationReason cancellationReason) {
+        this.cancellationReason = cancellationReason;
     }
 }
