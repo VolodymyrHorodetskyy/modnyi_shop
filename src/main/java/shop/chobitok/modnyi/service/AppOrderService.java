@@ -251,6 +251,8 @@ public class AppOrderService {
         if (request.getStatus() == AppOrderStatus.Скасовано &&
                 request.getCancellationReason() == null) {
             throw new ConflictException("Причина скасування не вказана");
+        } else {
+            appOrder.setCancellationReason(request.getCancellationReason());
         }
         User user;
         if (request.getUserId() != null) {
@@ -264,7 +266,7 @@ public class AppOrderService {
         if (!StringUtils.isEmpty(ttn)) {
             ttn = ttn.replaceAll("\\s+", "");
             AppOrder appOrder1 = appOrderRepository.findByTtn(ttn);
-            if (appOrder1 != null) {
+            if (appOrder1 != null && !appOrder.getId().equals(appOrder1.getId())) {
                 throw new ConflictException("Накладна вже додана в заявку, id = " + appOrder1.getId());
             } else {
                 appOrder.setTtn(ttn);
@@ -272,7 +274,6 @@ public class AppOrderService {
             processAppOrderTtn(ttn, appOrder, request, user);
         }
         changeStatus(appOrder, user, request.getStatus());
-        appOrder.setCancellationReason(request.getCancellationReason());
         appOrder.setComment(request.getComment());
         return new ChangeAppOrderResponse(message, appOrderRepository.save(appOrder));
     }
@@ -313,6 +314,9 @@ public class AppOrderService {
             ));
         }
         appOrder.setStatus(status);
+        if (status != AppOrderStatus.Скасовано) {
+            appOrder.setCancellationReason(null);
+        }
         return appOrder;
     }
 
