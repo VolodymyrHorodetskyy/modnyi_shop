@@ -82,25 +82,37 @@ public class CheckerService {
         }
     }
 
-    public StringResponse checkMistakesInOrder(Long userId, String dateFrom, String dateTo) {
+    public StringResponse checkMistakesInOrder(Long userId, String from, String to) {
         OrderedSpecification orderedSpecification = new OrderedSpecification();
-        orderedSpecification.setFrom(formDateFromOrGetDefault(dateFrom));
-        orderedSpecification.setTo(formDateToOrGetDefault(dateTo));
+        LocalDateTime fromDate = formDateFromOrGetDefault(from);
+        LocalDateTime toDate = formDateToOrGetDefault(to);
+        orderedSpecification.setFrom(fromDate.minusDays(7));
+        orderedSpecification.setTo(toDate);
+        StringBuilder response = new StringBuilder();
+        response.append(fromDate).append(" - ")
+                .append(to == null ? "зараз" : to).append("\n\n");
         if (userId != null) {
             orderedSpecification.setUserId(userId.toString());
+            response.append("Id менеджера : ").append(userId).append("\n");
         }
         List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
-        StringBuilder priceUnder500StringBuilder = new StringBuilder();
-        StringBuilder nullOrderedShoesStringBuilder = new StringBuilder();
-        StringBuilder commasNoEqualShoesSizeStringBuilder = new StringBuilder();
-        priceUnder500StringBuilder.append("Ціна нижча за 500").append("\n");
-        nullOrderedShoesStringBuilder.append("Взуття не вибрано").append("\n");
-        commasNoEqualShoesSizeStringBuilder.append("Кількість крапок з комою не відповідає кількості взуття").append("\n");
+        StringBuilder priceUnder500StringBuilder = null;
+        StringBuilder nullOrderedShoesStringBuilder = null;
+        StringBuilder commasNoEqualShoesSizeStringBuilder = null;
         for (Ordered ordered : orderedList) {
             if (ordered.getPrice() < 500) {
+                if (priceUnder500StringBuilder == null) {
+                    priceUnder500StringBuilder = new StringBuilder();
+                    priceUnder500StringBuilder.append("Ціна нижча за 500").append("\n");
+                }
                 priceUnder500StringBuilder.append(ordered.getTtn()).append(" ").append(ordered.getUser().getName()).append("\n");
             }
-            if (ordered.getOrderedShoeList() == null) {
+            if (ordered.getOrderedShoeList() == null || ordered.getOrderedShoeList().size() == 0) {
+                if (nullOrderedShoesStringBuilder == null) {
+                    nullOrderedShoesStringBuilder = new StringBuilder();
+                    nullOrderedShoesStringBuilder.append("Взуття не вибрано").append("\n");
+
+                }
                 nullOrderedShoesStringBuilder.append(ordered.getTtn()).append(" ").append(ordered.getUser().getName()).append("\n");
             } else {
                 int commas = 0;
@@ -108,25 +120,40 @@ public class CheckerService {
                     if (ordered.getPostComment().charAt(i) == ';') commas++;
                 }
                 if (commas != ordered.getOrderedShoeList().size() - 1) {
+                    if (commasNoEqualShoesSizeStringBuilder == null) {
+                        commasNoEqualShoesSizeStringBuilder = new StringBuilder();
+                        commasNoEqualShoesSizeStringBuilder.append("Кількість крапок з комою не відповідає кількості взуття").append("\n");
+                    }
                     commasNoEqualShoesSizeStringBuilder.append(ordered.getTtn()).append(" ").append(ordered.getUser().getName()).append("\n");
                 }
             }
         }
-        return new StringResponse(priceUnder500StringBuilder.append("\n")
-                .append("\n").append(nullOrderedShoesStringBuilder.toString())
-                .append("\n").append(commasNoEqualShoesSizeStringBuilder.toString())
-                .toString());
+        if (priceUnder500StringBuilder != null) {
+            response.append(priceUnder500StringBuilder).append("\n");
+        }
+        if (nullOrderedShoesStringBuilder != null) {
+            response.append(nullOrderedShoesStringBuilder).append("\n");
+        }
+        if (commasNoEqualShoesSizeStringBuilder != null) {
+            response.append(commasNoEqualShoesSizeStringBuilder).append("\n");
+        }
+        return new StringResponse(response.toString());
     }
 
-    public StringResponse checkAppOrdersBecameOrders(Long userId, String dateFrom, String to) {
+    public StringResponse checkAppOrdersBecameOrders(Long userId, String from, String to) {
         AppOrderSpecification specification = new AppOrderSpecification();
-        specification.setFromCreatedDate(formDateFromOrGetDefault(dateFrom));
-        specification.setToCreatedDate(formDateToOrGetDefault(to));
+        LocalDateTime fromDate = formDateFromOrGetDefault(from);
+        LocalDateTime toDate = formDateToOrGetDefault(to);
+        specification.setFromCreatedDate(fromDate);
+        specification.setToCreatedDate(toDate);
+        StringBuilder response = new StringBuilder();
+        response.append(fromDate).append(" - ")
+                .append(to == null ? "зараз" : to).append("\n");
         if (userId != null) {
             specification.setUserId(userId.toString());
+            response.append("Id менеджера : ").append(userId).append("\n");
         }
         List<AppOrder> appOrders = appOrderRepository.findAll(specification);
-        StringBuilder response = new StringBuilder();
         long amountWithTtn = appOrders.stream().filter(appOrder -> appOrder.getTtn() != null).count();
         Map<AppOrderCancellationReason, Integer> appOrderCancellationReasonIntegerMap = new HashMap<>();
         StringBuilder reasonCommentsForOther = new StringBuilder();

@@ -1,7 +1,6 @@
 package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
-import shop.chobitok.modnyi.entity.AppOrder;
 import shop.chobitok.modnyi.entity.User;
 import shop.chobitok.modnyi.entity.UserLoggedIn;
 import shop.chobitok.modnyi.entity.request.LogInRequest;
@@ -11,7 +10,6 @@ import shop.chobitok.modnyi.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static java.util.stream.Collectors.toList;
 import static shop.chobitok.modnyi.util.DateHelper.makeDateBeginningOfDay;
 import static shop.chobitok.modnyi.util.DateHelper.makeDateEndOfDay;
 
@@ -82,5 +80,4 @@ public class UserService {
         }
         userLoggedInRepository.saveAll(allLoggedActiveUsers);
     }
-
 }

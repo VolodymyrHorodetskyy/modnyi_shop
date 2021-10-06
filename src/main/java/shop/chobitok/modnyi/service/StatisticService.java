@@ -417,6 +417,4 @@ public class StatisticService {
                 .append("80% = ").append(realisticSum).append("\n");
         return new StringResponse(stringBuilder.toString());
     }
-
-
 }
