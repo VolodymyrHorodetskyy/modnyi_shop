@@ -12,9 +12,7 @@ import shop.chobitok.modnyi.specification.OrderedSpecification;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static shop.chobitok.modnyi.util.DateHelper.formDateFromOrGetDefault;
 import static shop.chobitok.modnyi.util.DateHelper.formDateToOrGetDefault;
@@ -54,11 +52,18 @@ public class CheckerService {
     }
 
     public void makeAppOrderNewAgain() {
-        List<AppOrder> appOrders = appOrderRepository.findByStatusIn(Arrays.asList(AppOrderStatus.Чекаємо_оплату, AppOrderStatus.Не_Відповідає, AppOrderStatus.В_обробці));
+        makeAppOrdersNew(appOrderRepository.findByStatusIn(Arrays.asList(AppOrderStatus.Чекаємо_оплату, AppOrderStatus.Не_Відповідає, AppOrderStatus.В_обробці)));
+    }
+
+    public void checkRemindOnAppOrdersAndMakeThemNewAgain() {
+        makeAppOrdersNew(appOrderRepository.findByRemindOnIsLessThanEqual(LocalDateTime.now()));
+    }
+
+    private void makeAppOrdersNew(List<AppOrder> appOrders) {
         if (appOrders.size() > 0) {
             List<AppOrder> updated = new ArrayList<>();
             for (AppOrder appOrder : appOrders) {
-                updated.add(appOrderService.changeStatus(appOrder, null, AppOrderStatus.Новий));
+                updated.add(appOrderService.changeStatus(appOrder, null, AppOrderStatus.Новий, appOrder.getRemindOn() == null));
             }
             appOrderRepository.saveAll(updated);
         }
@@ -122,9 +127,38 @@ public class CheckerService {
         }
         List<AppOrder> appOrders = appOrderRepository.findAll(specification);
         StringBuilder response = new StringBuilder();
-        response.append(appOrders.size())
-                .append("\n")
-                .append(appOrders.stream().filter(appOrder -> appOrder.getTtn() != null).count());
+        long amountWithTtn = appOrders.stream().filter(appOrder -> appOrder.getTtn() != null).count();
+        Map<AppOrderCancellationReason, Integer> appOrderCancellationReasonIntegerMap = new HashMap<>();
+        StringBuilder reasonCommentsForOther = new StringBuilder();
+        for (AppOrder appOrder : appOrders) {
+            if (appOrder.getStatus() == AppOrderStatus.Скасовано) {
+                if (appOrder.getCancellationReason() == AppOrderCancellationReason.ІНШЕ) {
+                    reasonCommentsForOther.append("id : ").append(appOrder.getId()).append(" комент : ")
+                            .append(appOrder.getComment()).append("\n");
+                } else {
+                    Integer amount = appOrderCancellationReasonIntegerMap.get(appOrder.getCancellationReason());
+                    if (amount == null) {
+                        appOrderCancellationReasonIntegerMap.put(appOrder.getCancellationReason(), 1);
+                    } else {
+                        appOrderCancellationReasonIntegerMap.put(appOrder.getCancellationReason(), ++amount);
+                    }
+                }
+            }
+        }
+        StringBuilder cancellationReasonStats = new StringBuilder();
+        for (Map.Entry entry : appOrderCancellationReasonIntegerMap.entrySet()) {
+            cancellationReasonStats.append(entry.getKey()).append(" : ")
+                    .append(entry.getValue()).append("\n");
+        }
+        response.append("Загальна кількість заявок : ").append(appOrders.size())
+                .append("\n").append("Кількість заявок з ттн : ")
+                .append(amountWithTtn)
+                .append("\n").append("% : ")
+                .append(amountWithTtn * 100 / appOrders.size())
+                .append("\n").append("Статистика причин скасування заявок : ")
+                .append(cancellationReasonStats.toString())
+                .append("\n").append("Інша причина, коменти : ")
+                .append(reasonCommentsForOther.toString());
         return new StringResponse(response.toString());
     }
 }

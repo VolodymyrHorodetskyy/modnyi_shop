@@ -41,4 +41,6 @@ public interface AppOrderRepository extends JpaRepository<AppOrder, Long> {
     AppOrder findFirstByDateAppOrderShouldBeProcessedGreaterThanEqualAndUserId(LocalDateTime from,
                                                                                Long id);
     AppOrder findByTtn(String ttn);
+
+    List<AppOrder> findByRemindOnIsLessThanEqual(LocalDateTime localDateTime);
 }

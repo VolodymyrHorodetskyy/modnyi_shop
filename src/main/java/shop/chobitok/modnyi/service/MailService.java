@@ -8,20 +8,21 @@ import shop.chobitok.modnyi.util.FileReader;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import java.util.Arrays;
 import java.util.List;
+
+import static java.util.Collections.singletonList;
 
 @Service
 public class MailService {
 
-    private JavaMailSender javaMailSender;
+    private final JavaMailSender javaMailSender;
 
     public MailService(JavaMailSender javaMailSender) {
         this.javaMailSender = javaMailSender;
     }
 
     public void sendEmail(String subject, String body, String to) {
-        sendEmail(subject, body, Arrays.asList(to));
+        sendEmail(subject, body, singletonList(to));
     }
 
     public void sendEmail(String subject, String body, List<String> toList) {

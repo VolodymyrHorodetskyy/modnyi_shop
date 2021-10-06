@@ -9,10 +9,7 @@ import shop.chobitok.modnyi.service.AppOrderService;
 import shop.chobitok.modnyi.service.CheckerService;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @RestController
 @CrossOrigin
@@ -42,7 +39,7 @@ public class AppOrderController {
         return appOrderService.changeAppOrder(request);
     }
 
-    @GetMapping("/statuses")
+    @GetMapping("statuses")
     public List<AppOrderStatus> getStatus() {
         List<AppOrderStatus> appOrderStatuses = new ArrayList<>();
         appOrderStatuses.add(AppOrderStatus.Новий);

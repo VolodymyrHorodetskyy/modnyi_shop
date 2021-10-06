@@ -245,15 +245,7 @@ public class AppOrderService {
 
     public ChangeAppOrderResponse changeAppOrder(ChangeAppOrderRequest request) {
         AppOrder appOrder = appOrderRepository.findById(request.getId()).orElse(null);
-        if (appOrder == null) {
-            throw new ConflictException("AppOrder not found");
-        }
-        if (request.getStatus() == AppOrderStatus.Скасовано &&
-                request.getCancellationReason() == null) {
-            throw new ConflictException("Причина скасування не вказана");
-        } else {
-            appOrder.setCancellationReason(request.getCancellationReason());
-        }
+        validateAppOrderChange(request, appOrder);
         User user;
         if (request.getUserId() != null) {
             user = userRepository.findById(request.getUserId()).orElse(null);
@@ -273,11 +265,30 @@ public class AppOrderService {
             }
             processAppOrderTtn(ttn, appOrder, request, user);
         }
-        changeStatus(appOrder, user, request.getStatus());
+        changeStatus(appOrder, user, request.getStatus(), request.isRemindTomorrow());
         appOrder.setComment(request.getComment());
         return new ChangeAppOrderResponse(message, appOrderRepository.save(appOrder));
     }
 
+    private void validateAppOrderChange(ChangeAppOrderRequest request, AppOrder appOrder) {
+        if (appOrder == null) {
+            throw new ConflictException("AppOrder not found");
+        }
+        if (request.getStatus() == AppOrderStatus.Скасовано &&
+                request.getCancellationReason() == null) {
+            throw new ConflictException("Причина скасування не вказана");
+        } else {
+            appOrder.setCancellationReason(request.getCancellationReason());
+        }
+        if ((request.getStatus() == AppOrderStatus.Чекаємо_оплату
+                || request.getStatus() == AppOrderStatus.Не_Відповідає)
+                && !request.isRemindTomorrow()) {
+            if (request.getRemindAt() < 0) {
+                throw new ConflictException("Нагадати за не може бути 0 чи відємне число");
+            }
+            appOrder.setRemindOn(now().plusMinutes(request.getRemindAt()));
+        }
+    }
 
     public String processAppOrderTtn(String ttn, AppOrder appOrder, ChangeAppOrderRequest request,
                                      User user) {
@@ -305,17 +316,22 @@ public class AppOrderService {
         return message;
     }
 
-    public AppOrder changeStatus(AppOrder appOrder, User user, AppOrderStatus status) {
+    public AppOrder changeStatus(AppOrder appOrder, User user, AppOrderStatus status, boolean remindTomorrow) {
         // userEfficiencyService.determineEfficiency(appOrder, user);
         if (appOrder.getStatus() != status) {
             appOrder.setPreviousStatus(appOrder.getStatus());
-            appOrderProcessingRepository.save(new AppOrderProcessing(
-                    appOrder, user, appOrder.getStatus(), status, appOrder.getPreviousStatus() == null
-            ));
+            AppOrderProcessing appOrderProcessing = new AppOrderProcessing(
+                    appOrder, user, appOrder.getStatus(), status, appOrder.getPreviousStatus() == null);
+            appOrderProcessing.setRemindOn(appOrder.getRemindOn());
+            appOrderProcessing.setRemindTomorrow(remindTomorrow);
+            appOrderProcessingRepository.save(appOrderProcessing);
         }
         appOrder.setStatus(status);
         if (status != AppOrderStatus.Скасовано) {
             appOrder.setCancellationReason(null);
+        }
+        if (status != AppOrderStatus.Не_Відповідає && status != AppOrderStatus.Чекаємо_оплату) {
+            appOrder.setRemindOn(null);
         }
         return appOrder;
     }

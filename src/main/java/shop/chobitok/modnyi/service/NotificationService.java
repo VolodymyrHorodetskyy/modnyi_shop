@@ -13,23 +13,23 @@ import shop.chobitok.modnyi.repository.NotificationRepository;
 @Service
 public class NotificationService {
 
-    private NotificationRepository notificationRepository;
+    private final NotificationRepository notificationRepository;
 
     public NotificationService(NotificationRepository notificationRepository) {
         this.notificationRepository = notificationRepository;
     }
 
-    public Notification createNotification(String topic, String content, MessageType type, String ttn) {
+    public void createNotification(String topic, String content, MessageType type, String ttn) {
         Notification notification = new Notification();
         notification.setMessageType(type);
         notification.setTopic(topic);
         notification.setContent(content);
         notification.setTtn(ttn);
-        return notificationRepository.save(notification);
+        notificationRepository.save(notification);
     }
 
-    public Notification createNotification(String topic, String content, MessageType type) {
-        return createNotification(topic, content, type, null);
+    public void createNotification(String topic, String content, MessageType type) {
+        createNotification(topic, content, type, null);
     }
 
     public Page getNotifications(int page, int size, Boolean read) {

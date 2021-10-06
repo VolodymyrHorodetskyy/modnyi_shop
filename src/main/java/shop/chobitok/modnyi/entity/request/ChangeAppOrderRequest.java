@@ -12,6 +12,8 @@ public class ChangeAppOrderRequest {
     private Long userId;
     private Long discountId;
     private AppOrderCancellationReason cancellationReason;
+    private int remindAt;
+    private boolean remindTomorrow;
 
     public Long getId() {
         return id;
@@ -67,5 +69,21 @@ public class ChangeAppOrderRequest {
 
     public void setCancellationReason(AppOrderCancellationReason cancellationReason) {
         this.cancellationReason = cancellationReason;
+    }
+
+    public int getRemindAt() {
+        return remindAt;
+    }
+
+    public void setRemindAt(int remindAt) {
+        this.remindAt = remindAt;
+    }
+
+    public boolean isRemindTomorrow() {
+        return remindTomorrow;
+    }
+
+    public void setRemindTomorrow(boolean remindTomorrow) {
+        this.remindTomorrow = remindTomorrow;
     }
 }

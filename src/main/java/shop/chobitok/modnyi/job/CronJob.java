@@ -42,4 +42,10 @@ public class CronJob {
         canceledOrderReasonService.setReturnTtnAndUpdateStatus();
         orderService.updateOrdersByNovaPosta();
     }
+
+    @Scheduled(cron = "0 0/3 * * * *")
+    public void checkAppOrdersNeedToBeNewAgain(){
+        checkerService.checkRemindOnAppOrdersAndMakeThemNewAgain();
+    }
+
 }
