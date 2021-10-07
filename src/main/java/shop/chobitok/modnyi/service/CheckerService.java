@@ -91,6 +91,7 @@ public class CheckerService {
         LocalDateTime toDate = formDateToOrGetDefault(to);
         orderedSpecification.setFrom(fromDate.minusDays(7));
         orderedSpecification.setTo(toDate);
+        orderedSpecification.setStatusNotIn(Collections.singletonList(Status.ВИДАЛЕНО));
         StringBuilder response = new StringBuilder();
         response.append(fromDate).append(" - ")
                 .append(to == null ? "зараз" : to).append("\n\n");
@@ -105,20 +106,21 @@ public class CheckerService {
         StringBuilder discountIsNull = null;
         StringBuilder priceIsNotCorrect = null;
         for (Ordered ordered : orderedList) {
-            if (ordered.getPrice() < 500) {
-                if (priceUnder500StringBuilder == null) {
-                    priceUnder500StringBuilder = new StringBuilder();
-                    priceUnder500StringBuilder.append("Ціна нижча за 500").append("\n");
-                }
-                priceUnder500StringBuilder.append(ordered.getTtn()).append(" ").append(ordered.getUser().getName()).append("\n");
-            }
+            String ttn = ordered.getTtn();
+            String userName = ordered.getUser().getName();
             if (ordered.getOrderedShoeList() == null || ordered.getOrderedShoeList().size() == 0) {
                 if (nullOrderedShoesStringBuilder == null) {
                     nullOrderedShoesStringBuilder = new StringBuilder();
                     nullOrderedShoesStringBuilder.append("Взуття не вибрано").append("\n");
 
                 }
-                nullOrderedShoesStringBuilder.append(ordered.getTtn()).append(" ").append(ordered.getUser().getName()).append("\n");
+                nullOrderedShoesStringBuilder.append(ttn).append(" ").append(userName).append("\n");
+            } else if (ordered.getPrice() < 500) {
+                if (priceUnder500StringBuilder == null) {
+                    priceUnder500StringBuilder = new StringBuilder();
+                    priceUnder500StringBuilder.append("Ціна нижча за 500").append("\n");
+                }
+                priceUnder500StringBuilder.append(ttn).append(" ").append(userName).append("\n");
             } else {
                 int commas = 0;
                 for (int i = 0; i < ordered.getPostComment().length(); i++) {
@@ -129,7 +131,7 @@ public class CheckerService {
                         commasNoEqualShoesSizeStringBuilder = new StringBuilder();
                         commasNoEqualShoesSizeStringBuilder.append("Кількість крапок з комою не відповідає кількості взуття").append("\n");
                     }
-                    commasNoEqualShoesSizeStringBuilder.append(ordered.getTtn()).append(" ").append(ordered.getUser().getName()).append("\n");
+                    commasNoEqualShoesSizeStringBuilder.append(ttn).append(" ").append(userName).append("\n");
                 }
             }
             if (ordered.getOrderedShoeList().size() > 1) {
@@ -138,7 +140,7 @@ public class CheckerService {
                         discountIsNull = new StringBuilder();
                         discountIsNull.append("В замовленні більше двох пар, але немає знижки").append("\n");
                     }
-                    discountIsNull.append(ordered.getTtn()).append(" ").append(ordered.getUser().getName())
+                    discountIsNull.append(ttn).append(" ").append(userName)
                             .append("\n");
                 } else if (checkPriceIsNotCorrect(ordered)) {
                     if (priceIsNotCorrect == null) {
@@ -149,7 +151,7 @@ public class CheckerService {
                             .append(" ,ціна яка повинна бути: ")
                             .append(npOrderMapper.countDiscount(ordered.getOrderedShoeList(), ordered.getDiscount()))
                             .append("\n");
-                    priceIsNotCorrect.append(ordered.getTtn() + " " + ordered.getUser().getName())
+                    priceIsNotCorrect.append(ttn).append(" ").append(userName)
                             .append("\n\n");
                 }
             }

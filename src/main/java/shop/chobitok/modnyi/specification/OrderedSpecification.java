@@ -26,6 +26,7 @@ public class OrderedSpecification implements Specification<Ordered> {
     private String isNotTtn;
     private String userId;
     private List<Status> statuses;
+    private List<Status> statusNotIn;
     private LocalDateTime dateCreatedFrom;
     private LocalDateTime dateCreatedTo;
     private Long npAccountId;
@@ -170,6 +171,13 @@ public class OrderedSpecification implements Specification<Ordered> {
         if (size != null) {
             Predicate sizePredicate = criteriaBuilder.equal(root.get("size"), size);
             predicateList.add(sizePredicate);
+        }
+        if (statusNotIn != null && statusNotIn.size() > 0) {
+            List<Predicate> statusNotInPredicates = new ArrayList<>();
+            for (Status status : statusNotIn) {
+                statusNotInPredicates.add(criteriaBuilder.notEqual(root.get("status"), status));
+            }
+            predicateList.add(criteriaBuilder.or(statusNotInPredicates.toArray(Predicate[]::new)));
         }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }
@@ -318,4 +326,7 @@ public class OrderedSpecification implements Specification<Ordered> {
         this.npAccountId = npAccountId;
     }
 
+    public void setStatusNotIn(List<Status> statusNotIn) {
+        this.statusNotIn = statusNotIn;
+    }
 }
