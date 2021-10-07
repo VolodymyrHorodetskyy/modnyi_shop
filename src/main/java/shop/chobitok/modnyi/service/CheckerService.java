@@ -3,6 +3,7 @@ package shop.chobitok.modnyi.service;
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.response.StringResponse;
+import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
 import shop.chobitok.modnyi.repository.AppOrderRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.StatusChangeRepository;
@@ -26,14 +27,16 @@ public class CheckerService {
     private final AppOrderRepository appOrderRepository;
     private final AppOrderService appOrderService;
     private final StatusChangeRepository statusChangeRepository;
+    private final NPOrderMapper npOrderMapper;
 
-    public CheckerService(OrderService orderService, OrderRepository orderRepository, NotificationService notificationService, AppOrderRepository appOrderRepository, AppOrderService appOrderService, StatusChangeRepository statusChangeRepository) {
+    public CheckerService(OrderService orderService, OrderRepository orderRepository, NotificationService notificationService, AppOrderRepository appOrderRepository, AppOrderService appOrderService, StatusChangeRepository statusChangeRepository, NPOrderMapper npOrderMapper) {
         this.orderService = orderService;
         this.orderRepository = orderRepository;
         this.notificationService = notificationService;
         this.appOrderRepository = appOrderRepository;
         this.appOrderService = appOrderService;
         this.statusChangeRepository = statusChangeRepository;
+        this.npOrderMapper = npOrderMapper;
     }
 
     public void checkPayedKeepingOrders() {
@@ -99,6 +102,8 @@ public class CheckerService {
         StringBuilder priceUnder500StringBuilder = null;
         StringBuilder nullOrderedShoesStringBuilder = null;
         StringBuilder commasNoEqualShoesSizeStringBuilder = null;
+        StringBuilder discountIsNull = null;
+        StringBuilder priceIsNotCorrect = null;
         for (Ordered ordered : orderedList) {
             if (ordered.getPrice() < 500) {
                 if (priceUnder500StringBuilder == null) {
@@ -127,6 +132,27 @@ public class CheckerService {
                     commasNoEqualShoesSizeStringBuilder.append(ordered.getTtn()).append(" ").append(ordered.getUser().getName()).append("\n");
                 }
             }
+            if (ordered.getOrderedShoeList().size() > 1) {
+                if (checkDiscountIsNull(ordered)) {
+                    if (discountIsNull == null) {
+                        discountIsNull = new StringBuilder();
+                        discountIsNull.append("В замовленні більше двох пар, але немає знижки").append("\n");
+                    }
+                    discountIsNull.append(ordered.getTtn()).append(" ").append(ordered.getUser().getName())
+                            .append("\n");
+                } else if (checkPriceIsNotCorrect(ordered)) {
+                    if (priceIsNotCorrect == null) {
+                        priceIsNotCorrect = new StringBuilder();
+                        priceIsNotCorrect.append("Неправильна ціна в замовленні").append("\n");
+                    }
+                    priceIsNotCorrect.append("Ціна зараз: ").append(ordered.getPrice())
+                            .append(" ,ціна яка повинна бути: ")
+                            .append(npOrderMapper.countDiscount(ordered.getOrderedShoeList(), ordered.getDiscount()))
+                            .append("\n");
+                    priceIsNotCorrect.append(ordered.getTtn() + " " + ordered.getUser().getName())
+                            .append("\n\n");
+                }
+            }
         }
         if (priceUnder500StringBuilder != null) {
             response.append(priceUnder500StringBuilder).append("\n");
@@ -137,7 +163,29 @@ public class CheckerService {
         if (commasNoEqualShoesSizeStringBuilder != null) {
             response.append(commasNoEqualShoesSizeStringBuilder).append("\n");
         }
+        if (discountIsNull != null) {
+            response.append(discountIsNull.toString()).append("\n");
+        }
+        if (priceIsNotCorrect != null) {
+            response.append(priceIsNotCorrect.toString()).append("\n");
+        }
         return new StringResponse(response.toString());
+    }
+
+    private boolean checkDiscountIsNull(Ordered ordered) {
+        boolean result = false;
+        if (ordered.getDiscount() == null) {
+            result = true;
+        }
+        return result;
+    }
+
+    private boolean checkPriceIsNotCorrect(Ordered ordered) {
+        boolean result = false;
+        if (Math.abs(npOrderMapper.countDiscount(ordered.getOrderedShoeList(), ordered.getDiscount()) - ordered.getPrice()) > 199) {
+            result = true;
+        }
+        return result;
     }
 
     public StringResponse checkAppOrdersBecameOrders(Long userId, String from, String to) {
