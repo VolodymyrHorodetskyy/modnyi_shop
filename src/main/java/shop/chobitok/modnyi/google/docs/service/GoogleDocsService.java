@@ -14,13 +14,18 @@ public class GoogleDocsService {
 
     private String deliveryFileId = "14PZYEr3ny4xu5zd3A9n14t5gk8UH9J6eXCA40jplr7o";
     private String returningsFileId = "1K2mkRH9BMu9SEn-xXGn1e70MwWP1CQUVLwrH5z_ID6Q";
+    private String forTestFile = "115CoCu2YhCbj4VV8KQqET2aX9sBjfv0Pef0ygVwFyM8";
 
     public void updateDeliveryFile(String text) {
-  //      docsRepository.updateDocumentByText(deliveryFileId, text);
+        //      docsRepository.updateDocumentByText(deliveryFileId, text);
     }
 
     public void updateReturningsFile(String text) {
-  //      docsRepository.updateDocumentByText(returningsFileId, text);
+        //      docsRepository.updateDocumentByText(returningsFileId, text);
+    }
+
+    public void forTest(String text) {
+        docsRepository.updateDocumentByText(forTestFile, text);
     }
 
 }

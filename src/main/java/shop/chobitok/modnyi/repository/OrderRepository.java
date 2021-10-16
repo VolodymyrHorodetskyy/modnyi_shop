@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Status;
@@ -25,7 +26,7 @@ public interface OrderRepository extends JpaRepository<Ordered, Long> {
 
     List<Ordered> findAllByAvailableTrueAndNotForDeliveryFileFalseAndStatusOrderByDateCreated(Status status);
 
-    List<Ordered> findAllByAvailableTrueAndStatusIn(List<Status> statuses);
+    List<Ordered> findAllByAvailableTrueAndWithoutTTNFalseAndStatusIn(List<Status> statuses);
 
     List<Ordered> findAllByStatusInAndLastModifiedDateGreaterThan(List<Status> statuses, LocalDateTime dateTime);
 
@@ -57,4 +58,6 @@ public interface OrderRepository extends JpaRepository<Ordered, Long> {
 
     List<Ordered> findByCardIdAndNpAccountIdAndCreatedDateGreaterThanEqualAndCreatedDateLessThanEqual(Long id, Long npAccountId, LocalDateTime from, LocalDateTime to);
 
+    @Query(value = "Select min(o.id) from ordered o", nativeQuery = true)
+    Integer findMinimum();
 }

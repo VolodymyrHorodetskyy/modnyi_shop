@@ -5,15 +5,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.*;
-import shop.chobitok.modnyi.entity.request.CreateOrderRequest;
 import shop.chobitok.modnyi.entity.request.ImportOrdersFromStringRequest;
 import shop.chobitok.modnyi.entity.request.UpdateOrderRequest;
 import shop.chobitok.modnyi.entity.response.GetAllOrderedResponse;
 import shop.chobitok.modnyi.entity.response.PaginationInfo;
 import shop.chobitok.modnyi.entity.response.StringResponse;
-import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.google.docs.service.GoogleDocsService;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.DataForList;
@@ -34,6 +31,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.singletonList;
+import static org.springframework.util.StringUtils.isEmpty;
 import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
 import static shop.chobitok.modnyi.util.StringHelper.removeSpaces;
 import static shop.chobitok.modnyi.util.StringHelper.splitTTNString;
@@ -55,11 +53,12 @@ public class OrderService {
     private CardService cardService;
     private HistoryService historyService;
     private ImportService importService;
+    private PropsService propsService;
 
     @Value("${spring.datasource.username}")
     private String username;
 
-    public OrderService(OrderRepository orderRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, HistoryService historyService, ImportService importService) {
+    public OrderService(OrderRepository orderRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, HistoryService historyService, ImportService importService, PropsService propsService) {
         this.orderRepository = orderRepository;
         this.clientService = clientService;
         this.novaPostaService = novaPostaService;
@@ -74,6 +73,7 @@ public class OrderService {
         this.cardService = cardService;
         this.historyService = historyService;
         this.importService = importService;
+        this.propsService = propsService;
     }
 
     public Ordered findByTTN(String ttn) {
@@ -110,7 +110,7 @@ public class OrderService {
 
     public List<Ordered> getOrdersByStatus(Status status) {
         updateOrdersByNovaPosta();
-        return orderRepository.findAllByAvailableTrueAndStatusIn(singletonList(status));
+        return orderRepository.findAllByAvailableTrueAndWithoutTTNFalseAndStatusIn(singletonList(status));
     }
 
     private Sort createSort(String orderBy) {
@@ -122,44 +122,17 @@ public class OrderService {
         }
     }
 
-
-    public Ordered createOrder(CreateOrderRequest createOrderRequest) {
-        Ordered ordered = new Ordered();
-        if (!StringUtils.isEmpty(createOrderRequest.getTtn())) {
-            if (getAll(0, 1, createOrderRequest.getTtn(), null, null, false, null, null).getOrderedList().size() > 0) {
-                throw new ConflictException("Замовлення з такою накладною вже існує");
-            }
-        } else {
-            ordered.setWithoutTTN(true);
-        }
-     /*   if (createOrderRequest.getShoes() != null && createOrderRequest.getShoes().size() > 0) {
-            ordered.setOrderedShoes(shoeRepository.findAllById(createOrderRequest.getShoes()));
-        } else {
-            throw new ConflictException("Взуття не може бути пусте");
-        }*/
-        setUser(ordered, createOrderRequest.getUserId());
-        ordered.setClient(clientService.createClient(createOrderRequest));
-        ordered.setTtn(createOrderRequest.getTtn());
-        statusChangeService.createRecord(ordered, ordered.getStatus(), createOrderRequest.getStatus());
-        ordered.setStatus(createOrderRequest.getStatus());
-        ordered.setAddress(createOrderRequest.getAddress());
-        ordered.setNotes(createOrderRequest.getNotes());
-        if (createOrderRequest.isFullpayment()) {
-            ordered.setFullPayment(true);
-        } else {
-            ordered.setPrePayment(createOrderRequest.getPrepayment());
-        }
-        ordered.setPrice(createOrderRequest.getPrice());
-        return orderRepository.save(ordered);
-    }
-
     public Ordered updateOrder(Long id, UpdateOrderRequest updateOrderRequest) {
-        Ordered ordered = orderRepository.findById(id).orElse(null);
+        Ordered ordered = null;
+        if (id != null) {
+            ordered = orderRepository.findById(id).orElse(null);
+        }
         if (ordered == null) {
-            throw new ConflictException("Замовлення не знайдено");
+            ordered = new Ordered();
+            ordered.setTtn(String.valueOf(orderRepository.findMinimum() + 1));
         }
         setUser(ordered, updateOrderRequest.getUserId());
-        if (!StringUtils.isEmpty(updateOrderRequest.getPostComment())) {
+        if (!isEmpty(updateOrderRequest.getPostComment()) || ordered.isWithoutTTN()) {
             ordered.setPostComment(updateOrderRequest.getPostComment());
         }
         ordered.setDiscount(discountService.getById(updateOrderRequest.getDiscountId()));
@@ -169,7 +142,16 @@ public class OrderService {
         clientService.updateOrCreateClient(ordered.getClient(), updateOrderRequest);
         ordered.setPrePayment(updateOrderRequest.getPrepayment());
         ordered.setPrice(updateOrderRequest.getPrice());
-        statusChangeService.createRecord(ordered, ordered.getStatus(), updateOrderRequest.getStatus());
+        if (ordered.isWithoutTTN()) {
+            ordered.setStatus(updateOrderRequest.getStatus());
+        }
+        if (id != null) {
+            statusChangeService.createRecord(ordered, ordered.getStatus(), updateOrderRequest.getStatus());
+        } else {
+            ordered.setNpAccountId(propsService.getActual().getId());
+            ordered.setStatus(updateOrderRequest.getStatus());
+            ordered.setWithoutTTN(true);
+        }
         return orderRepository.save(ordered);
     }
 
@@ -192,7 +174,7 @@ public class OrderService {
 
 
     public String updateOrdersByStatusesByNovaPosta(List<Status> statuses) {
-        return updateOrdersByNovaPosta(orderRepository.findAllByAvailableTrueAndStatusIn(statuses));
+        return updateOrdersByNovaPosta(orderRepository.findAllByAvailableTrueAndWithoutTTNFalseAndStatusIn(statuses));
     }
 
     public String updateOrdersByNovaPosta(List<Ordered> orderedList) {
@@ -368,7 +350,7 @@ public class OrderService {
             } else {
                 Client client = ordered.getClient();
                 if (client != null) {
-                    if (!StringUtils.isEmpty(client.getMail()) && !username.equals("root") && newStatus != Status.ВИДАЛЕНО) {
+                    if (!isEmpty(client.getMail()) && !username.equals("root") && newStatus != Status.ВИДАЛЕНО) {
                         mailService.sendStatusNotificationEmail(client.getMail(), newStatus);
                     }
                 }
@@ -461,7 +443,7 @@ public class OrderService {
 
 
     public void updateGoogleDocsDeliveryFile() {
-        googleDocsService.updateDeliveryFile(countNeedDeliveryFromDB(false).getResult());
+        //     googleDocsService.updateDeliveryFile(countNeedDeliveryFromDB(false).getResult());
     }
 
     public StringResponse countNeedDeliveryFromDB(boolean updateStatuses) {
@@ -509,13 +491,16 @@ public class OrderService {
                     ordered.setSequenceNumber(++count);
                     toSave.add(ordered);
                 }
-                if (!StringUtils.isEmpty(ordered.getTtn())) {
+                if (!isEmpty(ordered.getTtn()) && ordered.getTtn().length() > 10) {
                     result.append(ordered.getSequenceNumber()).append(". ").append(ordered.getTtn()).append("\n").append(ordered.getPostComment()).append("\n\n");
-                } else {
-                    result.append(ordered.getSequenceNumber()).append(". ").append("без накладноЇ\n");
+                } else if (!isEmpty(ordered.getPostComment())) {
+                    result.append(ordered.getSequenceNumber()).append(". ").append("без накладної\n");
+                    result.append(ordered.getPostComment()).append("\n\n");
+                } else if (ordered.getOrderedShoeList() != null && ordered.getOrderedShoeList().size() > 0) {
+                    result.append(ordered.getSequenceNumber()).append(". ").append("без накладної\n");
                     for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
                         result.append(orderedShoe.getShoe().getModel()).append(" ").append(orderedShoe.getShoe().getColor())
-                                .append(", розмір: ").append(orderedShoe.getSize());
+                                .append(", розмір: ").append(orderedShoe.getSize()).append("\n\n");
                     }
                 }
             }

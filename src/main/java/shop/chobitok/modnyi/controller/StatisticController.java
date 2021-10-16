@@ -1,10 +1,12 @@
 package shop.chobitok.modnyi.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.response.AmountsInfoResponse;
 import shop.chobitok.modnyi.entity.response.GoogleChartObject;
 import shop.chobitok.modnyi.entity.response.StringResponse;
+import shop.chobitok.modnyi.google.docs.service.GoogleDocsService;
 import shop.chobitok.modnyi.service.CanceledOrderReasonService;
 import shop.chobitok.modnyi.service.OrderService;
 import shop.chobitok.modnyi.service.StatisticService;
@@ -109,6 +111,14 @@ public class StatisticController {
     @GetMapping("/getRedeliveryStatsByNpAccount")
     public StringResponse getByNpAccount(@RequestParam Long npAccountId, @RequestParam String dateFrom, @RequestParam String dateTo) {
         return statisticService.getRedeliverySumByNpAccountId(npAccountId, dateFrom, dateTo);
+    }
+
+    @Autowired
+    private GoogleDocsService googleDocsService;
+
+    @PostMapping("updateGoogleTest")
+    public void updateTestGoogleFile(@RequestParam String text) {
+        googleDocsService.forTest(text);
     }
 
 }
