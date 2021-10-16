@@ -4,6 +4,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.*;
@@ -18,10 +20,10 @@ import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.repository.*;
 import shop.chobitok.modnyi.service.*;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
-import shop.chobitok.modnyi.util.FileReader;
+
 
 import javax.transaction.Transactional;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -57,7 +59,7 @@ public class NovaPostaTest {
 
     @Test
     public void googleTest() {
-        googleDocsService.updateReturningsFile("TEST");
+        googleDocsService.forTest("TEST");
     }
 
 /*    @Test
@@ -205,7 +207,7 @@ public class NovaPostaTest {
 
     @Test
     public void sendMail() {
-        String mailTemplate = "mail_our_discounts_and_updates_1.html";
+/*        String mailTemplate = "mail_our_discounts_and_updates_1.html";
         List<Client> clients = clientRepository.findByMailNotNull();
         for (Client client : clients) {
             if (!client.getMail().isEmpty() && sentMailRepository.findByClientId(client.getId()) == null) {
@@ -213,7 +215,7 @@ public class NovaPostaTest {
                         FileReader.getHtmlTemplate("mail_our_discounts_and_updates_1.html"), client.getMail());
                 sentMailRepository.save(new SentMail(client.getId(), mailTemplate, client.getMail()));
             }
-        }
+        }*/
     }
 
     @Autowired
@@ -327,7 +329,7 @@ public class NovaPostaTest {
 
     @Test
     public void tt() {
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО));
+        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndWithoutTTNFalseAndStatusIn(Arrays.asList(Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО));
         for (Ordered ordered : orderedList) {
             ordered.setNpAccountId(2l);
             orderRepository.save(ordered);
@@ -384,7 +386,7 @@ public class NovaPostaTest {
 
     @Test
     public void getToRecreate() {
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.СТВОРЕНО));
+        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndWithoutTTNFalseAndStatusIn(Arrays.asList(Status.СТВОРЕНО));
         StringBuilder stringBuilder = new StringBuilder();
         for (Ordered ordered : orderedList) {
             if (ordered.getUser().getId() == 2l) {
@@ -553,19 +555,24 @@ public class NovaPostaTest {
         System.out.println(clients.size());*/
         StringBuilder stringBuilder = new StringBuilder();
         OrderedSpecification specification = new OrderedSpecification();
-        specification.setFrom(LocalDateTime.now().minusDays(45));
-        List<Ordered> orderedList = orderRepository.findAll(specification);
+        List<Ordered> orderedList = orderRepository.findAll();
+        int withoutClientCount = 0;
         for (Ordered ordered : orderedList) {
             Client client = ordered.getClient();
-            long count = orderRepository.findByClientId(client.getId())
-                    .stream().filter(o -> o.getStatus() == Status.ОТРИМАНО).count();
-            stringBuilder.append(client.getMail() == null ? "" : client.getMail()).append(",")
-                    .append(client.getPhone()).append(",")
-                    .append(client.getName()).append(",")
-                    .append(client.getLastName()).append(",")
-                    .append(count)
-                    .append("\n");
+            if (client != null) {
+                long count = orderRepository.findByClientId(client.getId())
+                        .stream().filter(o -> o.getStatus() == Status.ОТРИМАНО).count();
+                stringBuilder.append(client.getMail() == null ? "" : client.getMail()).append(",")
+                        .append(client.getPhone()).append(",")
+                        .append(client.getName()).append(",")
+                        .append(client.getLastName()).append(",")
+                        .append(count)
+                        .append("\n");
+            } else {
+                ++withoutClientCount;
+            }
         }
+        System.out.println("Without client = " + withoutClientCount);
         System.out.println(stringBuilder.toString());
     }
 
@@ -588,12 +595,84 @@ public class NovaPostaTest {
         List<CanceledOrderReason> canceledOrderReasons = canceledOrderReasonRepository.findByCreatedDateGreaterThanEqual(LocalDateTime.now().minusDays(90));
         for (CanceledOrderReason reason : canceledOrderReasons) {
             if (reason.isManual() && reason.getOrdered().getStatus() != Status.ВІДМОВА) {
-              //  reason.getOrdered().setStatus(Status.ВІДМОВА);
-               // orderRepository.save(reason.getOrdered());
-               System.out.println(reason.getOrdered().getTtn());
+                //  reason.getOrdered().setStatus(Status.ВІДМОВА);
+                // orderRepository.save(reason.getOrdered());
+                System.out.println(reason.getOrdered().getTtn());
             }
         }
     }
 
+    @Autowired
+    private ResourceLoader resourceLoader;
+
+    @Test
+    public void doJob() throws IOException {
+        Resource resource = resourceLoader.getResource("classpath:toread.txt");
+        InputStream input = resource.getInputStream();
+        File file = resource.getFile();
+        StringBuilder stringBuilder = new StringBuilder();
+        int count = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                ++count;
+                if (count == 1) {
+                    stringBuilder.append("[");
+                }
+                stringBuilder
+                        .append("{\"value\":\"")
+                        .append(line)
+                        .append("\"}");
+                if (count == 5) {
+                    stringBuilder.append("]").append("\n");
+                    count = 0;
+                } else {
+                    stringBuilder.append(",");
+                }
+            }
+        }
+        System.out.println(stringBuilder);
+    }
+
+    @Autowired
+    ParamsService paramsService;
+
+    @Test
+    public void addParams() {
+        paramsService.saveOrChangeParam("workingHoursWeekDayFrom", "10");
+        paramsService.saveOrChangeParam("workingHoursWeekDayTo", "18");
+        paramsService.saveOrChangeParam("workingHoursSaturdayFrom", "10");
+        paramsService.saveOrChangeParam("workingHoursSaturdayTo", "17");
+        paramsService.saveOrChangeParam("workingHoursSundayFrom", "10");
+        paramsService.saveOrChangeParam("workingHoursSundayTo", "16");
+        paramsService.saveOrChangeParam("minutesAppOrderShouldBeProcessed", "12");
+        paramsService.saveOrChangeParam("firstShouldBeProcessedDateOnNow", "true");
+    }
+
+    @Autowired
+    private AppOrderService appOrderService;
+
+    @Test
+    public void shouldBeProcessedTest() {
+        appOrderService.getAllAppOrderAndDateTimeWhenShouldBeProcessed("2021-05-19 00:00");
+    }
+
+    @Autowired
+    private AppOrderProcessingRepository appOrderProcessingRepository;
+
+    @Test
+    @Transactional
+    public void test() {
+    /*    Discount discount = discountRepository.findById(13093l).orElse(null);
+        List<Ordered> orderedList = orderRepository.findByCreatedDateGreaterThan(LocalDateTime.now().minusDays(15));
+        for (Ordered ordered :
+                orderedList) {
+            if (ordered.getOrderedShoeList().size() > 1 && ordered.getDiscount() == null) {
+                ordered.setDiscount(discount);
+                orderRepository.save(ordered);
+            }
+        }*/
+        appOrderRepository.findByRemindOnIsLessThanEqual(LocalDateTime.now());
+    }
 
 }
