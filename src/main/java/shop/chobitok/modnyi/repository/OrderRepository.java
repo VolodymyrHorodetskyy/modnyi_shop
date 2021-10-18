@@ -58,6 +58,6 @@ public interface OrderRepository extends JpaRepository<Ordered, Long> {
 
     List<Ordered> findByCardIdAndNpAccountIdAndCreatedDateGreaterThanEqualAndCreatedDateLessThanEqual(Long id, Long npAccountId, LocalDateTime from, LocalDateTime to);
 
-    @Query(value = "Select min(o.id) from ordered o", nativeQuery = true)
-    Integer findMinimum();
+    @Query(value = "Select max(o.id) from ordered o", nativeQuery = true)
+    Integer findMaximum();
 }

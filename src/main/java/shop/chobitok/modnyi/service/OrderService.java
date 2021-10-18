@@ -129,7 +129,7 @@ public class OrderService {
         }
         if (ordered == null) {
             ordered = new Ordered();
-            ordered.setTtn(String.valueOf(orderRepository.findMinimum() + 1));
+            ordered.setTtn(String.valueOf(orderRepository.findMaximum() + 1));
         }
         setUser(ordered, updateOrderRequest.getUserId());
         if (!isEmpty(updateOrderRequest.getPostComment()) || ordered.isWithoutTTN()) {
