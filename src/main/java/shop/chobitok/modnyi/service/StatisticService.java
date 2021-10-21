@@ -1,7 +1,6 @@
 package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.response.AmountsInfoResponse;
 import shop.chobitok.modnyi.entity.response.GoogleChartObject;
@@ -9,7 +8,6 @@ import shop.chobitok.modnyi.entity.response.StringDoubleObj;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
-import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.AppOrderRepository;
@@ -22,17 +20,18 @@ import shop.chobitok.modnyi.specification.OrderedSpecification;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
-import static shop.chobitok.modnyi.util.DateHelper.*;
+import static shop.chobitok.modnyi.util.DateHelper.formDateFromOrGetDefault;
+import static shop.chobitok.modnyi.util.DateHelper.formDateToOrGetDefault;
 
 @Service
 public class StatisticService {
 
     private NovaPostaRepository postaRepository;
     private OrderRepository orderRepository;
-    private NPOrderMapper npOrderMapper;
     private OrderService orderService;
     private ShoePriceService shoePriceService;
     private AppOrderRepository appOrderRepository;
@@ -42,10 +41,9 @@ public class StatisticService {
     private OurTtnService ourTtnService;
     private HistoryService historyService;
 
-    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, NPOrderMapper npOrderMapper, OrderService orderService, ShoePriceService shoePriceService, AppOrderRepository appOrderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, PayedOrderedService payedOrderedService, ParamsService paramsService, OurTtnService ourTtnService, HistoryService historyService) {
+    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, OrderService orderService, ShoePriceService shoePriceService, AppOrderRepository appOrderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, PayedOrderedService payedOrderedService, ParamsService paramsService, OurTtnService ourTtnService, HistoryService historyService) {
         this.postaRepository = postaRepository;
         this.orderRepository = orderRepository;
-        this.npOrderMapper = npOrderMapper;
         this.orderService = orderService;
         this.shoePriceService = shoePriceService;
         this.appOrderRepository = appOrderRepository;
@@ -62,26 +60,13 @@ public class StatisticService {
         List<Ordered> orderedList = orderRepository.findAll();
         for (Ordered ordered : orderedList) {
             if (ordered.getOrderedShoeList() == null || ordered.getOrderedShoeList().size() < 1) {
-                result.append(ordered.getTtn() + "  ... замовлення без взуття або розміру \n");
+                result.append(ordered.getTtn()).append("  ... замовлення без взуття або розміру \n");
             }
         }
         if (result.length() == 0) {
             result.append("Помилок немає");
         }
         return new StringResponse(result.toString());
-    }
-
-    private Set<String> readFileToTTNSet(String path) {
-        List<String> allTTNList = ShoeUtil.readTXTFile(path);
-        Set<String> allTTNSet = new HashSet();
-        for (String s : allTTNList) {
-            allTTNSet.add(s.replaceAll("\\s+", ""));
-        }
-        return allTTNSet;
-    }
-
-    private Set<String> readFileToTTNSet(MultipartFile file) {
-        return toTTNSet(ShoeUtil.readTXTFile(file));
     }
 
     private Set<String> toTTNSet(List<String> orderedList) {
@@ -92,55 +77,17 @@ public class StatisticService {
         return allTTNSet;
     }
 
-    public String needToBePayed(String pathToAllTTNFile, String payedTTNFile) {
-        return null;
-/*        StringBuilder stringBuilder = new StringBuilder();
-        List<String> allTTNList = ShoeUtil.readTXTFile(pathToAllTTNFile);
-        Set<String> allTTNSet = new HashSet();
-        for (String s : allTTNList) {
-            allTTNSet.add(s.replaceAll("\\s+", ""));
-        }
-        List<String> payedTTNList = ShoeUtil.readTXTFile(payedTTNFile);
-        Set<String> payedTTNSet = new HashSet();
-        for (String s : payedTTNList) {
-            payedTTNSet.add(s.replaceAll("\\s+", ""));
-        }
-
-        List<Ordered> orderedList = new ArrayList<>();
-        Double sum = 0d;
-        for (String s : allTTNSet) {
-            if (!payedTTNSet.contains(s)) {
-                TrackingEntity trackingEntity = postaRepository.getTracking(null, s);
-                Data data = trackingEntity.getData().get(0);
-                if (convertToStatus(data.getStatusCode()) == Status.ОТРИМАНО) {
-                    stringBuilder.append(data.getNumber());
-                    stringBuilder.append("\n");
-                    Ordered ordered = npOrderMapper.toOrdered(trackingEntity);
-                    if (ordered.getOrderedShoes().size() > 0) {
-                        for (Shoe shoe : ordered.getOrderedShoes()) {
-                            sum += shoePriceService.getShoePrice(shoe, ordered).getCost();
-                        }
-                    }
-                    orderedList.add(ordered);
-                }
-            }
-        }
-        stringBuilder.append("\n\n");
-        stringBuilder.append("Сума = " + sum);
-        return stringBuilder.toString();*/
-    }
-
     public StringResponse needToPayed(boolean updateStatuses) {
         Map<String, NeedToBePayed> companySumMap = new HashMap<>();
         StringBuilder result = new StringBuilder();
         if (updateStatuses) {
             orderService.updateOrdersByNovaPosta();
         }
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndPayedFalseAndStatusIn(Arrays.asList(Status.ОТРИМАНО));
+        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndPayedFalseAndStatusIn(singletonList(Status.ОТРИМАНО));
 
         for (Ordered ordered : orderedList) {
             if (ordered.getOrderedShoeList().size() < 1) {
-                result.append(ordered.getTtn() + " НЕ ВИЗНАЧЕНО\n");
+                result.append(ordered.getTtn()).append(" НЕ ВИЗНАЧЕНО\n");
             } else {
                 for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
                     NeedToBePayed needToBePayed = companySumMap.get(orderedShoe.getShoe().getCompany().getName());
@@ -158,11 +105,11 @@ public class StatisticService {
             }
         }
         for (Map.Entry<String, NeedToBePayed> entry : companySumMap.entrySet()) {
-            result.append(entry.getKey() + "\n\n");
+            result.append(entry.getKey()).append("\n\n");
             for (String s : entry.getValue().ttns) {
-                result.append(s + "\n");
+                result.append(s).append("\n");
             }
-            result.append("Сума = " + entry.getValue().sum + "\n");
+            result.append("Сума = ").append(entry.getValue().sum).append("\n");
         }
         Double sumNotCounted = payedOrderedService.getSumNotCounted();
         Double sum = 0d;
@@ -175,7 +122,7 @@ public class StatisticService {
         return new StringResponse(result.toString());
     }
 
-    class NeedToBePayed {
+    static class NeedToBePayed {
         Double sum;
         List<String> ttns;
     }
@@ -183,10 +130,6 @@ public class StatisticService {
     public String countAllReceivedAndDenied(String pathAllTTNFile) {
         StringBuilder stringBuilder = new StringBuilder();
         List<String> allTTNList = ShoeUtil.readTXTFile(pathAllTTNFile);
-        Set<String> allTTNSet = new HashSet();
-        for (String s : allTTNList) {
-            allTTNSet.add(s.replaceAll("\\s+", ""));
-        }
         int received = 0;
         int denied = 0;
         for (String s : allTTNList) {
@@ -198,9 +141,9 @@ public class StatisticService {
                 ++denied;
             }
         }
-        stringBuilder.append("Отримані = " + received);
+        stringBuilder.append("Отримані = ").append(received);
         stringBuilder.append("\n");
-        stringBuilder.append("Відмова = " + denied);
+        stringBuilder.append("Відмова = ").append(denied);
         return stringBuilder.toString();
     }
 
@@ -272,7 +215,7 @@ public class StatisticService {
             Integer receivedAmount = entry.getValue();
             Integer deniedAmount = deniedMap.get(shoe);
             if (deniedAmount != null) {
-                Integer generalAmount = receivedAmount + deniedAmount;
+                int generalAmount = receivedAmount + deniedAmount;
                 statShoeList.add(new StatShoe(shoe, receivedAmount, deniedAmount, receivedAmount * 100 / generalAmount, generalAmount));
             } else {
                 statShoeList.add(new StatShoe(shoe, receivedAmount, 0, 100, receivedAmount));
@@ -284,8 +227,8 @@ public class StatisticService {
     }
 
     public AmountsInfoResponse countAmounts() {
-        int newAppOrdersSize = appOrderRepository.findByStatusIn(Arrays.asList(AppOrderStatus.Новий)).size();
-        int canceledWithoutReasonSize = canceledOrderReasonRepository.findByReasonIn(Arrays.asList(CancelReason.НЕ_ВИЗНАЧЕНО)).size();
+        int newAppOrdersSize = appOrderRepository.findByStatusIn(singletonList(AppOrderStatus.Новий)).size();
+        int canceledWithoutReasonSize = canceledOrderReasonRepository.findByReasonIn(singletonList(CancelReason.НЕ_ВИЗНАЧЕНО)).size();
         int ourTtnsSize = ourTtnService.getTtns(0, 100, false).getNumber();
         return new AmountsInfoResponse(newAppOrdersSize, canceledWithoutReasonSize, ourTtnsSize);
     }
@@ -314,14 +257,14 @@ public class StatisticService {
                     result.append("Замовлення \n\n");
                     for (Map.Entry<Client, List<Ordered>> entry : clientOrderedMap.entrySet()) {
                         Client client = entry.getKey();
-                        result.append(client.getName() + " " + client.getLastName() + " " + client.getPhone() + "\n");
+                        result.append(client.getName()).append(" ").append(client.getLastName()).append(" ").append(client.getPhone()).append("\n");
                         for (Ordered ordered : entry.getValue()) {
-                            result.append(ordered.getTtn() + "\n");
+                            result.append(ordered.getTtn()).append("\n");
                         }
                     }
                     result.append("\n Заявки\n");
                     for (AppOrder appOrder : appOrders) {
-                        result.append(appOrder.getId() + ", ");
+                        result.append(appOrder.getId()).append(", ");
                     }
                     return new StringResponse(result.toString());
                 }
@@ -330,12 +273,11 @@ public class StatisticService {
         return new StringResponse();
     }
 
-    public StringResponse getAllOrdersByUser(String dateFrom, Long id) {
+    public String getAllOrdersByUser(LocalDateTime from, Long id) {
         StringBuilder builder = new StringBuilder();
         List<Ordered> allReceivedByUser = orderRepository.findAllByAvailableTrueAndUserIdAndStatusAndPayedForUserFalse(id, Status.ОТРИМАНО);
         OrderedSpecification orderedSpecification = new OrderedSpecification();
         orderedSpecification.setUserId(id.toString());
-        LocalDateTime from = formDateFromOrGetDefault(dateFrom);
         orderedSpecification.setFrom(from);
         List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
         orderedList.addAll(allReceivedByUser);
@@ -364,8 +306,8 @@ public class StatisticService {
                 }
             }
         }
-        builder.append("Не оплаченно за весь час = " + notPayed);
-        return new StringResponse(builder.toString());
+        builder.append("Не оплаченно за весь час = ").append(notPayed);
+        return builder.toString();
     }
 
     public void payAllForOperator(Long userId) {

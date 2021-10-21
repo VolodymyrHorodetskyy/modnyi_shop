@@ -98,11 +98,6 @@ public class StatisticController {
         return statisticService.getOrdersAndAppordersByPhone(id);
     }
 
-    @GetMapping("/getAllOrdersByUser")
-    public StringResponse getAllOrdersByUser(@RequestParam(required = false) String dateFrom, @RequestParam Long userId) {
-        return statisticService.getAllOrdersByUser(dateFrom, userId);
-    }
-
     @PatchMapping
     public void payAllForOperator(@RequestParam Long userId) {
         statisticService.payAllForOperator(userId);

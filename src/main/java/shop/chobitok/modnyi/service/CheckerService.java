@@ -28,8 +28,9 @@ public class CheckerService {
     private final AppOrderService appOrderService;
     private final StatusChangeRepository statusChangeRepository;
     private final NPOrderMapper npOrderMapper;
+    private final StatisticService statisticService;
 
-    public CheckerService(OrderService orderService, OrderRepository orderRepository, NotificationService notificationService, AppOrderRepository appOrderRepository, AppOrderService appOrderService, StatusChangeRepository statusChangeRepository, NPOrderMapper npOrderMapper) {
+    public CheckerService(OrderService orderService, OrderRepository orderRepository, NotificationService notificationService, AppOrderRepository appOrderRepository, AppOrderService appOrderService, StatusChangeRepository statusChangeRepository, NPOrderMapper npOrderMapper, StatisticService statisticService) {
         this.orderService = orderService;
         this.orderRepository = orderRepository;
         this.notificationService = notificationService;
@@ -37,6 +38,7 @@ public class CheckerService {
         this.appOrderService = appOrderService;
         this.statusChangeRepository = statusChangeRepository;
         this.npOrderMapper = npOrderMapper;
+        this.statisticService = statisticService;
     }
 
     public void checkPayedKeepingOrders() {
@@ -196,13 +198,16 @@ public class CheckerService {
         LocalDateTime toDate = formDateToOrGetDefault(to);
         specification.setFromCreatedDate(fromDate);
         specification.setToCreatedDate(toDate);
+        specification.setUserId(userId.toString());
+        String ordersByUserToPay;
         StringBuilder response = new StringBuilder();
         response.append(fromDate).append(" - ")
                 .append(to == null ? "зараз" : to).append("\n");
-        if (userId != null) {
-            specification.setUserId(userId.toString());
-            response.append("Id менеджера : ").append(userId).append("\n");
-        }
+        ordersByUserToPay = statisticService.getAllOrdersByUser(fromDate, userId);
+        specification.setUserId(userId.toString());
+        response.append("Id менеджера : ").append(userId).append("\n")
+                .append(ordersByUserToPay).append("\n\n");
+
         List<AppOrder> appOrders = appOrderRepository.findAll(specification);
         long amountWithTtn = appOrders.stream().filter(appOrder -> appOrder.getTtn() != null).count();
         Map<AppOrderCancellationReason, Integer> appOrderCancellationReasonIntegerMap = new HashMap<>();
@@ -231,7 +236,7 @@ public class CheckerService {
                 .append("\n").append("Кількість заявок з ттн : ")
                 .append(amountWithTtn)
                 .append("\n").append("% : ")
-                .append(amountWithTtn * 100 / appOrders.size())
+                .append(appOrders.size() != 0 ? amountWithTtn * 100 / appOrders.size() : 0)
                 .append("\n").append("Статистика причин скасування заявок : ")
                 .append(cancellationReasonStats.toString())
                 .append("\n").append("Інша причина, коменти : ")
