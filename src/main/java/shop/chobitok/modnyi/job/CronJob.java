@@ -48,8 +48,8 @@ public class CronJob {
         checkerService.checkRemindOnAppOrdersAndMakeThemNewAgain();
     }
 
-    @Scheduled(cron = "0 0 */3 * *")
-    public void every3Days() {
+    @Scheduled(cron = "0 0 0 * * TUE,SAT")
+    public void everyTueAndSat() {
         checkerService.updateMonthlyReceivingPercentage();
     }
 
