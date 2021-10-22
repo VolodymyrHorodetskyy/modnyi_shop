@@ -17,7 +17,7 @@ import shop.chobitok.modnyi.novaposta.entity.*;
 import shop.chobitok.modnyi.novaposta.request.*;
 import shop.chobitok.modnyi.novaposta.util.NPHelper;
 import shop.chobitok.modnyi.repository.OrderRepository;
-import shop.chobitok.modnyi.service.PropsService;
+import shop.chobitok.modnyi.service.NpAccountService;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
@@ -39,12 +39,12 @@ public class NovaPostaRepository {
     private RestTemplate restTemplate;
     private HttpHeaders httpHeaders;
 
-    private PropsService propsService;
+    private NpAccountService npAccountService;
     private NPHelper npHelper;
     private OrderRepository orderRepository;
 
-    public NovaPostaRepository(PropsService propsService, NPHelper npHelper, OrderRepository orderRepository) {
-        this.propsService = propsService;
+    public NovaPostaRepository(NpAccountService npAccountService, NPHelper npHelper, OrderRepository orderRepository) {
+        this.npAccountService = npAccountService;
         this.npHelper = npHelper;
         this.orderRepository = orderRepository;
     }
@@ -111,7 +111,7 @@ public class NovaPostaRepository {
     }
 
     public ListTrackingEntity getTrackingEntityList(LocalDateTime from, LocalDateTime to, Long npAccountId) {
-        NpAccount npAccount = propsService.getById(npAccountId);
+        NpAccount npAccount = npAccountService.getById(npAccountId);
         GetDocumentListRequest getDocumentListRequest = new GetDocumentListRequest();
         getDocumentListRequest.setApiKey(npAccount.getToken());
         MethodPropertiesForList methodPropertiesForList = new MethodPropertiesForList();
@@ -145,7 +145,7 @@ public class NovaPostaRepository {
 
 
     public CheckPossibilityCreateReturnResponse checkPossibilityReturn(Ordered ordered) {
-        NpAccount npAccount = propsService.getByOrder(ordered);
+        NpAccount npAccount = npAccountService.getByOrder(ordered);
         CheckPossibilityReturnCargoRequest checkPossibilityReturnCargoRequest = new CheckPossibilityReturnCargoRequest();
         checkPossibilityReturnCargoRequest.setApiKey(npAccount.getToken());
         checkPossibilityReturnCargoRequest.setMethodProperties(new MethodPropertiesForCheckReturn(ordered.getTtn()));
@@ -161,7 +161,7 @@ public class NovaPostaRepository {
     }
 
     public String getMarking(Ordered ordered) {
-        NpAccount npAccount = propsService.getByOrder(ordered);
+        NpAccount npAccount = npAccountService.getByOrder(ordered);
         StringBuilder link = new StringBuilder();
         link.append(getMarkingUrlPart1).append(ordered.getTtn()).append(getMarkingUrlPart2)
                 .append(npAccount.getToken());

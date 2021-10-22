@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.NpAccount;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.novaposta.request.*;
-import shop.chobitok.modnyi.service.PropsService;
+import shop.chobitok.modnyi.service.NpAccountService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,10 +13,10 @@ import java.util.List;
 @Service
 public class NPHelper {
 
-    private PropsService propsService;
+    private NpAccountService npAccountService;
 
-    public NPHelper(PropsService propsService) {
-        this.propsService = propsService;
+    public NPHelper(NpAccountService npAccountService) {
+        this.npAccountService = npAccountService;
     }
 
     public GetTrackingRequest formGetTrackingRequest(NpAccount npAccount, List<String> ttns) {
@@ -36,16 +36,16 @@ public class NPHelper {
     }
 
     public GetTrackingRequest formGetTrackingRequest(Long npAccountId, String ttn) {
-        return formGetTrackingRequest(propsService.getById(npAccountId), Arrays.asList(ttn));
+        return formGetTrackingRequest(npAccountService.getById(npAccountId), Arrays.asList(ttn));
     }
 
     public GetTrackingRequest formGetTrackingRequest(Long npAccountId, List<String> ttns) {
-        return formGetTrackingRequest(propsService.getById(npAccountId), ttns);
+        return formGetTrackingRequest(npAccountService.getById(npAccountId), ttns);
     }
 
 
     public ReturnCargoRequest createReturnCargoRequest(Ordered ordered, String ref) {
-        NpAccount npAccount = propsService.getByOrder(ordered);
+        NpAccount npAccount = npAccountService.getByOrder(ordered);
         ReturnCargoRequest returnCargoRequest = new ReturnCargoRequest();
         returnCargoRequest.setApiKey(npAccount.getToken());
         MethodPropertiesForReturn methodPropertiesForReturn = new MethodPropertiesForReturn();

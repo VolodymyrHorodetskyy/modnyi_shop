@@ -19,10 +19,12 @@ public class FinanceService {
 
     private OrderRepository orderRepository;
     private ShoePriceService shoePriceService;
+    private ParamsService paramsService;
 
-    public FinanceService(OrderRepository orderRepository, ShoePriceService shoePriceService) {
+    public FinanceService(OrderRepository orderRepository, ShoePriceService shoePriceService, ParamsService paramsService) {
         this.orderRepository = orderRepository;
         this.shoePriceService = shoePriceService;
+        this.paramsService = paramsService;
     }
 
     public EarningsResponse getEarnings(List<Ordered> orderedList, LocalDateTime fromDate, LocalDateTime toDate) {
@@ -50,17 +52,23 @@ public class FinanceService {
         } catch (ArithmeticException e) {
             e.printStackTrace();
         }
-        realisticSum = (predictedSum / 100) * receivedPercentage;
+        int monthlyReceivingPercentage = paramsService.getMonthlyReceivingPercentage();
+        realisticSum = (predictedSum / 100) * monthlyReceivingPercentage;
         EarningsResponse earningsResponse = new EarningsResponse(fromDate, toDate, sum, predictedSum, realisticSum, amountByStatus, receivedPercentage, all);
         earningsResponse.setOrderedAmount(orderedList.size());
+        earningsResponse.setMonthlyReceivingPercentage(monthlyReceivingPercentage);
         return earningsResponse;
+    }
+
+    public EarningsResponse getEarnings(LocalDateTime from, LocalDateTime to) {
+        List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(from, to));
+        return getEarnings(orderedList, from, to);
     }
 
     public EarningsResponse getEarnings(String dateTime1, String dateTime2) {
         LocalDateTime fromDate = DateHelper.formDateFromOrGetDefault(dateTime1);
         LocalDateTime toDate = DateHelper.formDateToOrGetDefault(dateTime2);
-        List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate));
-        return getEarnings(orderedList, fromDate, toDate);
+        return getEarnings(fromDate, toDate);
     }
 
     public Double getMargin(List<Ordered> ordereds) {

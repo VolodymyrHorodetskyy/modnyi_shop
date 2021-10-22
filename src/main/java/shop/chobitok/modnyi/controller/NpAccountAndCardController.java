@@ -7,7 +7,7 @@ import shop.chobitok.modnyi.entity.NpAccount;
 import shop.chobitok.modnyi.entity.response.SavedParamsForNpAccountStats;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.service.CardService;
-import shop.chobitok.modnyi.service.PropsService;
+import shop.chobitok.modnyi.service.NpAccountService;
 
 import java.util.List;
 
@@ -18,17 +18,17 @@ import static shop.chobitok.modnyi.util.StringHelper.formCardStatsInfo;
 @RequestMapping("/npAccountAndCard")
 public class NpAccountAndCardController {
 
-    private PropsService propsService;
+    private NpAccountService npAccountService;
     private CardService cardService;
 
-    public NpAccountAndCardController(PropsService propsService, CardService cardService) {
-        this.propsService = propsService;
+    public NpAccountAndCardController(NpAccountService npAccountService, CardService cardService) {
+        this.npAccountService = npAccountService;
         this.cardService = cardService;
     }
 
     @GetMapping("/getNpAccounts")
     public List<NpAccount> getNpAccounts() {
-        return propsService.getAll();
+        return npAccountService.getAll();
     }
 
     @GetMapping("/getCards")

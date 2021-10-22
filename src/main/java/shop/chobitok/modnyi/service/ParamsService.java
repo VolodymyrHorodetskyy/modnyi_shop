@@ -13,6 +13,8 @@ public class ParamsService {
     private String dateFromParamName;
     @Value("${params.dateToNpAccountSearch}")
     private String dateToParamName;
+    @Value("${params.monthlyReceivingPercentage}")
+    private String monthlyReceivingPercentage;
 
     public ParamsService(ParamsRepository paramsRepository) {
         this.paramsRepository = paramsRepository;
@@ -20,6 +22,10 @@ public class ParamsService {
 
     public Long getActualNpAccountId() {
         return Long.parseLong(paramsRepository.findByClue("mainNpAccount").getGetting());
+    }
+
+    public int getMonthlyReceivingPercentage() {
+        return Integer.parseInt(paramsRepository.findByClue(monthlyReceivingPercentage).getGetting());
     }
 
     public void saveDateFromAndDateToSearchNpAccount(String dateFrom, String dateTo) {
@@ -42,5 +48,4 @@ public class ParamsService {
     public Params getParam(String key) {
         return paramsRepository.findByClue(key);
     }
-
 }

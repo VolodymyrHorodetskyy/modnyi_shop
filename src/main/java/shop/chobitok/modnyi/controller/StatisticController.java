@@ -30,11 +30,6 @@ public class StatisticController {
         this.canceledOrderReasonService = canceledOrderReasonService;
     }
 
-    @GetMapping("/needToPayed")
-    public Object get(@RequestParam String pathToAllTTNfile, @RequestParam String pathToPayedTTNFile) {
-        return statisticService.needToBePayed(pathToAllTTNfile, pathToPayedTTNFile);
-    }
-
     @GetMapping("/getAllReceivedAndDeniedCount")
     public String getReceivedAndDeniedCount(@RequestParam String path) {
         return statisticService.countAllReceivedAndDenied(path);

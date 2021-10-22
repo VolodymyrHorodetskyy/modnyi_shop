@@ -10,8 +10,9 @@ public class FinanceStats {
     private Double earningMinusSpends;
     private Double projectedEarningsMinusSpends;
     private Integer orderedAmount;
+    private int monthlyReceivingPercentage;
 
-    public FinanceStats(Double earnings, Double projectedEarnings, int receivedPercentage, Double earningsPlusProjected, Double spends, Double earningMinusSpends, Double projectedEarningsMinusSpends) {
+    public FinanceStats(Double earnings, Double projectedEarnings, int receivedPercentage, Double earningsPlusProjected, Double spends, Double earningMinusSpends, Double projectedEarningsMinusSpends, int monthlyReceivingPercentage) {
         this.earnings = earnings;
         this.projectedEarnings = projectedEarnings;
         this.receivedPercentage = receivedPercentage;
@@ -19,6 +20,7 @@ public class FinanceStats {
         this.spends = spends;
         this.earningMinusSpends = earningMinusSpends;
         this.projectedEarningsMinusSpends = projectedEarningsMinusSpends;
+        this.monthlyReceivingPercentage = monthlyReceivingPercentage;
     }
 
     public FinanceStats() {
@@ -86,5 +88,9 @@ public class FinanceStats {
 
     public void setOrderedAmount(Integer orderedAmount) {
         this.orderedAmount = orderedAmount;
+    }
+
+    public int getMonthlyReceivingPercentage() {
+        return monthlyReceivingPercentage;
     }
 }

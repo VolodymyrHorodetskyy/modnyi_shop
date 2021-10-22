@@ -19,6 +19,7 @@ public class StringHelper {
                 .append(earningsResponse.getSum()).append("\n").append("Predicted sum: ").append(earningsResponse.getPredictedSum())
                 .append("\n").append("Realistic sum: ").append(earningsResponse.getRealisticSum())
                 .append("\n").append("Received %: ").append(earningsResponse.getReceivedPercentage())
+                .append("\n").append("Monthly receiving %: ").append(earningsResponse.getMonthlyReceivingPercentage())
                 .append("\n");
         for (Map.Entry<Status, Integer> st : earningsResponse.getAmountByStatus().entrySet()) {
             stringBuilder.append(st.getKey()).append(" : ").append(st.getValue()).append("\n");

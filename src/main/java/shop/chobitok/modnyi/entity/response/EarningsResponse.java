@@ -15,6 +15,7 @@ public class EarningsResponse {
     private Double predictedSum;
     private Double realisticSum;
     private Map<Status, Integer> amountByStatus;
+    private int monthlyReceivingPercentage;
     private int receivedPercentage;
     private int all;
 
@@ -116,5 +117,13 @@ public class EarningsResponse {
 
     public void setOrderedAmount(Integer orderedAmount) {
         this.orderedAmount = orderedAmount;
+    }
+
+    public int getMonthlyReceivingPercentage() {
+        return monthlyReceivingPercentage;
+    }
+
+    public void setMonthlyReceivingPercentage(int monthlyReceivingPercentage) {
+        this.monthlyReceivingPercentage = monthlyReceivingPercentage;
     }
 }

@@ -53,12 +53,12 @@ public class OrderService {
     private CardService cardService;
     private HistoryService historyService;
     private ImportService importService;
-    private PropsService propsService;
+    private NpAccountService npAccountService;
 
     @Value("${spring.datasource.username}")
     private String username;
 
-    public OrderService(OrderRepository orderRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, HistoryService historyService, ImportService importService, PropsService propsService) {
+    public OrderService(OrderRepository orderRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, HistoryService historyService, ImportService importService, NpAccountService npAccountService) {
         this.orderRepository = orderRepository;
         this.clientService = clientService;
         this.novaPostaService = novaPostaService;
@@ -73,7 +73,7 @@ public class OrderService {
         this.cardService = cardService;
         this.historyService = historyService;
         this.importService = importService;
-        this.propsService = propsService;
+        this.npAccountService = npAccountService;
     }
 
     public Ordered findByTTN(String ttn) {
@@ -148,7 +148,7 @@ public class OrderService {
         if (id != null) {
             statusChangeService.createRecord(ordered, ordered.getStatus(), updateOrderRequest.getStatus());
         } else {
-            ordered.setNpAccountId(propsService.getActual().getId());
+            ordered.setNpAccountId(npAccountService.getActual().getId());
             ordered.setStatus(updateOrderRequest.getStatus());
             ordered.setWithoutTTN(true);
         }

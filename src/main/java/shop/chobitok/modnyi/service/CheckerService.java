@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.response.StringResponse;
@@ -10,11 +11,14 @@ import shop.chobitok.modnyi.repository.StatusChangeRepository;
 import shop.chobitok.modnyi.specification.AppOrderSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 
+import javax.transaction.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import static java.lang.String.valueOf;
+import static java.time.LocalDateTime.now;
 import static shop.chobitok.modnyi.util.DateHelper.formDateFromOrGetDefault;
 import static shop.chobitok.modnyi.util.DateHelper.formDateToOrGetDefault;
 
@@ -29,8 +33,13 @@ public class CheckerService {
     private final StatusChangeRepository statusChangeRepository;
     private final NPOrderMapper npOrderMapper;
     private final StatisticService statisticService;
+    private final ParamsService paramsService;
+    private final FinanceService financeService;
 
-    public CheckerService(OrderService orderService, OrderRepository orderRepository, NotificationService notificationService, AppOrderRepository appOrderRepository, AppOrderService appOrderService, StatusChangeRepository statusChangeRepository, NPOrderMapper npOrderMapper, StatisticService statisticService) {
+    @Value("${params.monthlyReceivingPercentage}")
+    private String monthlyReceivingPercentage;
+
+    public CheckerService(OrderService orderService, OrderRepository orderRepository, NotificationService notificationService, AppOrderRepository appOrderRepository, AppOrderService appOrderService, StatusChangeRepository statusChangeRepository, NPOrderMapper npOrderMapper, StatisticService statisticService, ParamsService paramsService, FinanceService financeService) {
         this.orderService = orderService;
         this.orderRepository = orderRepository;
         this.notificationService = notificationService;
@@ -39,6 +48,8 @@ public class CheckerService {
         this.statusChangeRepository = statusChangeRepository;
         this.npOrderMapper = npOrderMapper;
         this.statisticService = statisticService;
+        this.paramsService = paramsService;
+        this.financeService = financeService;
     }
 
     public void checkPayedKeepingOrders() {
@@ -48,7 +59,7 @@ public class CheckerService {
         for (Ordered ordered : arrivedOrders) {
             LocalDateTime datePayedKeeping = ordered.getDatePayedKeepingNP();
             if (datePayedKeeping != null) {
-                if (LocalDateTime.now().plusDays(3).isAfter(datePayedKeeping)) {
+                if (now().plusDays(3).isAfter(datePayedKeeping)) {
                     notificationService.createNotification("Платне зберігання з " + datePayedKeeping.format(formatter),
                             ordered.getUser().getName(), MessageType.PAYED_KEEPING, ordered.getTtn());
                 }
@@ -61,7 +72,7 @@ public class CheckerService {
     }
 
     public void checkRemindOnAppOrdersAndMakeThemNewAgain() {
-        makeAppOrdersNew(appOrderRepository.findByRemindOnIsLessThanEqual(LocalDateTime.now()));
+        makeAppOrdersNew(appOrderRepository.findByRemindOnIsLessThanEqual(now()));
     }
 
     private void makeAppOrdersNew(List<AppOrder> appOrders) {
@@ -75,12 +86,12 @@ public class CheckerService {
     }
 
     public void checkSendOrdersAndTakeMoreFiveDays() {
-        List<StatusChangeRecord> statusChangeRecords = statusChangeRepository.findAllByCreatedDateGreaterThanEqualAndNewStatus(LocalDateTime.now().minusDays(30), Status.ВІДПРАВЛЕНО);
+        List<StatusChangeRecord> statusChangeRecords = statusChangeRepository.findAllByCreatedDateGreaterThanEqualAndNewStatus(now().minusDays(30), Status.ВІДПРАВЛЕНО);
         for (StatusChangeRecord statusChangeRecord : statusChangeRecords) {
             List<StatusChangeRecord> statusChangeRecordList = statusChangeRepository.findOneByNewStatusInAndOrderedId(Arrays.asList(Status.ДОСТАВЛЕНО, Status.ОТРИМАНО, Status.ВІДМОВА),
                     statusChangeRecord.getOrdered().getId());
             if ((statusChangeRecordList == null || statusChangeRecordList.size() == 0)
-                    && Duration.between(statusChangeRecord.getCreatedDate(), LocalDateTime.now()).toDays() > 4) {
+                    && Duration.between(statusChangeRecord.getCreatedDate(), now()).toDays() > 4) {
                 notificationService.createNotification("Статус відправлено більше ніж 5 днів",
                         statusChangeRecord.getOrdered().getTtn(), MessageType.NEED_ATTENTION);
             }
@@ -242,6 +253,12 @@ public class CheckerService {
                 .append("\n").append("Інша причина, коменти : ")
                 .append(reasonCommentsForOther.toString());
         return new StringResponse(response.toString());
+    }
+
+    @Transactional
+    public void updateMonthlyReceivingPercentage() {
+        paramsService.saveOrChangeParam(monthlyReceivingPercentage,
+                valueOf(financeService.getEarnings(now().minusDays(30), now()).getReceivedPercentage()));
     }
 }
 

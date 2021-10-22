@@ -12,7 +12,7 @@ import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.service.CardService;
 import shop.chobitok.modnyi.service.ClientService;
-import shop.chobitok.modnyi.service.PropsService;
+import shop.chobitok.modnyi.service.NpAccountService;
 import shop.chobitok.modnyi.service.ShoePriceService;
 import shop.chobitok.modnyi.specification.ShoeSpecification;
 
@@ -31,14 +31,14 @@ public class NPOrderMapper {
 
     private List<Integer> sizes = Arrays.asList(36, 37, 38, 39, 40, 41);
 
-    private PropsService propsService;
+    private NpAccountService npAccountService;
 
-    public NPOrderMapper(ShoeRepository shoeRepository, ClientService clientService, ShoePriceService shoePriceService, CardService cardService, PropsService propsService) {
+    public NPOrderMapper(ShoeRepository shoeRepository, ClientService clientService, ShoePriceService shoePriceService, CardService cardService, NpAccountService npAccountService) {
         this.shoeRepository = shoeRepository;
         this.clientService = clientService;
         this.shoePriceService = shoePriceService;
         this.cardService = cardService;
-        this.propsService = propsService;
+        this.npAccountService = npAccountService;
     }
 
     public Ordered toOrdered(Ordered ordered, TrackingEntity trackingEntity, Discount discount) {
@@ -76,7 +76,7 @@ public class NPOrderMapper {
                     setPriceAndPrepayment(ordered, data, discount);
                 }
                 if (ordered.getNpAccountId() == null) {
-                    ordered.setNpAccountId(propsService.getActual().getId());
+                    ordered.setNpAccountId(npAccountService.getActual().getId());
                 }
             }
         }
@@ -115,7 +115,7 @@ public class NPOrderMapper {
                 setPriceAndPrepayment(ordered, ordered.getReturnSumNP(), discount);
             }
             if (ordered.getNpAccountId() == null) {
-                ordered.setNpAccountId(propsService.getActual().getId());
+                ordered.setNpAccountId(npAccountService.getActual().getId());
             }
         }
         return ordered;

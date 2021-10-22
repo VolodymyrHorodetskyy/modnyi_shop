@@ -44,8 +44,13 @@ public class CronJob {
     }
 
     @Scheduled(cron = "0 0/3 * * * *")
-    public void checkAppOrdersNeedToBeNewAgain(){
+    public void checkAppOrdersNeedToBeNewAgain() {
         checkerService.checkRemindOnAppOrdersAndMakeThemNewAgain();
+    }
+
+    @Scheduled(cron = "0 0 */3 * *")
+    public void every3Days() {
+        checkerService.updateMonthlyReceivingPercentage();
     }
 
 }

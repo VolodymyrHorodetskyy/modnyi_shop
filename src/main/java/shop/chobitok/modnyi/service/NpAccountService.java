@@ -8,12 +8,12 @@ import shop.chobitok.modnyi.repository.NpAccountRepository;
 import java.util.List;
 
 @Service
-public class PropsService {
+public class NpAccountService {
 
     private NpAccountRepository npAccountRepository;
     private ParamsService paramsService;
 
-    public PropsService(NpAccountRepository npAccountRepository, ParamsService paramsService) {
+    public NpAccountService(NpAccountRepository npAccountRepository, ParamsService paramsService) {
         this.npAccountRepository = npAccountRepository;
         this.paramsService = paramsService;
     }

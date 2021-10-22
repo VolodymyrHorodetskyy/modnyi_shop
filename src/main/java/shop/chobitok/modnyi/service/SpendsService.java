@@ -26,11 +26,13 @@ public class SpendsService {
     private DaySpendRepository daySpendRepository;
     private FinanceService financeService;
     private SpendRecRepository spendRecRepository;
+    private ParamsService paramsService;
 
-    public SpendsService(DaySpendRepository daySpendRepository, FinanceService financeService, SpendRecRepository spendRecRepository) {
+    public SpendsService(DaySpendRepository daySpendRepository, FinanceService financeService, SpendRecRepository spendRecRepository, ParamsService paramsService) {
         this.daySpendRepository = daySpendRepository;
         this.financeService = financeService;
         this.spendRecRepository = spendRecRepository;
+        this.paramsService = paramsService;
     }
 
     @Transactional
@@ -71,7 +73,7 @@ public class SpendsService {
         } else {
             daySpendRec.setSpendSum(daySpendRec.getSpendSum() + amount);
             List<SpendRec> spendRecs = daySpendRec.getSpendRecords();
-            if(spendRecs == null){
+            if (spendRecs == null) {
                 spendRecs = new ArrayList<>();
             }
             spendRecs.add(spendRec);
@@ -108,7 +110,7 @@ public class SpendsService {
         Double cleanEarning = sum - spends;
         Double projectedEarningMinusSpends = sum + predictedSum - spends;
         FinanceStats financeStats = new FinanceStats(sum, predictedSum, earningsResponse.getReceivedPercentage(), sum + predictedSum, spends,
-                cleanEarning, projectedEarningMinusSpends);
+                cleanEarning, projectedEarningMinusSpends, earningsResponse.getMonthlyReceivingPercentage());
         financeStats.setOrderedAmount(earningsResponse.getOrderedAmount());
         return financeStats;
     }
@@ -121,6 +123,7 @@ public class SpendsService {
         stringBuilder.append("Дохід : ").append(financeStats.getEarnings()).append("\n")
                 .append("Прогнозований дохід : ").append(financeStats.getProjectedEarnings()).append("\n")
                 .append("Відсоток отримань : ").append(financeStats.getReceivedPercentage()).append("\n")
+                .append("Місячний відсоток отримань: ").append(financeStats.getMonthlyReceivingPercentage())
                 .append("Чистий + прогноз : ").append(financeStats.getEarningsPlusProjected()).append("\n")
                 .append("Витрати : ").append(financeStats.getSpends()).append("\n")
                 .append("Кількість замовлень : ").append(financeStats.getOrderedAmount()).append("\n")
