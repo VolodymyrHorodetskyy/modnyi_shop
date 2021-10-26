@@ -24,7 +24,6 @@ public class CronJob {
         this.userService = userService;
     }
 
-    //  @Scheduled(cron = "0/30 * * * * ?")
     @Scheduled(cron = "0 0 4 * * *")
     public void dailyJob() {
         orderService.updateOrdersByNovaPosta();

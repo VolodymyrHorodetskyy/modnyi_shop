@@ -105,13 +105,14 @@ public class SpendsService {
 
     public FinanceStats getFinanceStats(List<DaySpendRec> daySpendRecList, EarningsResponse earningsResponse) {
         Double sum = earningsResponse.getSum();
-        Double predictedSum = earningsResponse.getPredictedSum();
+        Double realisticSum = earningsResponse.getRealisticSum();
         Double spends = countSpends(daySpendRecList);
         Double cleanEarning = sum - spends;
-        Double projectedEarningMinusSpends = sum + predictedSum - spends;
-        FinanceStats financeStats = new FinanceStats(sum, predictedSum, earningsResponse.getReceivedPercentage(), sum + predictedSum, spends,
+        Double projectedEarningMinusSpends = sum + realisticSum - spends;
+        FinanceStats financeStats = new FinanceStats(sum, realisticSum, earningsResponse.getReceivedPercentage(), sum + realisticSum, spends,
                 cleanEarning, projectedEarningMinusSpends, earningsResponse.getMonthlyReceivingPercentage());
         financeStats.setOrderedAmount(earningsResponse.getOrderedAmount());
+        financeStats.setRealisticEarning(earningsResponse.getRealisticSum());
         return financeStats;
     }
 
@@ -122,9 +123,10 @@ public class SpendsService {
         stringBuilder.append(findMissedDate(formDate(from), formDate(to), daySpendRecList));
         stringBuilder.append("Дохід : ").append(financeStats.getEarnings()).append("\n")
                 .append("Прогнозований дохід : ").append(financeStats.getProjectedEarnings()).append("\n")
+                .append("Реальний прогнозований дохід : ").append(financeStats.getRealisticEarning()).append("\n")
                 .append("Відсоток отримань : ").append(financeStats.getReceivedPercentage()).append("\n")
-                .append("Місячний відсоток отримань: ").append(financeStats.getMonthlyReceivingPercentage())
-                .append("Чистий + прогноз : ").append(financeStats.getEarningsPlusProjected()).append("\n")
+                .append("Місячний відсоток отримань: ").append(financeStats.getMonthlyReceivingPercentage()).append("\n")
+                .append("Дохід + прогноз : ").append(financeStats.getEarningsPlusProjected()).append("\n")
                 .append("Витрати : ").append(financeStats.getSpends()).append("\n")
                 .append("Кількість замовлень : ").append(financeStats.getOrderedAmount()).append("\n")
                 .append("Ціна замовлення : ").append(financeStats.getSpends() / financeStats.getOrderedAmount()).append("\n")

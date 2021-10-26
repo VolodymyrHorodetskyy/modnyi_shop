@@ -25,7 +25,12 @@ public class ParamsService {
     }
 
     public int getMonthlyReceivingPercentage() {
-        return Integer.parseInt(paramsRepository.findByClue(monthlyReceivingPercentage).getGetting());
+        Params monthlyReceivingPercentageParam =
+                paramsRepository.findByClue(monthlyReceivingPercentage);
+        if (monthlyReceivingPercentageParam != null) {
+            return Integer.parseInt(monthlyReceivingPercentageParam.getGetting());
+        }
+        return 80;
     }
 
     public void saveDateFromAndDateToSearchNpAccount(String dateFrom, String dateTo) {

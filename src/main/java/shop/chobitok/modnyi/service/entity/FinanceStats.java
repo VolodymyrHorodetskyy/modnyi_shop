@@ -4,6 +4,7 @@ public class FinanceStats {
 
     private Double earnings;
     private Double projectedEarnings;
+    private Double realisticEarning;
     private int receivedPercentage;
     private Double earningsPlusProjected;
     private Double spends;
@@ -21,9 +22,6 @@ public class FinanceStats {
         this.earningMinusSpends = earningMinusSpends;
         this.projectedEarningsMinusSpends = projectedEarningsMinusSpends;
         this.monthlyReceivingPercentage = monthlyReceivingPercentage;
-    }
-
-    public FinanceStats() {
     }
 
     public Double getEarnings() {
@@ -92,5 +90,17 @@ public class FinanceStats {
 
     public int getMonthlyReceivingPercentage() {
         return monthlyReceivingPercentage;
+    }
+
+    public Double getRealisticEarning() {
+        return realisticEarning;
+    }
+
+    public void setRealisticEarning(Double realisticEarning) {
+        this.realisticEarning = realisticEarning;
+    }
+
+    public void setMonthlyReceivingPercentage(int monthlyReceivingPercentage) {
+        this.monthlyReceivingPercentage = monthlyReceivingPercentage;
     }
 }
