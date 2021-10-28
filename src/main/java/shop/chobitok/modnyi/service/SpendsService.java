@@ -109,7 +109,7 @@ public class SpendsService {
         Double spends = countSpends(daySpendRecList);
         Double cleanEarning = sum - spends;
         Double projectedEarningMinusSpends = sum + realisticSum - spends;
-        FinanceStats financeStats = new FinanceStats(sum, realisticSum, earningsResponse.getReceivedPercentage(), sum + realisticSum, spends,
+        FinanceStats financeStats = new FinanceStats(sum, earningsResponse.getPredictedSum(), earningsResponse.getReceivedPercentage(), sum + realisticSum, spends,
                 cleanEarning, projectedEarningMinusSpends, earningsResponse.getMonthlyReceivingPercentage());
         financeStats.setOrderedAmount(earningsResponse.getOrderedAmount());
         financeStats.setRealisticEarning(earningsResponse.getRealisticSum());
