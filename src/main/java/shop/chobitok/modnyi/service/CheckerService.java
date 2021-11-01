@@ -8,6 +8,7 @@ import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
 import shop.chobitok.modnyi.repository.AppOrderRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.StatusChangeRepository;
+import shop.chobitok.modnyi.repository.UserRepository;
 import shop.chobitok.modnyi.specification.AppOrderSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 
@@ -16,6 +17,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.lang.String.valueOf;
 import static java.time.LocalDateTime.now;
@@ -35,11 +37,12 @@ public class CheckerService {
     private final StatisticService statisticService;
     private final ParamsService paramsService;
     private final FinanceService financeService;
+    private final UserRepository userRepository;
 
     @Value("${params.monthlyReceivingPercentage}")
     private String monthlyReceivingPercentage;
 
-    public CheckerService(OrderService orderService, OrderRepository orderRepository, NotificationService notificationService, AppOrderRepository appOrderRepository, AppOrderService appOrderService, StatusChangeRepository statusChangeRepository, NPOrderMapper npOrderMapper, StatisticService statisticService, ParamsService paramsService, FinanceService financeService) {
+    public CheckerService(OrderService orderService, OrderRepository orderRepository, NotificationService notificationService, AppOrderRepository appOrderRepository, AppOrderService appOrderService, StatusChangeRepository statusChangeRepository, NPOrderMapper npOrderMapper, StatisticService statisticService, ParamsService paramsService, FinanceService financeService, UserRepository userRepository) {
         this.orderService = orderService;
         this.orderRepository = orderRepository;
         this.notificationService = notificationService;
@@ -50,6 +53,7 @@ public class CheckerService {
         this.statisticService = statisticService;
         this.paramsService = paramsService;
         this.financeService = financeService;
+        this.userRepository = userRepository;
     }
 
     public void checkPayedKeepingOrders() {
@@ -201,6 +205,16 @@ public class CheckerService {
             result = true;
         }
         return result;
+    }
+
+    public StringResponse checkAppOrdersBecameOrdersForAllUsers(String from, String to) {
+        List<User> users = userRepository.findAll().stream().filter(user -> user.getId() != 1l).collect(Collectors.toList());
+        StringBuilder response = new StringBuilder();
+        for (User user : users) {
+            response.append(checkAppOrdersBecameOrders(user.getId(), from, to).getResult())
+                    .append("\n\n");
+        }
+        return new StringResponse(response.toString());
     }
 
     public StringResponse checkAppOrdersBecameOrders(Long userId, String from, String to) {

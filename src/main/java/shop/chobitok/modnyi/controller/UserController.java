@@ -63,6 +63,10 @@ public class UserController {
     public StringResponse checkAppOrdersBecameOrders(@RequestParam(required = false) String from,
                                                      @RequestParam(required = false) String to,
                                                      @RequestParam(required = false) Long userId) {
-        return checkerService.checkAppOrdersBecameOrders(userId, from, to);
+        if (userId == 1l) {
+            return checkerService.checkAppOrdersBecameOrdersForAllUsers(from, to);
+        } else {
+            return checkerService.checkAppOrdersBecameOrders(userId, from, to);
+        }
     }
 }
