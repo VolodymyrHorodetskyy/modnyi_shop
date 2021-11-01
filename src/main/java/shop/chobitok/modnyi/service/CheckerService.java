@@ -220,6 +220,10 @@ public class CheckerService {
                 .append(ordersByUserToPay).append("\n\n");
 
         List<AppOrder> appOrders = appOrderRepository.findAll(specification);
+        long amountWithoutFakeData = appOrders.stream().filter(
+                appOrder -> !(appOrder.getStatus() == AppOrderStatus.Скасовано
+                        && appOrder.getCancellationReason() == AppOrderCancellationReason.НЕ_ВІРНІ_ДАНІ))
+                .count();
         long amountWithTtn = appOrders.stream().filter(appOrder -> appOrder.getTtn() != null).count();
         Map<AppOrderCancellationReason, Integer> appOrderCancellationReasonIntegerMap = new HashMap<>();
         StringBuilder reasonCommentsForOther = new StringBuilder();
@@ -244,10 +248,12 @@ public class CheckerService {
                     .append(entry.getValue()).append("\n");
         }
         response.append("Загальна кількість заявок : ").append(appOrders.size())
+                .append("\n").append("Кількість заявок з вірними даними : ")
+                .append(amountWithoutFakeData)
                 .append("\n").append("Кількість заявок з ттн : ")
                 .append(amountWithTtn)
                 .append("\n").append("% : ")
-                .append(appOrders.size() != 0 ? amountWithTtn * 100 / appOrders.size() : 0)
+                .append(appOrders.size() != 0 ? amountWithTtn * 100 / amountWithoutFakeData : 0)
                 .append("\n").append("Статистика причин скасування заявок : ")
                 .append(cancellationReasonStats.toString())
                 .append("\n").append("Інша причина, коменти : ")

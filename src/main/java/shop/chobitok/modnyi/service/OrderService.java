@@ -334,27 +334,32 @@ public class OrderService {
             , Double redeliverySum, Card card, LocalDateTime datePayedKeeping, Double deliveryCost,
                                       Double storagePrice) {
         Status oldStatus = ordered.getStatus();
-        Status newStatus = convertToStatus(statusCode);
-        updateOrderFieldsBeforeStatusesCheck(ordered, redeliverySum, card, datePayedKeeping, deliveryCost,
-                storagePrice);
-        if (oldStatus != newStatus) {
-            statusChangeService.createRecord(ordered, oldStatus, newStatus);
-            ordered.setStatus(newStatus);
-            ordered.setStatusNP(statusCode);
-            if (oldStatus == Status.СТВОРЕНО) {
-                ordered.setAddress(recipientAddress);
-            }
-            orderRepository.save(ordered);
-            if (newStatus == Status.ВІДМОВА) {
-                canceledOrderReasonService.createDefaultReasonOnCancel(ordered);
-            } else {
-                Client client = ordered.getClient();
-                if (client != null) {
-                    if (!isEmpty(client.getMail()) && !username.equals("root") && newStatus != Status.ВИДАЛЕНО) {
-                        mailService.sendStatusNotificationEmail(client.getMail(), newStatus);
+        if (oldStatus != null) {
+            Status newStatus = convertToStatus(statusCode);
+            updateOrderFieldsBeforeStatusesCheck(ordered, redeliverySum, card, datePayedKeeping, deliveryCost,
+                    storagePrice);
+            if (oldStatus != newStatus) {
+                statusChangeService.createRecord(ordered, oldStatus, newStatus);
+                ordered.setStatus(newStatus);
+                ordered.setStatusNP(statusCode);
+                if (oldStatus == Status.СТВОРЕНО) {
+                    ordered.setAddress(recipientAddress);
+                }
+                orderRepository.save(ordered);
+                if (newStatus == Status.ВІДМОВА) {
+                    canceledOrderReasonService.createDefaultReasonOnCancel(ordered);
+                } else {
+                    Client client = ordered.getClient();
+                    if (client != null) {
+                        if (!isEmpty(client.getMail()) && !username.equals("root") && newStatus != Status.ВИДАЛЕНО) {
+                            mailService.sendStatusNotificationEmail(client.getMail(), newStatus);
+                        }
                     }
                 }
             }
+        } else {
+            mailService.sendEmail("status is null",
+                    ordered.getTtn(), "horodetskyyv@gmail.com");
         }
         return orderRepository.save(ordered);
     }
