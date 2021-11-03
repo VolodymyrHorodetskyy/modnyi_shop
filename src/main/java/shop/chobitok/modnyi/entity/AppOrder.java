@@ -42,6 +42,8 @@ public class AppOrder extends Audit {
     private AppOrderCancellationReason cancellationReason;
     @Column
     private LocalDateTime remindOn;
+    @Column
+    private String delivery;
 
     public AppOrder() {
     }
@@ -169,5 +171,13 @@ public class AppOrder extends Audit {
 
     public void setRemindOn(LocalDateTime remindOn) {
         this.remindOn = remindOn;
+    }
+
+    public String getDelivery() {
+        return delivery;
+    }
+
+    public void setDelivery(String delivery) {
+        this.delivery = delivery;
     }
 }
