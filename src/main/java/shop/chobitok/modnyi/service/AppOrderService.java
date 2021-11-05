@@ -5,11 +5,11 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.request.ChangeAppOrderRequest;
 import shop.chobitok.modnyi.entity.response.ChangeAppOrderResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
+import shop.chobitok.modnyi.facebook.FacebookApi2;
 import shop.chobitok.modnyi.repository.*;
 import shop.chobitok.modnyi.specification.AppOrderSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
@@ -25,8 +25,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.time.LocalDateTime.now;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
+import static org.springframework.util.StringUtils.isEmpty;
+import static shop.chobitok.modnyi.entity.VariantType.Domain;
 import static shop.chobitok.modnyi.util.DateHelper.formDateFromOrGetDefault;
 import static shop.chobitok.modnyi.util.DateHelper.makeDateBeginningOfDay;
 
@@ -43,8 +46,11 @@ public class AppOrderService {
     private ParamsService paramsService;
     private UserLoggedInRepository userLoggedInRepository;
     private ImportService importService;
+    private FacebookApi2 facebookApi2;
+    private PixelService pixelService;
+    private VariantsService variantsService;
 
-    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService, AppOrderProcessingRepository appOrderProcessingRepository, ParamsService paramsService, UserLoggedInRepository userLoggedInRepository, ImportService importService) {
+    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService, AppOrderProcessingRepository appOrderProcessingRepository, ParamsService paramsService, UserLoggedInRepository userLoggedInRepository, ImportService importService, FacebookApi2 facebookApi2, PixelService pixelService, VariantsService variantsService) {
         this.appOrderRepository = appOrderRepository;
         this.orderService = orderService;
         this.clientRepository = clientRepository;
@@ -55,11 +61,19 @@ public class AppOrderService {
         this.paramsService = paramsService;
         this.userLoggedInRepository = userLoggedInRepository;
         this.importService = importService;
+        this.facebookApi2 = facebookApi2;
+        this.pixelService = pixelService;
+        this.variantsService = variantsService;
     }
 
-    public AppOrder catchOrder(String s) throws UnsupportedEncodingException {
+    public AppOrder catchOrder(String s, boolean notDecode) throws UnsupportedEncodingException {
         AppOrder appOrder = new AppOrder();
-        String decoded = URLDecoder.decode(s, StandardCharsets.UTF_8.name());
+        String decoded;
+        if (notDecode) {
+            decoded = s;
+        } else {
+            decoded = URLDecoder.decode(s, StandardCharsets.UTF_8.name());
+        }
         appOrder.setInfo(decoded);
         Map<String, List<String>> splittedUrl = splitQuery(decoded);
         appOrder.setName(getValue(splittedUrl.get("name")));
@@ -78,6 +92,7 @@ public class AppOrderService {
         }
         appOrder.setProducts(orders);
         appOrder.setStatus(AppOrderStatus.Новий);
+        setFBData(splittedUrl, appOrder);
         appOrder = appOrderRepository.save(appOrder);
         // assignAppOrderToUserAndSetShouldBeProcessedTime(appOrder);
         return appOrder;
@@ -90,7 +105,59 @@ public class AppOrderService {
         return null;
     }
 
-    private Map<String, List<String>> splitQuery(String params) {
+    public void setFBData(Map<String, List<String>> spllitedMap, AppOrder appOrder) {
+        String cookies = getValue(spllitedMap.get("COOKIES"));
+        String[] splittedCookies = cookies.split(";");
+        if (splittedCookies.length > 0 && setPixelInAppOrder(appOrder,
+                getValue(spllitedMap.get("utm_term")))
+                && setDomain(appOrder, splittedCookies)) {
+            String fbp = null;
+            String fbc = null;
+            for (String s : splittedCookies) {
+                if (s.contains("fbp")) {
+                    fbp = s.split("=")[1];
+                } else if (s.contains("fbc")) {
+                    fbc = s.split("=")[1];
+                }
+            }
+            appOrder.setFbc(fbc);
+            appOrder.setFbp(fbp);
+        }
+    }
+
+    private boolean setDomain(AppOrder appOrder, String[] splittedCookies) {
+        boolean result = false;
+        List<Variants> variantsList = variantsService.getByType(Domain);
+        for (Variants variants : variantsList) {
+            for (String cookie : splittedCookies) {
+                if (!isEmpty(cookie) && cookie.contains(variants.getGetting())) {
+                    appOrder.setDomain(variants.getGetting());
+                    result = true;
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
+    private boolean setPixelInAppOrder(AppOrder appOrder, String pixelString) {
+        boolean result = false;
+        if (!isEmpty(pixelString)) {
+            pixelString = removeAllNonDigits(pixelString);
+            Pixel pixel = pixelService.getPixel(pixelString);
+            if (pixel != null) {
+                appOrder.setPixel(pixel);
+                result = true;
+            }
+        }
+        return result;
+    }
+
+    private String removeAllNonDigits(String s) {
+        return s.replaceAll("\\D", "");
+    }
+
+    public Map<String, List<String>> splitQuery(String params) {
         if (Strings.isNullOrEmpty(params)) {
             return Collections.emptyMap();
         }
@@ -170,7 +237,7 @@ public class AppOrderService {
         int minutesAppOrderShouldBeProcessed =
                 Integer.parseInt(paramsService.getParam("minutesAppOrderShouldBeProcessed").getGetting());
         List<AppOrder> appOrders = appOrderRepository.findByStatusInOrderByCreatedDateDesc(
-                Arrays.asList(AppOrderStatus.Новий));
+                singletonList(AppOrderStatus.Новий));
         Map<User, LocalDateTime> userLocalDateTimeMap = new HashMap<>();
         Iterator<AppOrder> appOrderIterator = appOrders.iterator();
         while (appOrderIterator.hasNext()) {
@@ -222,8 +289,8 @@ public class AppOrderService {
                         Arrays.asList(AppOrderStatus.Передплачено, AppOrderStatus.Повна_оплата, AppOrderStatus.Скасовано), userId),
                 Sort.by(Sort.Direction.DESC, "createdDate"));
         List<AppOrder> combinedAppOrders;
-        if (!StringUtils.isEmpty(userId)) {
-            List<AppOrder> newAppOrders = appOrderRepository.findAll(new AppOrderSpecification(phoneAndName, comment, Arrays.asList(AppOrderStatus.Новий), true));
+        if (!isEmpty(userId)) {
+            List<AppOrder> newAppOrders = appOrderRepository.findAll(new AppOrderSpecification(phoneAndName, comment, singletonList(AppOrderStatus.Новий), true));
             combinedAppOrders = Stream.concat(appOrdersNotReady.stream(), appOrdersReady.stream()).collect(toList());
             combinedAppOrders = Stream.concat(newAppOrders.stream(), combinedAppOrders.stream()).collect(toList());
         } else {
@@ -256,7 +323,7 @@ public class AppOrderService {
         appOrder.setUser(user);
         String ttn = request.getTtn();
         String message = null;
-        if (!StringUtils.isEmpty(ttn)) {
+        if (!isEmpty(ttn)) {
             ttn = ttn.replaceAll("\\s+", "");
             AppOrder appOrder1 = appOrderRepository.findByTtn(ttn);
             if (appOrder1 != null && !appOrder.getId().equals(appOrder1.getId())) {
@@ -301,13 +368,13 @@ public class AppOrderService {
         if (ordered == null) {
             return null;
         }
-        if (!StringUtils.isEmpty(mail)) {
+        if (!isEmpty(mail)) {
             Client client = ordered.getClient();
             client.setMail(mail);
             clientRepository.save(client);
         }
-        if (!StringUtils.isEmpty(request.getComment())) {
-            if (StringUtils.isEmpty(ordered.getNotes())) {
+        if (!isEmpty(request.getComment())) {
+            if (isEmpty(ordered.getNotes())) {
                 ordered.setNotes(request.getComment());
                 orderRepository.save(ordered);
             }
@@ -317,22 +384,27 @@ public class AppOrderService {
         return message;
     }
 
-    public AppOrder changeStatus(AppOrder appOrder, User user, AppOrderStatus status, boolean remindTomorrow) {
+    public AppOrder changeStatus(AppOrder appOrder, User user, AppOrderStatus newStatus, boolean remindTomorrow) {
         // userEfficiencyService.determineEfficiency(appOrder, user);
-        if (appOrder.getStatus() != status) {
+        if (appOrder.getStatus() != newStatus) {
             appOrder.setPreviousStatus(appOrder.getStatus());
             AppOrderProcessing appOrderProcessing = new AppOrderProcessing(
-                    appOrder, user, appOrder.getStatus(), status, appOrder.getPreviousStatus() == null);
+                    appOrder, user, appOrder.getStatus(), newStatus, appOrder.getPreviousStatus() == null);
             appOrderProcessing.setRemindOn(appOrder.getRemindOn());
             appOrderProcessing.setRemindTomorrow(remindTomorrow);
             appOrderProcessingRepository.save(appOrderProcessing);
         }
-        appOrder.setStatus(status);
-        if (status != AppOrderStatus.Скасовано) {
+        appOrder.setStatus(newStatus);
+        if (newStatus != AppOrderStatus.Скасовано) {
             appOrder.setCancellationReason(null);
         }
-        if (status != AppOrderStatus.Не_Відповідає && status != AppOrderStatus.Чекаємо_оплату) {
+        if (newStatus != AppOrderStatus.Не_Відповідає && newStatus != AppOrderStatus.Чекаємо_оплату) {
             appOrder.setRemindOn(null);
+        }
+        if (newStatus == AppOrderStatus.Повна_оплата ||
+                newStatus == AppOrderStatus.Передплачено ||
+                newStatus == AppOrderStatus.Чекаємо_оплату) {
+            facebookApi2.send(appOrder);
         }
         return appOrder;
     }
@@ -341,7 +413,7 @@ public class AppOrderService {
         StringBuilder result = new StringBuilder();
         List<AppOrder> appOrders = appOrderRepository.findByTtnIsNotNullAndLastModifiedDateIsGreaterThan(now().minusDays(3));
         for (AppOrder appOrder : appOrders) {
-            if (!StringUtils.isEmpty(appOrder.getTtn()) && orderRepository.findOneByAvailableTrueAndTtn(appOrder.getTtn()) == null) {
+            if (!isEmpty(appOrder.getTtn()) && orderRepository.findOneByAvailableTrueAndTtn(appOrder.getTtn()) == null) {
                 result.append(importService.importOrderFromTTNString(appOrder.getTtn(), appOrder.getUser().getId(), null));
             }
         }

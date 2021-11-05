@@ -25,8 +25,8 @@ public class AppOrderController {
     }
 
     @PostMapping("/catchOrder")
-    public AppOrder webhook(@RequestBody String s) throws UnsupportedEncodingException {
-        return appOrderService.catchOrder(s);
+    public AppOrder webhook(@RequestBody String s, @RequestParam(required = false) boolean notDecode) throws UnsupportedEncodingException {
+        return appOrderService.catchOrder(s, notDecode);
     }
 
     @GetMapping

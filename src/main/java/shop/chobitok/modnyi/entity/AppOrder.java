@@ -44,6 +44,11 @@ public class AppOrder extends Audit {
     private LocalDateTime remindOn;
     @Column
     private String delivery;
+    private String domain;
+    @OneToOne
+    private Pixel pixel;
+    private String fbp;
+    private String fbc;
 
     public AppOrder() {
     }
@@ -179,5 +184,37 @@ public class AppOrder extends Audit {
 
     public void setDelivery(String delivery) {
         this.delivery = delivery;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+
+    public Pixel getPixel() {
+        return pixel;
+    }
+
+    public void setPixel(Pixel pixel) {
+        this.pixel = pixel;
+    }
+
+    public String getFbp() {
+        return fbp;
+    }
+
+    public void setFbp(String fbp) {
+        this.fbp = fbp;
+    }
+
+    public String getFbc() {
+        return fbc;
+    }
+
+    public void setFbc(String fbc) {
+        this.fbc = fbc;
     }
 }
