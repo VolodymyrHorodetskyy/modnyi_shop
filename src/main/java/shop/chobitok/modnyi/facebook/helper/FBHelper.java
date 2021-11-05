@@ -14,8 +14,6 @@ public class FBHelper {
         facebookEvent.setData(createData(eventName,
                 createUser_data(fbp, fbc),
                 createCustom_data(sum)));
-        //TODO comment than this
-        facebookEvent.setTest_event_code("TEST66985");
         return facebookEvent;
     }
 
