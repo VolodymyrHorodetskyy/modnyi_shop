@@ -5,14 +5,16 @@ import shop.chobitok.modnyi.facebook.entity.Data;
 import shop.chobitok.modnyi.facebook.entity.FacebookEvent;
 import shop.chobitok.modnyi.facebook.entity.User_data;
 
+import java.util.ArrayList;
+
 public class FBHelper {
 
     private static String eventName = "Purchase";
 
-    public static FacebookEvent createFacebookPurchaseEvent(String fbp, String fbc, float sum) {
+    public static FacebookEvent createFacebookPurchaseEvent(String fbp, String fbc, ArrayList<String> phones, ArrayList<String> emails, float sum) {
         FacebookEvent facebookEvent = new FacebookEvent();
         facebookEvent.setData(createData(eventName,
-                createUser_data(fbp, fbc),
+                createUser_data(fbp, fbc, phones, emails),
                 createCustom_data(sum)));
         return facebookEvent;
     }
@@ -26,8 +28,10 @@ public class FBHelper {
         return new Data[]{data};
     }
 
-    private static User_data createUser_data(String fbp, String fbc) {
+    private static User_data createUser_data(String fbp, String fbc, ArrayList<String> phones, ArrayList<String> emails) {
         User_data user_data = new User_data();
+        user_data.setEm(emails);
+        user_data.setPh(phones);
         user_data.setFbp(fbp);
         user_data.setFbc(fbc);
         return user_data;

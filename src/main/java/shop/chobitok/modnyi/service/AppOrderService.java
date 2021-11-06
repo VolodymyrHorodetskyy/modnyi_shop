@@ -49,8 +49,9 @@ public class AppOrderService {
     private FacebookApi2 facebookApi2;
     private PixelService pixelService;
     private VariantsService variantsService;
+    private AppOrderToPixelService appOrderToPixelService;
 
-    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService, AppOrderProcessingRepository appOrderProcessingRepository, ParamsService paramsService, UserLoggedInRepository userLoggedInRepository, ImportService importService, FacebookApi2 facebookApi2, PixelService pixelService, VariantsService variantsService) {
+    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService, AppOrderProcessingRepository appOrderProcessingRepository, ParamsService paramsService, UserLoggedInRepository userLoggedInRepository, ImportService importService, FacebookApi2 facebookApi2, PixelService pixelService, VariantsService variantsService, AppOrderToPixelService appOrderToPixelService) {
         this.appOrderRepository = appOrderRepository;
         this.orderService = orderService;
         this.clientRepository = clientRepository;
@@ -64,6 +65,7 @@ public class AppOrderService {
         this.facebookApi2 = facebookApi2;
         this.pixelService = pixelService;
         this.variantsService = variantsService;
+        this.appOrderToPixelService = appOrderToPixelService;
     }
 
     public AppOrder catchOrder(String s, boolean notDecode) throws UnsupportedEncodingException {
@@ -401,10 +403,13 @@ public class AppOrderService {
         if (newStatus != AppOrderStatus.Не_Відповідає && newStatus != AppOrderStatus.Чекаємо_оплату) {
             appOrder.setRemindOn(null);
         }
-        if (newStatus == AppOrderStatus.Повна_оплата ||
+        if ((newStatus == AppOrderStatus.Повна_оплата ||
                 newStatus == AppOrderStatus.Передплачено ||
-                newStatus == AppOrderStatus.Чекаємо_оплату) {
-            facebookApi2.send(appOrder);
+                newStatus == AppOrderStatus.Чекаємо_оплату
+                || (newStatus == AppOrderStatus.Скасовано && appOrder.getCancellationReason() == AppOrderCancellationReason.НЕ_ПІДХОДИТЬ_ПЕРЕДПЛАТА)
+                || (newStatus == AppOrderStatus.Скасовано && appOrder.getCancellationReason() == AppOrderCancellationReason.НЕ_АКТУАЛЬНО))
+                && appOrder.getPixel() != null && appOrder.getPixel().isSendEvents()) {
+            appOrderToPixelService.save(appOrder);
         }
         return appOrder;
     }

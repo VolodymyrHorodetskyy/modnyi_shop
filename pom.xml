@@ -89,7 +89,16 @@
 			<artifactId>google-api-services-docs</artifactId>
 			<version>v1-rev61-1.25.0</version>
 		</dependency>
-
+		<dependency>
+			<groupId>com.facebook.business.sdk</groupId>
+			<artifactId>facebook-java-business-sdk</artifactId>
+			<version>12.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.15</version>
+		</dependency>
 
 	</dependencies>
 

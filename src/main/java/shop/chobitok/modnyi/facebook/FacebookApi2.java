@@ -6,29 +6,23 @@ import org.springframework.web.client.RestTemplate;
 import shop.chobitok.modnyi.entity.AppOrder;
 import shop.chobitok.modnyi.entity.Pixel;
 import shop.chobitok.modnyi.facebook.entity.FacebookEvent;
-import shop.chobitok.modnyi.facebook.helper.FBHelper;
-import shop.chobitok.modnyi.service.PixelService;
 
 import static org.springframework.util.StringUtils.isEmpty;
+import static shop.chobitok.modnyi.facebook.helper.FBHelper.createFacebookPurchaseEvent;
 
 @Service
 public class FacebookApi2 {
 
-    private PixelService pixelService;
-
     String url1 = "https://graph.facebook.com/v12.0/";
     String url2 = "/events?access_token=";
-
-    public FacebookApi2(PixelService pixelService) {
-        this.pixelService = pixelService;
-    }
 
     public ResponseEntity<Object> send(AppOrder appOrder) {
         if (checkPixel(appOrder.getPixel()) &&
                 !isEmpty(appOrder.getFbc()) &&
                 !isEmpty(appOrder.getFbp())) {
+            //TODO send phones and emails
             return send(appOrder,
-                    FBHelper.createFacebookPurchaseEvent(appOrder.getFbp(), appOrder.getFbc(), 1699));
+                    createFacebookPurchaseEvent(appOrder.getFbp(), appOrder.getFbc(), null, null, 1699));
         }
         return null;
     }
@@ -44,17 +38,20 @@ public class FacebookApi2 {
     }
 
     public ResponseEntity<Object> send(AppOrder appOrder, FacebookEvent facebookEvent) {
+        return send(appOrder.getPixel().getPixelId(), appOrder.getPixel().getPixelAccessToken(),
+                facebookEvent);
+    }
+
+    public ResponseEntity<Object> send(String pixelId, String accessToken, FacebookEvent facebookEvent) {
         RestTemplate restTemplate = new RestTemplate();
-        return restTemplate.postForEntity(formUrl(appOrder.getPixel().getPixelId(), appOrder.getPixel().getPixelAccessToken()),
+        return restTemplate.postForEntity(formUrl(pixelId, accessToken),
                 facebookEvent, Object.class);
     }
 
     private String formUrl(String pixelId, String accessToken) {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(url1)
-                .append(pixelId)
-                .append(url2)
-                .append(accessToken);
-        return stringBuilder.toString();
+        return url1 +
+                pixelId +
+                url2 +
+                accessToken;
     }
 }

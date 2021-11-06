@@ -236,7 +236,8 @@ public class CheckerService {
         List<AppOrder> appOrders = appOrderRepository.findAll(specification);
         long amountWithoutFakeData = appOrders.stream().filter(
                 appOrder -> !(appOrder.getStatus() == AppOrderStatus.Скасовано
-                        && appOrder.getCancellationReason() == AppOrderCancellationReason.НЕ_ВІРНІ_ДАНІ))
+                        && (appOrder.getCancellationReason() == AppOrderCancellationReason.НЕ_ВІРНІ_ДАНІ
+                        || appOrder.getCancellationReason() == AppOrderCancellationReason.ДУБЛІКАТ)))
                 .count();
         long amountWithTtn = appOrders.stream().filter(appOrder -> appOrder.getTtn() != null).count();
         Map<AppOrderCancellationReason, Integer> appOrderCancellationReasonIntegerMap = new HashMap<>();
