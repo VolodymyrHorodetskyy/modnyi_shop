@@ -20,7 +20,7 @@ public class FacebookApi2 {
         if (checkPixel(appOrder.getPixel()) &&
                 !isEmpty(appOrder.getFbc()) &&
                 !isEmpty(appOrder.getFbp())) {
-            //TODO send phones and emails
+            //TODO process and than send phones and emails
             return send(appOrder,
                     createFacebookPurchaseEvent(appOrder.getFbp(), appOrder.getFbc(), null, null, 1699));
         }

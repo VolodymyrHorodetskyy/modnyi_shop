@@ -1,17 +1,12 @@
 package shop.chobitok.modnyi.facebook.entity;
 
-import com.facebook.ads.sdk.serverside.utils.Sha256StringListAdaptor;
-import com.google.gson.annotations.JsonAdapter;
-
 import java.util.ArrayList;
 
 public class User_data {
 
     private String client_ip_address;
     private String client_user_agent;
-    @JsonAdapter(Sha256StringListAdaptor.class)
     ArrayList<String> em = new ArrayList<>();
-    @JsonAdapter(Sha256StringListAdaptor.class)
     ArrayList<String> ph = new ArrayList<>();
     private String fbc;
     private String fbp;

@@ -109,16 +109,17 @@ public class AppOrderService {
 
     public void setFBData(Map<String, List<String>> spllitedMap, AppOrder appOrder) {
         String cookies = getValue(spllitedMap.get("COOKIES"));
-        String[] splittedCookies = cookies.split(";");
-        if (splittedCookies.length > 0 && setPixelInAppOrder(appOrder,
-                getValue(spllitedMap.get("utm_term")))
-                && setDomain(appOrder, splittedCookies)) {
+        if (!isEmpty(cookies)) {
+            String[] splittedCookies = cookies.split(";");
+            setPixelInAppOrder(appOrder,
+                    getValue(spllitedMap.get("utm_term")));
+            setDomain(appOrder, splittedCookies);
             String fbp = null;
             String fbc = null;
             for (String s : splittedCookies) {
-                if (s.contains("fbp")) {
+                if (s.contains("_fbp")) {
                     fbp = s.split("=")[1];
-                } else if (s.contains("fbc")) {
+                } else if (s.contains("_fbc")) {
                     fbc = s.split("=")[1];
                 }
             }
@@ -127,15 +128,18 @@ public class AppOrderService {
         }
     }
 
+
     private boolean setDomain(AppOrder appOrder, String[] splittedCookies) {
         boolean result = false;
-        List<Variants> variantsList = variantsService.getByType(Domain);
-        for (Variants variants : variantsList) {
-            for (String cookie : splittedCookies) {
-                if (!isEmpty(cookie) && cookie.contains(variants.getGetting())) {
-                    appOrder.setDomain(variants.getGetting());
-                    result = true;
-                    break;
+        if (splittedCookies != null && splittedCookies.length > 0) {
+            List<Variants> variantsList = variantsService.getByType(Domain);
+            for (Variants variants : variantsList) {
+                for (String cookie : splittedCookies) {
+                    if (!isEmpty(cookie) && cookie.contains(variants.getGetting())) {
+                        appOrder.setDomain(variants.getGetting());
+                        result = true;
+                        break;
+                    }
                 }
             }
         }
@@ -145,6 +149,7 @@ public class AppOrderService {
     private boolean setPixelInAppOrder(AppOrder appOrder, String pixelString) {
         boolean result = false;
         if (!isEmpty(pixelString)) {
+            pixelString = splitByComa(pixelString);
             pixelString = removeAllNonDigits(pixelString);
             Pixel pixel = pixelService.getPixel(pixelString);
             if (pixel != null) {
@@ -153,6 +158,14 @@ public class AppOrderService {
             }
         }
         return result;
+    }
+
+    private String splitByComa(String toSplit) {
+        String[] splitted = toSplit.split(",");
+        if (splitted.length > 1) {
+            return splitted[0];
+        }
+        return toSplit;
     }
 
     private String removeAllNonDigits(String s) {
