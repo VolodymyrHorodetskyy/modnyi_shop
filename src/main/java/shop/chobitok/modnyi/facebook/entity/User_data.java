@@ -10,6 +10,11 @@ public class User_data {
     ArrayList<String> ph = new ArrayList<>();
     private String fbc;
     private String fbp;
+    private String ge = "f";
+    private String country = "ua";
+    private String ct;
+    private String fn;
+    private String ln;
 
     public String getClient_ip_address() {
         return client_ip_address;
@@ -57,5 +62,45 @@ public class User_data {
 
     public void setFbp(String fbp) {
         this.fbp = fbp;
+    }
+
+    public String getGe() {
+        return ge;
+    }
+
+    public void setGe(String ge) {
+        this.ge = ge;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public String getCt() {
+        return ct;
+    }
+
+    public void setCt(String ct) {
+        this.ct = ct;
+    }
+
+    public String getFn() {
+        return fn;
+    }
+
+    public void setFn(String fn) {
+        this.fn = fn;
+    }
+
+    public String getLn() {
+        return ln;
+    }
+
+    public void setLn(String ln) {
+        this.ln = ln;
     }
 }

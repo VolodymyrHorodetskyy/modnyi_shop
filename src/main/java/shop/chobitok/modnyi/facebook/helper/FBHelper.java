@@ -6,21 +6,31 @@ import shop.chobitok.modnyi.facebook.entity.FacebookEvent;
 import shop.chobitok.modnyi.facebook.entity.User_data;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static org.springframework.util.StringUtils.isEmpty;
+import static shop.chobitok.modnyi.util.HashingUtil.hashSha256;
+import static shop.chobitok.modnyi.util.StringHelper.splitPhonesStringBySemiColonAndValidate;
 
 public class FBHelper {
 
-    private static String eventName = "Purchase";
+    private static final String eventName = "Purchase";
 
-    public static FacebookEvent createFacebookPurchaseEvent(String fbp, String fbc, ArrayList<String> phones, ArrayList<String> emails, float sum) {
+    public static FacebookEvent createFacebookPurchaseEvent(String fbp, String fbc, String phones, String email, String eventSourceUrl,
+                                                            String clientUserAgent, String city, String firstName, String lastName, float sum) {
         FacebookEvent facebookEvent = new FacebookEvent();
         facebookEvent.setData(createData(eventName,
-                createUser_data(fbp, fbc, phones, emails),
+                eventSourceUrl,
+                createUser_data(fbp, fbc, hashPhoneArrayList(phones), convertStringToHashedArrayList(email),
+                        clientUserAgent, city, firstName, lastName),
                 createCustom_data(sum)));
         return facebookEvent;
     }
 
-    private static Data[] createData(String eventName, User_data user_data, Custom_data custom_data) {
+    private static Data[] createData(String eventName, String eventSourceUrl, User_data user_data, Custom_data custom_data) {
         shop.chobitok.modnyi.facebook.entity.Data data = new shop.chobitok.modnyi.facebook.entity.Data();
+        data.setEvent_source_url(eventSourceUrl);
         data.setEvent_name(eventName);
         data.setEvent_time(System.currentTimeMillis() / 1000L);
         data.setUser_data(user_data);
@@ -28,12 +38,19 @@ public class FBHelper {
         return new Data[]{data};
     }
 
-    private static User_data createUser_data(String fbp, String fbc, ArrayList<String> phones, ArrayList<String> emails) {
+    private static User_data createUser_data(String fbp, String fbc, ArrayList<String> phones, ArrayList<String> emails,
+                                             String clientUserAgent, String city, String firstName, String lastName) {
         User_data user_data = new User_data();
         user_data.setEm(emails);
         user_data.setPh(phones);
         user_data.setFbp(fbp);
         user_data.setFbc(fbc);
+        user_data.setClient_user_agent(clientUserAgent);
+        user_data.setCt(hashSha256(city));
+        user_data.setFn(hashSha256(firstName));
+        user_data.setLn(hashSha256(lastName));
+        user_data.setGe(hashSha256("f"));
+        user_data.setCountry(hashSha256( "ua"));
         return user_data;
     }
 
@@ -44,5 +61,25 @@ public class FBHelper {
         return custom_data;
     }
 
+    private static ArrayList<String> hashDataInStringArrayList(List<String> stringList) {
+        ArrayList<String> hashedStringArrayList = new ArrayList<>();
+        for (String phone : stringList) {
+            hashedStringArrayList.add(hashSha256(phone));
+        }
+        return hashedStringArrayList;
+    }
+
+    private static ArrayList<String> hashPhoneArrayList(String phones) {
+        List<String> phonesArrayList = splitPhonesStringBySemiColonAndValidate(phones);
+        return hashDataInStringArrayList(phonesArrayList);
+    }
+
+    private static ArrayList<String> convertStringToHashedArrayList(String s) {
+        if (!isEmpty(s)) {
+            return hashDataInStringArrayList(Collections.singletonList(s));
+        } else {
+            return null;
+        }
+    }
 
 }

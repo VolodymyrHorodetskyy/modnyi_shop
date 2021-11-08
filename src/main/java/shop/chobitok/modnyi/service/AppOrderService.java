@@ -16,7 +16,6 @@ import shop.chobitok.modnyi.util.DateHelper;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.AbstractMap.SimpleImmutableEntry;
@@ -24,10 +23,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.LocalDateTime.now;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.substringBetween;
 import static org.springframework.util.StringUtils.isEmpty;
 import static shop.chobitok.modnyi.entity.VariantType.Domain;
 import static shop.chobitok.modnyi.util.DateHelper.formDateFromOrGetDefault;
@@ -46,12 +47,11 @@ public class AppOrderService {
     private ParamsService paramsService;
     private UserLoggedInRepository userLoggedInRepository;
     private ImportService importService;
-    private FacebookApi2 facebookApi2;
     private PixelService pixelService;
     private VariantsService variantsService;
     private AppOrderToPixelService appOrderToPixelService;
 
-    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService, AppOrderProcessingRepository appOrderProcessingRepository, ParamsService paramsService, UserLoggedInRepository userLoggedInRepository, ImportService importService, FacebookApi2 facebookApi2, PixelService pixelService, VariantsService variantsService, AppOrderToPixelService appOrderToPixelService) {
+    public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService, AppOrderProcessingRepository appOrderProcessingRepository, ParamsService paramsService, UserLoggedInRepository userLoggedInRepository, ImportService importService, PixelService pixelService, VariantsService variantsService, AppOrderToPixelService appOrderToPixelService) {
         this.appOrderRepository = appOrderRepository;
         this.orderService = orderService;
         this.clientRepository = clientRepository;
@@ -62,20 +62,14 @@ public class AppOrderService {
         this.paramsService = paramsService;
         this.userLoggedInRepository = userLoggedInRepository;
         this.importService = importService;
-        this.facebookApi2 = facebookApi2;
         this.pixelService = pixelService;
         this.variantsService = variantsService;
         this.appOrderToPixelService = appOrderToPixelService;
     }
 
-    public AppOrder catchOrder(String s, boolean notDecode) throws UnsupportedEncodingException {
+    public AppOrder catchOrder(String s) throws UnsupportedEncodingException {
         AppOrder appOrder = new AppOrder();
-        String decoded;
-        if (notDecode) {
-            decoded = s;
-        } else {
-            decoded = URLDecoder.decode(s, StandardCharsets.UTF_8.name());
-        }
+        String decoded = URLDecoder.decode(s, UTF_8.name());
         appOrder.setInfo(decoded);
         Map<String, List<String>> splittedUrl = splitQuery(decoded);
         appOrder.setName(getValue(splittedUrl.get("name")));
@@ -94,7 +88,9 @@ public class AppOrderService {
         }
         appOrder.setProducts(orders);
         appOrder.setStatus(AppOrderStatus.Новий);
+        appOrderRepository.save(appOrder);
         setFBData(splittedUrl, appOrder);
+        setBrowserData(decoded, appOrder);
         appOrder = appOrderRepository.save(appOrder);
         // assignAppOrderToUserAndSetShouldBeProcessedTime(appOrder);
         return appOrder;
@@ -128,6 +124,22 @@ public class AppOrderService {
         }
     }
 
+    public void setBrowserData(String decoded, AppOrder appOrder) {
+        String userAgent = null;
+        String landingPage = null;
+        try {
+            userAgent = substringBetween(decoded, "userAgent\":\"", "\"");
+        } catch (IndexOutOfBoundsException e) {
+            e.printStackTrace();
+        }
+        try {
+            landingPage = substringBetween(decoded, "currentVisitLandingPage\":\"", "\"");
+        } catch (IndexOutOfBoundsException e) {
+            e.printStackTrace();
+        }
+        appOrder.setEventSourceUrl(landingPage);
+        appOrder.setClientUserAgent(userAgent);
+    }
 
     private boolean setDomain(AppOrder appOrder, String[] splittedCookies) {
         boolean result = false;
@@ -182,27 +194,24 @@ public class AppOrderService {
     }
 
     private SimpleImmutableEntry<String, String> splitQueryParameter(String it) {
-        SimpleImmutableEntry simpleImmutableEntry = null;
+        SimpleImmutableEntry simpleImmutableEntry;
         final int idx = it.indexOf("=");
         final String key = idx > 0 ? it.substring(0, idx) : it;
         final String value = idx > 0 && it.length() > idx + 1 ? it.substring(idx + 1) : null;
-        try {
-            simpleImmutableEntry = new SimpleImmutableEntry<>(
-                    URLDecoder.decode(key, "UTF-8"),
-                    URLDecoder.decode(value, "UTF-8")
-            );
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        assert value != null;
+        simpleImmutableEntry = new SimpleImmutableEntry<>(
+                URLDecoder.decode(key, UTF_8),
+                URLDecoder.decode(value, UTF_8)
+        );
         return simpleImmutableEntry;
     }
 
     public AppOrder findFirstShouldBeProcessedAppOrderByUserId(Long userId) {
         AppOrder appOrder = appOrderRepository.findFirstByStatusInAndPreviousStatusIsNullAndUserIdOrderByDateAppOrderShouldBeProcessedDesc(
-                Arrays.asList(AppOrderStatus.Новий), userId);
+                singletonList(AppOrderStatus.Новий), userId);
         if (appOrder == null) {
             appOrder = appOrderRepository.findFirstByStatusInAndUserIdOrderByCreatedDateDesc(
-                    Arrays.asList(AppOrderStatus.Новий), userId);
+                    singletonList(AppOrderStatus.Новий), userId);
         }
         return appOrder;
     }
@@ -212,7 +221,7 @@ public class AppOrderService {
         List<UserLoggedIn> usersLoggedIn = userLoggedInRepository.findAllByActiveTrueAndCreatedDateGreaterThanEqual(
                 DateHelper.formLocalDateTimeStartOfTheDay(now()));
         User userToAssign = usersLoggedIn.stream().filter(userLoggedIn -> userLoggedIn.isActive() &&
-                !userLoggedIn.getUser().getId().equals(lastAppOrder.getUser())).map(userLoggedIn -> userLoggedIn.getUser())
+                !userLoggedIn.getUser().getId().equals(lastAppOrder.getUser())).map(UserLoggedIn::getUser)
                 .findFirst().orElse(usersLoggedIn.size() > 0 ? usersLoggedIn.get(0).getUser() : null);
         if (userToAssign != null) {
             int endOfDayWorkingHour = getEndOfWorkingDayHour(now().getDayOfWeek());
@@ -276,7 +285,7 @@ public class AppOrderService {
     private LocalDateTime findFirstAvailableLocalDateTimeForShouldBeProcessedByUserId(Long userId,
                                                                                       int endOfWorkingDay,
                                                                                       int minutesAppOrderShouldBeProcessed) {
-        LocalDateTime availableShouldBeProcessedDateTime = null;
+        LocalDateTime availableShouldBeProcessedDateTime;
         boolean firstShouldBeProcessedOnNow = Boolean.parseBoolean(paramsService.getParam("firstShouldBeProcessedDateOnNow").getGetting());
         AppOrder lastShouldBeProcessedAppOrderByUser = appOrderRepository.findFirstByDateAppOrderShouldBeProcessedGreaterThanEqualAndUserId(makeDateBeginningOfDay(now()), userId);
         if (lastShouldBeProcessedAppOrderByUser == null) {
@@ -396,7 +405,41 @@ public class AppOrderService {
         }
         ordered.setUser(user);
         orderRepository.save(ordered);
+        setFBData(appOrder, ordered);
         return message;
+    }
+
+    private void setFBData(AppOrder appOrder, Ordered ordered) {
+        Client client = ordered.getClient();
+        if (client != null) {
+            appOrder.setFirstNameForFb(client.getName());
+            appOrder.setLastNameForFb(client.getLastName());
+            setPhone(appOrder, client);
+        }
+    }
+
+    private void setPhone(AppOrder appOrder, Client client) {
+        String phone = client.getPhone();
+        if (!isEmpty(phone)) {
+            if (isEmpty(appOrder.getValidatedPhones())) {
+                appOrder.setPhone(phone);
+            } else if (!appOrder.getValidatedPhones().contains(";") &&
+                    !appOrder.getValidatedPhones().equals(phone)) {
+                appOrder.setValidatedPhones(appOrder.getValidatedPhones() + ";" + phone);
+            } else {
+                String[] phones = appOrder.getValidatedPhones().split(";");
+                boolean found = false;
+                for (String p : phones) {
+                    if (p.equals(phone)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    appOrder.setValidatedPhones(appOrder.getValidatedPhones() + ";" + phone);
+                }
+            }
+        }
     }
 
     public AppOrder changeStatus(AppOrder appOrder, User user, AppOrderStatus newStatus, boolean remindTomorrow) {

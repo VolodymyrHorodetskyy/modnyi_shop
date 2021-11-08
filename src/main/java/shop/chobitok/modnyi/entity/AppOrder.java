@@ -17,6 +17,8 @@ public class AppOrder extends Audit {
     @Column
     private String phone;
     @Column
+    private String validatedPhones;
+    @Column
     private String mail;
     @Column
     private boolean dontCall = false;
@@ -49,6 +51,12 @@ public class AppOrder extends Audit {
     private Pixel pixel;
     private String fbp;
     private String fbc;
+    private String clientUserAgent;
+    private String eventSourceUrl;
+
+    private String cityForFb;
+    private String firstNameForFb;
+    private String lastNameForFb;
 
     public AppOrder() {
     }
@@ -216,5 +224,53 @@ public class AppOrder extends Audit {
 
     public void setFbc(String fbc) {
         this.fbc = fbc;
+    }
+
+    public String getValidatedPhones() {
+        return validatedPhones;
+    }
+
+    public void setValidatedPhones(String validatedPhones) {
+        this.validatedPhones = validatedPhones;
+    }
+
+    public String getClientUserAgent() {
+        return clientUserAgent;
+    }
+
+    public void setClientUserAgent(String clientUserAgent) {
+        this.clientUserAgent = clientUserAgent;
+    }
+
+    public String getEventSourceUrl() {
+        return eventSourceUrl;
+    }
+
+    public void setEventSourceUrl(String eventSourceUrl) {
+        this.eventSourceUrl = eventSourceUrl;
+    }
+
+    public String getCityForFb() {
+        return cityForFb;
+    }
+
+    public void setCityForFb(String cityForFb) {
+        this.cityForFb = cityForFb;
+    }
+
+    public String getFirstNameForFb() {
+        return firstNameForFb;
+    }
+
+    public void setFirstNameForFb(String firstNameForFb) {
+        this.firstNameForFb = firstNameForFb;
+    }
+
+    public String getLastNameForFb() {
+        return lastNameForFb;
+    }
+
+    public void setLastNameForFb(String lastNameForFb) {
+        this.lastNameForFb = lastNameForFb;
     }
 }

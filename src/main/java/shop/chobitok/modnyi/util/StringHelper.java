@@ -5,10 +5,13 @@ import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.response.EarningsResponse;
 import shop.chobitok.modnyi.entity.response.StringResponse;
+import shop.chobitok.modnyi.exception.ConflictException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static org.springframework.util.StringUtils.isEmpty;
 
 public class StringHelper {
 
@@ -52,24 +55,54 @@ public class StringHelper {
     }
 
     public static String removeSpaces(String s) {
-        if (!StringUtils.isEmpty(s)) {
+        if (!isEmpty(s)) {
             s.replaceAll("\\s+", "");
         }
         return s;
     }
-
 
     public static List<String> splitTTNString(String ttns) {
         List<String> ttnsList = new ArrayList<>();
         if (ttns != null) {
             String[] ttnsArray = ttns.split("\\s+");
             for (String ttn : ttnsArray) {
-                if (!StringUtils.isEmpty(ttn) && isNumeric(ttn) && ttn.length() == 14) {
+                if (!isEmpty(ttn) && isNumeric(ttn) && ttn.length() == 14) {
                     ttnsList.add(ttn);
                 }
             }
         }
         return ttnsList;
+    }
+
+    public static ArrayList<String> splitPhonesStringBySemiColonAndValidate(String phones) {
+        ArrayList<String> phonesArrayList = new ArrayList<>();
+        if (phones.contains(";")) {
+            String[] phonesArray = phones.split(";");
+            for (String p : phonesArray) {
+                validatePhone(p);
+                phonesArrayList.add(p);
+            }
+        } else {
+            validatePhone(phones);
+            phonesArrayList.add(phones);
+        }
+        return phonesArrayList;
+    }
+
+    private static void validatePhone(String phone) {
+        if (isEmpty(phone)) {
+            throw new ConflictException("Телефон пустий");
+        } else if (!isNumeric(phone)) {
+            throw new ConflictException("Телефон може містити тільки цифри");
+        } else if (phone.length() != 12) {
+            throw new ConflictException("Не вірна кількість цифр в телефоні");
+        } else {
+            char[] chars = phone.toCharArray();
+            if (chars[0] != '3' || chars[1] != '8'
+                    || chars[2] != '0') {
+                throw new ConflictException("Телефон має починатись 380");
+            }
+        }
     }
 
     private static boolean isNumeric(String strNum) {

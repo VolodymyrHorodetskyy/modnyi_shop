@@ -27,6 +27,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.springframework.util.StringUtils.isEmpty;
 import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
 import static shop.chobitok.modnyi.util.DateHelper.formDateTime;
 import static shop.chobitok.modnyi.util.StringHelper.removeSpaces;
@@ -137,24 +138,24 @@ public class CanceledOrderReasonService {
         List<CanceledOrderReason> canceledOrderReasons = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(LocalDateTime.now().minusMonths(1), true));
         List<CanceledOrderReason> updated = new ArrayList<>();
         for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
-            if (StringUtils.isEmpty(canceledOrderReason.getReturnTtn()) && canceledOrderReason.getOrdered() != null
-                    && !StringUtils.isEmpty(canceledOrderReason.getOrdered().getTtn()) && !canceledOrderReason.isManual()) {
+            if (isEmpty(canceledOrderReason.getReturnTtn()) && canceledOrderReason.getOrdered() != null
+                    && !isEmpty(canceledOrderReason.getOrdered().getTtn()) && !canceledOrderReason.isManual()) {
                 Data returned = getReturnedEntity(canceledOrderReason.getOrdered().getTtn());
                 if (returned != null) {
                     canceledOrderReason.setReturnTtn(returned.getNumber());
                     canceledOrderReason.setStatus(convertToStatus(returned.getStatusCode()));
                     canceledOrderReason.setDeliveryCost(Double.valueOf(returned.getDocumentCost()));
-                    canceledOrderReason.setStoragePrice(!returned.getStoragePrice().isEmpty() ? Double.valueOf(returned.getStoragePrice()) : null);
+                    canceledOrderReason.setStoragePrice(!isEmpty(returned.getStoragePrice().isEmpty()) ? Double.valueOf(returned.getStoragePrice()) : null);
                     if (returned.getDatePayedKeeping() != null && canceledOrderReason.getDatePayedKeeping() == null) {
                         canceledOrderReason.setDatePayedKeeping(ShoeUtil.toLocalDateTime(returned.getDatePayedKeeping()));
                     }
                     updated.add(canceledOrderReason);
                 }
-            } else if (!StringUtils.isEmpty(canceledOrderReason.getReturnTtn())) {
+            } else if (!isEmpty(canceledOrderReason.getReturnTtn())) {
                 Data returned = postaRepository.getTracking(null, canceledOrderReason.getReturnTtn()).getData().get(0);
                 canceledOrderReason.setStatus(convertToStatus(returned.getStatusCode()));
                 canceledOrderReason.setDeliveryCost(Double.valueOf(returned.getDocumentCost()));
-                canceledOrderReason.setStoragePrice(!returned.getStoragePrice().isEmpty() ? Double.valueOf(returned.getStoragePrice()) : null);
+                canceledOrderReason.setStoragePrice(!isEmpty(returned.getStoragePrice()) ? Double.valueOf(returned.getStoragePrice()) : null);
                 if (returned.getDatePayedKeeping() != null && canceledOrderReason.getDatePayedKeeping() == null) {
                     canceledOrderReason.setDatePayedKeeping(ShoeUtil.toLocalDateTime(returned.getDatePayedKeeping()));
                 }
@@ -170,7 +171,7 @@ public class CanceledOrderReasonService {
         Data returned = null;
         if (trackingEntity != null && trackingEntity.getData().size() > 0) {
             Data data = trackingEntity.getData().get(0);
-            if (!StringUtils.isEmpty(data.getLastCreatedOnTheBasisNumber())) {
+            if (!isEmpty(data.getLastCreatedOnTheBasisNumber())) {
                 returned = postaRepository.getTracking(null, data.getLastCreatedOnTheBasisNumber()).getData().get(0);
                 if (convertToStatus(returned.getStatusCode()) == Status.ЗМІНА_АДРЕСУ) {
                     returned = postaRepository.getTracking(null, returned.getLastCreatedOnTheBasisNumber()).getData().get(0);
@@ -220,7 +221,7 @@ public class CanceledOrderReasonService {
         if (showOnlyDelivered) {
             canceledOrderReasonSpecification.setStatus(Status.ДОСТАВЛЕНО);
         }
-        if (!StringUtils.isEmpty(dateFrom)) {
+        if (!isEmpty(dateFrom)) {
             canceledOrderReasonSpecification.setLastModifiedDate(formDateTime(dateFrom));
         }
         canceledOrderReasons = canceledOrderReasonRepository.findAll(canceledOrderReasonSpecification);
@@ -294,7 +295,7 @@ public class CanceledOrderReasonService {
                                   CanceledOrderReason canceledOrderReason) {
         stringBuilder.append(showClientTtn ? canceledOrderReason.getOrdered().getTtn() : "").append(showClientTtn ? "\n" : "").append(canceledOrderReason.getReturnTtn()).append(" ")
                 .append(canceledOrderReason.getStatus()).append(" ").append("\n").append(canceledOrderReason.getReason())
-                .append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
+                .append(" ").append(isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
                 .append("\n").append(canceledOrderReason.getOrdered().getPostComment())
                 .append("\n\n");
     }
@@ -341,7 +342,7 @@ public class CanceledOrderReasonService {
                 result.append(canceledOrderReason.getOrdered().getPostComment()).append("\n").
                         append(canceledOrderReason.getOrdered().getTtn()).append("\n").append(canceledOrderReason.getReturnTtn()).append(" ")
                         .append(canceledOrderReason.getStatus()).append(" ").append(canceledOrderReason.getReason())
-                        .append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
+                        .append(" ").append(isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
                         .append("\n")
                         .append(canceledOrderReason.getDatePayedKeeping().format(timeFormatter))
                         .append("\n\n");
@@ -368,7 +369,7 @@ public class CanceledOrderReasonService {
         for (CanceledOrderReason canceledOrderReason : used2) {
             result.append(showClientTtn ? canceledOrderReason.getOrdered().getTtn() : "").append(showClientTtn ? "\n" : "")
                     .append(canceledOrderReason.getReturnTtn()).append(" ").append(canceledOrderReason.getStatus()).append("\n")
-                    .append(canceledOrderReason.getReason()).append(" ").append(StringUtils.isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
+                    .append(canceledOrderReason.getReason()).append(" ").append(isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
                     .append("\n\n");
 
         }

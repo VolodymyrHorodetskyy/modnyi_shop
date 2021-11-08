@@ -2,6 +2,7 @@ package shop.chobitok.modnyi.facebook.entity;
 
 public class Data {
 
+    private String action_source = "website";
     private String event_name;
     private float event_time;
     private String event_id;
@@ -64,5 +65,13 @@ public class Data {
 
     public void setCustom_data(Custom_data custom_data) {
         this.custom_data = custom_data;
+    }
+
+    public String getAction_source() {
+        return action_source;
+    }
+
+    public void setAction_source(String action_source) {
+        this.action_source = action_source;
     }
 }
