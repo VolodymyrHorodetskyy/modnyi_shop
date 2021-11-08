@@ -145,7 +145,7 @@ public class CanceledOrderReasonService {
                     canceledOrderReason.setReturnTtn(returned.getNumber());
                     canceledOrderReason.setStatus(convertToStatus(returned.getStatusCode()));
                     canceledOrderReason.setDeliveryCost(Double.valueOf(returned.getDocumentCost()));
-                    canceledOrderReason.setStoragePrice(!isEmpty(returned.getStoragePrice().isEmpty()) ? Double.valueOf(returned.getStoragePrice()) : null);
+                    canceledOrderReason.setStoragePrice(!isEmpty(returned.getStoragePrice()) ? Double.valueOf(returned.getStoragePrice()) : null);
                     if (returned.getDatePayedKeeping() != null && canceledOrderReason.getDatePayedKeeping() == null) {
                         canceledOrderReason.setDatePayedKeeping(ShoeUtil.toLocalDateTime(returned.getDatePayedKeeping()));
                     }
