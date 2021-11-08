@@ -278,7 +278,7 @@ public class CanceledOrderReasonService {
         sumToPayForDelivery += canceledOrderReason.getDeliveryCost() != null ?
                 canceledOrderReason.getDeliveryCost() : 0;
         sumToPayForDelivery += canceledOrderReason.getOrdered().getDeliveryCost() != null ?
-                canceledOrderReason.getDeliveryCost() : 0;
+                canceledOrderReason.getOrdered().getDeliveryCost() : 0;
         return sumToPayForDelivery;
     }
 
