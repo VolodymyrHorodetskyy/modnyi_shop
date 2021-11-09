@@ -1,15 +1,12 @@
 package shop.chobitok.modnyi.util;
 
-import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.response.EarningsResponse;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.springframework.util.StringUtils.isEmpty;
 
@@ -76,16 +73,19 @@ public class StringHelper {
 
     public static ArrayList<String> splitPhonesStringBySemiColonAndValidate(String phones) {
         ArrayList<String> phonesArrayList = new ArrayList<>();
+        phones = org.apache.commons.lang3.StringUtils.remove(phones, "+");
+        Set<String> phonesSet = new HashSet<>();
         if (phones.contains(";")) {
             String[] phonesArray = phones.split(";");
             for (String p : phonesArray) {
                 validatePhone(p);
-                phonesArrayList.add(p);
+                phonesSet.add(p);
             }
         } else {
             validatePhone(phones);
-            phonesArrayList.add(phones);
+            phonesSet.add(phones);
         }
+        phonesArrayList.addAll(phonesSet);
         return phonesArrayList;
     }
 
