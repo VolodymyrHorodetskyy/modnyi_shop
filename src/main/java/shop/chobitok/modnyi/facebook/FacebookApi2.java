@@ -20,9 +20,7 @@ public class FacebookApi2 {
     String url2 = "/events?access_token=";
 
     public RestResponseDTO send(AppOrder appOrder) {
-        if (checkPixel(appOrder.getPixel()) &&
-                !isEmpty(appOrder.getFbc()) &&
-                !isEmpty(appOrder.getFbp())) {
+        if (checkPixel(appOrder.getPixel())) {
             return send(appOrder,
                     createFacebookPurchaseEvent(appOrder.getFbp(), appOrder.getFbc(), appOrder.getValidatedPhones(),
                             appOrder.getMail(), appOrder.getEventSourceUrl(), appOrder.getClientUserAgent(),
