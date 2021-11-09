@@ -9,7 +9,6 @@ import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.request.ChangeAppOrderRequest;
 import shop.chobitok.modnyi.entity.response.ChangeAppOrderResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
-import shop.chobitok.modnyi.facebook.FacebookApi2;
 import shop.chobitok.modnyi.repository.*;
 import shop.chobitok.modnyi.specification.AppOrderSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
@@ -28,11 +27,13 @@ import static java.time.LocalDateTime.now;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.remove;
 import static org.apache.commons.lang3.StringUtils.substringBetween;
 import static org.springframework.util.StringUtils.isEmpty;
 import static shop.chobitok.modnyi.entity.VariantType.Domain;
 import static shop.chobitok.modnyi.util.DateHelper.formDateFromOrGetDefault;
 import static shop.chobitok.modnyi.util.DateHelper.makeDateBeginningOfDay;
+import static shop.chobitok.modnyi.util.StringHelper.splitPhonesStringBySemiColonAndValidate;
 
 @Service
 public class AppOrderService {
@@ -89,7 +90,7 @@ public class AppOrderService {
         appOrder.setProducts(orders);
         appOrder.setStatus(AppOrderStatus.Новий);
         appOrderRepository.save(appOrder);
-        setFBData(splittedUrl, appOrder);
+        setTtnDataForFB(splittedUrl, appOrder);
         setBrowserData(decoded, appOrder);
         appOrder = appOrderRepository.save(appOrder);
         // assignAppOrderToUserAndSetShouldBeProcessedTime(appOrder);
@@ -103,7 +104,7 @@ public class AppOrderService {
         return null;
     }
 
-    public void setFBData(Map<String, List<String>> spllitedMap, AppOrder appOrder) {
+    public void setTtnDataForFB(Map<String, List<String>> spllitedMap, AppOrder appOrder) {
         String cookies = getValue(spllitedMap.get("COOKIES"));
         if (!isEmpty(cookies)) {
             String[] splittedCookies = cookies.split(";");
@@ -356,10 +357,39 @@ public class AppOrderService {
                 appOrder.setTtn(ttn);
             }
             processAppOrderTtn(ttn, appOrder, request, user);
+        } else {
+            appOrder.setTtn(null);
         }
         changeStatus(appOrder, user, request.getStatus(), request.isRemindTomorrow());
         appOrder.setComment(request.getComment());
+        setDataForFb(appOrder, request);
         return new ChangeAppOrderResponse(message, appOrderRepository.save(appOrder));
+    }
+
+    private void setDataForFb(AppOrder appOrder, ChangeAppOrderRequest request) {
+        appOrder.setDataValid(request.isDataValid());
+        validateCity(request.getCity());
+        appOrder.setCityForFb(request.getCity());
+        if (isEmpty(request.getTtn())) {
+            splitPhonesStringBySemiColonAndValidate(request.getPhones());
+            appOrder.setValidatedPhones(request.getPhones());
+            appOrder.setFirstNameForFb(request.getName());
+            appOrder.setLastNameForFb(request.getLastName());
+        }
+        if (request.isDataValid() && isEmpty(appOrder.getValidatedPhones())) {
+            throw new ConflictException("Телефон не може бути пустим");
+        }
+        appOrderToPixelService.save(appOrder);
+    }
+
+    private void validateCity(String city) {
+        if (!isEmpty(city)) {
+            if ((!city.matches("\\w+"))) {
+                throw new ConflictException("В назві населеного пункту повинні бути тілька латинські букви");
+            } else if (city.matches("[0-9]+")) {
+                throw new ConflictException("В назві населеного пункту не повино бути цифр");
+            }
+        }
     }
 
     private void validateAppOrderChange(ChangeAppOrderRequest request, AppOrder appOrder) {
@@ -403,13 +433,15 @@ public class AppOrderService {
                 orderRepository.save(ordered);
             }
         }
+        splitPhonesStringBySemiColonAndValidate(request.getPhones());
+        appOrder.setValidatedPhones(request.getPhones());
         ordered.setUser(user);
+        setTtnDataForFB(appOrder, ordered);
         orderRepository.save(ordered);
-        setFBData(appOrder, ordered);
         return message;
     }
 
-    private void setFBData(AppOrder appOrder, Ordered ordered) {
+    private void setTtnDataForFB(AppOrder appOrder, Ordered ordered) {
         Client client = ordered.getClient();
         if (client != null) {
             appOrder.setFirstNameForFb(client.getName());
@@ -419,10 +451,10 @@ public class AppOrderService {
     }
 
     private void setPhone(AppOrder appOrder, Client client) {
-        String phone = client.getPhone();
+        String phone = remove(client.getPhone(), "+");
         if (!isEmpty(phone)) {
             if (isEmpty(appOrder.getValidatedPhones())) {
-                appOrder.setPhone(phone);
+                appOrder.setValidatedPhones(phone);
             } else if (!appOrder.getValidatedPhones().contains(";") &&
                     !appOrder.getValidatedPhones().equals(phone)) {
                 appOrder.setValidatedPhones(appOrder.getValidatedPhones() + ";" + phone);
@@ -458,14 +490,6 @@ public class AppOrderService {
         }
         if (newStatus != AppOrderStatus.Не_Відповідає && newStatus != AppOrderStatus.Чекаємо_оплату) {
             appOrder.setRemindOn(null);
-        }
-        if ((newStatus == AppOrderStatus.Повна_оплата ||
-                newStatus == AppOrderStatus.Передплачено ||
-                newStatus == AppOrderStatus.Чекаємо_оплату
-                || (newStatus == AppOrderStatus.Скасовано && appOrder.getCancellationReason() == AppOrderCancellationReason.НЕ_ПІДХОДИТЬ_ПЕРЕДПЛАТА)
-                || (newStatus == AppOrderStatus.Скасовано && appOrder.getCancellationReason() == AppOrderCancellationReason.НЕ_АКТУАЛЬНО))
-                && appOrder.getPixel() != null && appOrder.getPixel().isSendEvents()) {
-            appOrderToPixelService.save(appOrder);
         }
         return appOrder;
     }

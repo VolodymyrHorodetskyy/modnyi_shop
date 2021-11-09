@@ -25,7 +25,11 @@ public class AppOrderToPixelService {
     }
 
     public AppOrderToPixel save(AppOrder appOrder) {
-        return appOrderToPixelRepository.save(new AppOrderToPixel(appOrder));
+        if (appOrderToPixelRepository.findOneByAppOrderId(appOrder.getId()) == null
+                && appOrder.isDataValid()) {
+            return appOrderToPixelRepository.save(new AppOrderToPixel(appOrder));
+        }
+        return null;
     }
 
     public void makeTry(AppOrderToPixel appOrderToPixel) {

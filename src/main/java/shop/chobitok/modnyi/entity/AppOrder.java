@@ -57,6 +57,7 @@ public class AppOrder extends Audit {
     private String cityForFb;
     private String firstNameForFb;
     private String lastNameForFb;
+    private boolean dataValid;
 
     public AppOrder() {
     }
@@ -272,5 +273,13 @@ public class AppOrder extends Audit {
 
     public void setLastNameForFb(String lastNameForFb) {
         this.lastNameForFb = lastNameForFb;
+    }
+
+    public boolean isDataValid() {
+        return dataValid;
+    }
+
+    public void setDataValid(boolean dataValid) {
+        this.dataValid = dataValid;
     }
 }

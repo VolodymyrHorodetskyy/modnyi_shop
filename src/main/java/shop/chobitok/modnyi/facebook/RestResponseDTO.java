@@ -12,6 +12,10 @@ public class RestResponseDTO {
     private String message;
 
 
+    public RestResponseDTO(String message) {
+        this.message = message;
+    }
+
     public RestResponseDTO(String url, String body, HttpStatus httpStatus, ResponseEntity responseEntity, String message) {
         this.url = url;
         this.body = body;

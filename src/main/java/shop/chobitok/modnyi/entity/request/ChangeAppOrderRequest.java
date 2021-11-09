@@ -15,6 +15,13 @@ public class ChangeAppOrderRequest {
     private int remindAt;
     private boolean remindTomorrow;
 
+    private String name;
+    private String lastName;
+    private String phones;
+    private String city;
+
+    private boolean dataValid;
+
     public Long getId() {
         return id;
     }
@@ -85,5 +92,45 @@ public class ChangeAppOrderRequest {
 
     public void setRemindTomorrow(boolean remindTomorrow) {
         this.remindTomorrow = remindTomorrow;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getPhones() {
+        return phones;
+    }
+
+    public void setPhones(String phones) {
+        this.phones = phones;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public boolean isDataValid() {
+        return dataValid;
+    }
+
+    public void setDataValid(boolean dataValid) {
+        this.dataValid = dataValid;
     }
 }

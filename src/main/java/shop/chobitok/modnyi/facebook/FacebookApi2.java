@@ -28,8 +28,9 @@ public class FacebookApi2 {
                             appOrder.getMail(), appOrder.getEventSourceUrl(), appOrder.getClientUserAgent(),
                             appOrder.getCityForFb(), appOrder.getFirstNameForFb(), appOrder.getLastNameForFb(),
                             1699));
+        } else {
+            return new RestResponseDTO("Apporder id = " + appOrder.getId() + " ,domain = " + appOrder.getDomain());
         }
-        return null;
     }
 
     private boolean checkPixel(Pixel pixel) {

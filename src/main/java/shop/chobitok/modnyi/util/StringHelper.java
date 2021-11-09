@@ -72,21 +72,28 @@ public class StringHelper {
     }
 
     public static ArrayList<String> splitPhonesStringBySemiColonAndValidate(String phones) {
-        ArrayList<String> phonesArrayList = new ArrayList<>();
-        phones = org.apache.commons.lang3.StringUtils.remove(phones, "+");
-        Set<String> phonesSet = new HashSet<>();
-        if (phones.contains(";")) {
-            String[] phonesArray = phones.split(";");
-            for (String p : phonesArray) {
-                validatePhone(p);
-                phonesSet.add(p);
+        if (!isEmpty(phones)) {
+            ArrayList<String> phonesArrayList = new ArrayList<>();
+            phones = org.apache.commons.lang3.StringUtils.remove(phones, "+");
+            Set<String> phonesSet = new HashSet<>();
+            if (phones.contains(";")) {
+                String[] phonesArray = phones.split(";");
+                for (String p : phonesArray) {
+                    validatePhone(p);
+                    if (!phonesSet.add(p)) {
+                        throw new ConflictException("Однакові телефони");
+                    }
+                }
+            } else {
+                validatePhone(phones);
+                if (!phonesSet.add(phones)) {
+                    throw new ConflictException("Однакові телефони");
+                }
             }
-        } else {
-            validatePhone(phones);
-            phonesSet.add(phones);
+            phonesArrayList.addAll(phonesSet);
+            return phonesArrayList;
         }
-        phonesArrayList.addAll(phonesSet);
-        return phonesArrayList;
+        return null;
     }
 
     private static void validatePhone(String phone) {

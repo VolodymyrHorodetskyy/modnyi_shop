@@ -18,7 +18,10 @@ public class SendEventsHistoryService {
     public SendEventsHistory sendEventsHistory(RestResponseDTO restResponseDTO, AppOrderToPixel appOrderToPixel) {
         SendEventsHistory sendEventsHistory = new SendEventsHistory();
         sendEventsHistory.setBody(restResponseDTO.getBody());
-        sendEventsHistory.setHttpStatus(restResponseDTO.getHttpStatus().value());
+        if (restResponseDTO.getHttpStatus() != null) {
+            sendEventsHistory.setHttpStatus(
+                    restResponseDTO.getHttpStatus().value());
+        }
         sendEventsHistory.setUrl(restResponseDTO.getUrl());
         sendEventsHistory.setMessage(restResponseDTO.getMessage());
         sendEventsHistory.setAppOrderToPixel(appOrderToPixel);
