@@ -27,7 +27,12 @@ public class FacebookApi2 {
                             appOrder.getCityForFb(), appOrder.getFirstNameForFb(), appOrder.getLastNameForFb(),
                             1699));
         } else {
-            return new RestResponseDTO("Apporder id = " + appOrder.getId() + " ,domain = " + appOrder.getDomain());
+            Long pixelId = null;
+            if (appOrder.getPixel() != null) {
+                pixelId = appOrder.getPixel().getId();
+            }
+            return new RestResponseDTO("Apporder id = " + appOrder.getId() + " ,domain = " + appOrder.getDomain()
+                    + " ,pixel = " + pixelId);
         }
     }
 

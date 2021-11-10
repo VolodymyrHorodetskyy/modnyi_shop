@@ -41,13 +41,17 @@ public class AppOrderToPixelService {
     public void sendAll() {
         List<AppOrderToPixel> appOrderToPixelList = appOrderToPixelRepository.findAllBySentFalse();
         for (AppOrderToPixel appOrderToPixel : appOrderToPixelList) {
-            makeTry(appOrderToPixel);
-            RestResponseDTO restResponseDTO = facebookApi2.send(appOrderToPixel.getAppOrder());
-            if (OK == restResponseDTO.getHttpStatus()) {
-                appOrderToPixel.setSent(true);
-                appOrderToPixelRepository.save(appOrderToPixel);
-            }
-            sendEventsHistoryService.sendEventsHistory(restResponseDTO, appOrderToPixel);
+            send(appOrderToPixel);
         }
+    }
+
+    public void send(AppOrderToPixel appOrderToPixel) {
+        makeTry(appOrderToPixel);
+        RestResponseDTO restResponseDTO = facebookApi2.send(appOrderToPixel.getAppOrder());
+        if (OK == restResponseDTO.getHttpStatus()) {
+            appOrderToPixel.setSent(true);
+            appOrderToPixelRepository.save(appOrderToPixel);
+        }
+        sendEventsHistoryService.sendEventsHistory(restResponseDTO, appOrderToPixel);
     }
 }

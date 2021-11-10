@@ -14,7 +14,7 @@ import shop.chobitok.modnyi.specification.AppOrderSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.AbstractMap.SimpleImmutableEntry;
@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.net.URLDecoder.decode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.LocalDateTime.now;
 import static java.util.Collections.singletonList;
@@ -70,8 +71,10 @@ public class AppOrderService {
 
     public AppOrder catchOrder(String s) throws UnsupportedEncodingException {
         AppOrder appOrder = new AppOrder();
-        String decoded = URLDecoder.decode(s, UTF_8.name());
+        String decoded = decode(s, UTF_8.name());
         appOrder.setInfo(decoded);
+        appOrder.setStatus(AppOrderStatus.Новий);
+        appOrderRepository.save(appOrder);
         Map<String, List<String>> splittedUrl = splitQuery(decoded);
         appOrder.setName(getValue(splittedUrl.get("name")));
         appOrder.setPhone(getValue(splittedUrl.get("phone")));
@@ -88,9 +91,9 @@ public class AppOrderService {
             orders.add(jsonArray.get(i).toString());
         }
         appOrder.setProducts(orders);
-        appOrder.setStatus(AppOrderStatus.Новий);
         appOrderRepository.save(appOrder);
         setTtnDataForFB(splittedUrl, appOrder);
+        decoded = decode(decoded, UTF_8.name());
         setBrowserData(decoded, appOrder);
         appOrder = appOrderRepository.save(appOrder);
         // assignAppOrderToUserAndSetShouldBeProcessedTime(appOrder);
@@ -201,8 +204,8 @@ public class AppOrderService {
         final String value = idx > 0 && it.length() > idx + 1 ? it.substring(idx + 1) : null;
         assert value != null;
         simpleImmutableEntry = new SimpleImmutableEntry<>(
-                URLDecoder.decode(key, UTF_8),
-                URLDecoder.decode(value, UTF_8)
+                decode(key, UTF_8),
+                decode(value, UTF_8)
         );
         return simpleImmutableEntry;
     }
@@ -384,7 +387,7 @@ public class AppOrderService {
 
     private void validateCity(String city) {
         if (!isEmpty(city)) {
-            if ((!city.matches("\\w+"))) {
+            if (!Charset.forName("US-ASCII").newEncoder().canEncode(city)) {
                 throw new ConflictException("В назві населеного пункту повинні бути тілька латинські букви");
             } else if (city.matches("[0-9]+")) {
                 throw new ConflictException("В назві населеного пункту не повино бути цифр");

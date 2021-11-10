@@ -11,4 +11,6 @@ public interface AppOrderToPixelRepository extends JpaRepository<AppOrderToPixel
 
     AppOrderToPixel findOneByAppOrderId(Long id);
 
+    List<AppOrderToPixel> findAllBySentFalseAndAppOrderDomain(String domain);
+
 }
