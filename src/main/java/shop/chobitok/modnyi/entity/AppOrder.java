@@ -28,6 +28,7 @@ public class AppOrder extends Audit {
     private Double amount;
     @Column
     private String info;
+    private String notDecodedInfo;
     @Column(nullable = false)
     private AppOrderStatus status;
     @Column
@@ -281,5 +282,13 @@ public class AppOrder extends Audit {
 
     public void setDataValid(boolean dataValid) {
         this.dataValid = dataValid;
+    }
+
+    public String getNotDecodedInfo() {
+        return notDecodedInfo;
+    }
+
+    public void setNotDecodedInfo(String notDecodedInfo) {
+        this.notDecodedInfo = notDecodedInfo;
     }
 }

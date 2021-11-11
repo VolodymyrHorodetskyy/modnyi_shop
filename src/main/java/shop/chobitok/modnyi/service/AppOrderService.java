@@ -71,6 +71,7 @@ public class AppOrderService {
 
     public AppOrder catchOrder(String s) throws UnsupportedEncodingException {
         AppOrder appOrder = new AppOrder();
+        appOrder.setNotDecodedInfo(s);
         String decoded = decode(s, UTF_8.name());
         appOrder.setInfo(decoded);
         appOrder.setStatus(AppOrderStatus.Новий);
