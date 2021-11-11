@@ -108,12 +108,11 @@ public class AppOrderService {
         return null;
     }
 
-    private String decodeUrl(String toDecode) throws UnsupportedEncodingException {
-        String result = decode(toDecode, UTF_8.name());
-        if (result.contains("%")) {
-            result = remove(result, "%");
+    public String decodeUrl(String toDecode) throws UnsupportedEncodingException {
+        if (toDecode.contains("%")) {
+            toDecode = remove(toDecode, "%");
         }
-        return result;
+        return decode(toDecode, UTF_8.name());
     }
 
     public void setDataForFB(Map<String, List<String>> spllitedMap, AppOrder appOrder) {
