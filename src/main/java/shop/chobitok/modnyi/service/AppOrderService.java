@@ -109,9 +109,8 @@ public class AppOrderService {
     }
 
     public String decodeUrl(String toDecode) throws UnsupportedEncodingException {
-        if (toDecode.contains("%")) {
-            toDecode = remove(toDecode, "%");
-        }
+        toDecode = decode(toDecode, UTF_8.name());
+        toDecode = remove(toDecode, "\"discountvalue\":\"10%\",");
         return decode(toDecode, UTF_8.name());
     }
 
