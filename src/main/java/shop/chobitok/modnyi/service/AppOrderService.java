@@ -72,7 +72,7 @@ public class AppOrderService {
     public AppOrder catchOrder(String s) throws UnsupportedEncodingException {
         AppOrder appOrder = new AppOrder();
         appOrder.setNotDecodedInfo(s);
-        String decoded = decode(s, UTF_8.name());
+        String decoded = decodeUrl(s);
         appOrder.setInfo(decoded);
         appOrder.setStatus(AppOrderStatus.Новий);
         appOrderRepository.save(appOrder);
@@ -93,7 +93,7 @@ public class AppOrderService {
         }
         appOrder.setProducts(orders);
         appOrderRepository.save(appOrder);
-        setTtnDataForFB(splittedUrl, appOrder);
+        setDataForFB(splittedUrl, appOrder);
         decoded = decode(decoded, UTF_8.name());
         setBrowserData(decoded, appOrder);
         appOrder = appOrderRepository.save(appOrder);
@@ -108,7 +108,15 @@ public class AppOrderService {
         return null;
     }
 
-    public void setTtnDataForFB(Map<String, List<String>> spllitedMap, AppOrder appOrder) {
+    private String decodeUrl(String toDecode) throws UnsupportedEncodingException {
+        String result = decode(toDecode, UTF_8.name());
+        if (result.contains("%")) {
+            result = remove(result, "%");
+        }
+        return result;
+    }
+
+    public void setDataForFB(Map<String, List<String>> spllitedMap, AppOrder appOrder) {
         String cookies = getValue(spllitedMap.get("COOKIES"));
         if (!isEmpty(cookies)) {
             String[] splittedCookies = cookies.split(";");
@@ -202,7 +210,7 @@ public class AppOrderService {
         SimpleImmutableEntry simpleImmutableEntry;
         final int idx = it.indexOf("=");
         final String key = idx > 0 ? it.substring(0, idx) : it;
-        final String value = idx > 0 && it.length() > idx + 1 ? it.substring(idx + 1) : null;
+        String value = idx > 0 && it.length() > idx + 1 ? it.substring(idx + 1) : null;
         assert value != null;
         simpleImmutableEntry = new SimpleImmutableEntry<>(
                 decode(key, UTF_8),
@@ -440,12 +448,12 @@ public class AppOrderService {
         splitPhonesStringBySemiColonAndValidate(request.getPhones());
         appOrder.setValidatedPhones(request.getPhones());
         ordered.setUser(user);
-        setTtnDataForFB(appOrder, ordered);
+        setDataForFB(appOrder, ordered);
         orderRepository.save(ordered);
         return message;
     }
 
-    private void setTtnDataForFB(AppOrder appOrder, Ordered ordered) {
+    private void setDataForFB(AppOrder appOrder, Ordered ordered) {
         Client client = ordered.getClient();
         if (client != null) {
             appOrder.setFirstNameForFb(client.getName());
