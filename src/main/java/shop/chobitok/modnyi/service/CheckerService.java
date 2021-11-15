@@ -124,7 +124,8 @@ public class CheckerService {
         StringBuilder priceIsNotCorrect = null;
         for (Ordered ordered : orderedList) {
             String ttn = ordered.getTtn();
-            String userName = ordered.getUser().getName();
+            String userName = ordered.getUser() != null ? ordered.getUser().getName() :
+                    "без менеджера";
             if (ordered.getOrderedShoeList() == null || ordered.getOrderedShoeList().size() == 0) {
                 if (nullOrderedShoesStringBuilder == null) {
                     nullOrderedShoesStringBuilder = new StringBuilder();
