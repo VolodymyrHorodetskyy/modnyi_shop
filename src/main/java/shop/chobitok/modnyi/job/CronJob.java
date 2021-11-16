@@ -2,10 +2,7 @@ package shop.chobitok.modnyi.job;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import shop.chobitok.modnyi.service.CanceledOrderReasonService;
-import shop.chobitok.modnyi.service.CheckerService;
-import shop.chobitok.modnyi.service.OrderService;
-import shop.chobitok.modnyi.service.UserService;
+import shop.chobitok.modnyi.service.*;
 
 import java.time.LocalDateTime;
 
@@ -16,12 +13,14 @@ public class CronJob {
     private OrderService orderService;
     private CanceledOrderReasonService canceledOrderReasonService;
     private UserService userService;
+    private AppOrderToPixelService appOrderToPixelService;
 
-    public CronJob(CheckerService checkerService, OrderService orderService, CanceledOrderReasonService canceledOrderReasonService, UserService userService) {
+    public CronJob(CheckerService checkerService, OrderService orderService, CanceledOrderReasonService canceledOrderReasonService, UserService userService, AppOrderToPixelService appOrderToPixelService) {
         this.checkerService = checkerService;
         this.orderService = orderService;
         this.canceledOrderReasonService = canceledOrderReasonService;
         this.userService = userService;
+        this.appOrderToPixelService = appOrderToPixelService;
     }
 
     @Scheduled(cron = "0 0 4 * * *")
@@ -45,6 +44,11 @@ public class CronJob {
     @Scheduled(cron = "0 0/3 * * * *")
     public void checkAppOrdersNeedToBeNewAgain() {
         checkerService.checkRemindOnAppOrdersAndMakeThemNewAgain();
+    }
+
+    @Scheduled(cron = "0 0/30 * * * ?")
+    public void everyHalfHour() {
+        appOrderToPixelService.sendAll(0);
     }
 
     @Scheduled(cron = "0 0 0 * * TUE,SAT")

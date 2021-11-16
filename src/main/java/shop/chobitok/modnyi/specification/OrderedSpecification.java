@@ -27,18 +27,9 @@ public class OrderedSpecification implements Specification<Ordered> {
     private String userId;
     private List<Status> statuses;
     private List<Status> statusNotIn;
-    private LocalDateTime dateCreatedFrom;
-    private LocalDateTime dateCreatedTo;
     private Long npAccountId;
 
     public OrderedSpecification() {
-    }
-
-    public OrderedSpecification(List<Status> statuses, LocalDateTime dateCreatedFrom, LocalDateTime dateCreatedTo, Long npAccountId) {
-        this.statuses = statuses;
-        this.dateCreatedFrom = dateCreatedFrom;
-        this.dateCreatedTo = dateCreatedTo;
-        this.npAccountId = npAccountId;
     }
 
     public OrderedSpecification(String phone, String isNotTtn) {
@@ -144,14 +135,6 @@ public class OrderedSpecification implements Specification<Ordered> {
                 statusesPredicates.add(criteriaBuilder.equal(root.get("status"), status));
             }
             predicateList.add(criteriaBuilder.or(statusesPredicates.toArray(Predicate[]::new)));
-        }
-        if (dateCreatedFrom != null) {
-            Predicate predicateFrom = criteriaBuilder.greaterThanOrEqualTo(root.get("dateCreated"), from);
-            predicateList.add(predicateFrom);
-        }
-        if (dateCreatedTo != null) {
-            Predicate predicateTo = criteriaBuilder.lessThanOrEqualTo(root.get("dateCreated"), to);
-            predicateList.add(predicateTo);
         }
         if (npAccountId != null) {
             Predicate predicateNpAccount = criteriaBuilder.equal(root.get("npAccountId"), npAccountId);
@@ -300,22 +283,6 @@ public class OrderedSpecification implements Specification<Ordered> {
 
     public void setStatuses(List<Status> statuses) {
         this.statuses = statuses;
-    }
-
-    public LocalDateTime getDateCreatedFrom() {
-        return dateCreatedFrom;
-    }
-
-    public void setDateCreatedFrom(LocalDateTime dateCreatedFrom) {
-        this.dateCreatedFrom = dateCreatedFrom;
-    }
-
-    public LocalDateTime getDateCreatedTo() {
-        return dateCreatedTo;
-    }
-
-    public void setDateCreatedTo(LocalDateTime dateCreatedTo) {
-        this.dateCreatedTo = dateCreatedTo;
     }
 
     public Long getNpAccountId() {

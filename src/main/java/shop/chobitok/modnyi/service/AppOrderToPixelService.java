@@ -38,8 +38,8 @@ public class AppOrderToPixelService {
         appOrderToPixelRepository.save(appOrderToPixel);
     }
 
-    public void sendAll() {
-        List<AppOrderToPixel> appOrderToPixelList = appOrderToPixelRepository.findAllBySentFalse();
+    public void sendAll(int trying) {
+        List<AppOrderToPixel> appOrderToPixelList = appOrderToPixelRepository.findAllBySentFalseAndTrying(trying);
         for (AppOrderToPixel appOrderToPixel : appOrderToPixelList) {
             send(appOrderToPixel);
         }
