@@ -21,8 +21,4 @@ public class ModnyiApplication {
 		SpringApplication.run(ModnyiApplication.class, args);
 	}
 
-	@PostConstruct
-	public void init(){
-		TimeZone.setDefault(TimeZone.getTimeZone("GMT+2"));
-	}
 }
