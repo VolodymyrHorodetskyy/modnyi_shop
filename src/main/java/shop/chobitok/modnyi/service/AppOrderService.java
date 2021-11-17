@@ -84,14 +84,17 @@ public class AppOrderService {
                 && !getValue(splittedUrl.get("dont_call")).isEmpty());
         appOrder.setDelivery(getValue(splittedUrl.get("delivery")));
         //set products ordered
-        JSONObject jsonObject = new JSONObject(getValue(splittedUrl.get("payment")));
-        appOrder.setAmount(jsonObject.getDouble("amount"));
-        JSONArray jsonArray = jsonObject.getJSONArray("products");
-        List<String> orders = new ArrayList<>();
-        for (int i = 0; i < jsonArray.length(); i++) {
-            orders.add(jsonArray.get(i).toString());
+        String paymentValue = getValue(splittedUrl.get("payment"));
+        if (!isEmpty(paymentValue)) {
+            JSONObject jsonObject = new JSONObject(paymentValue);
+            appOrder.setAmount(jsonObject.getDouble("amount"));
+            JSONArray jsonArray = jsonObject.getJSONArray("products");
+            List<String> orders = new ArrayList<>();
+            for (int i = 0; i < jsonArray.length(); i++) {
+                orders.add(jsonArray.get(i).toString());
+            }
+            appOrder.setProducts(orders);
         }
-        appOrder.setProducts(orders);
         appOrderRepository.save(appOrder);
         setDataForFB(splittedUrl, appOrder);
         decoded = decode(decoded, UTF_8.name());

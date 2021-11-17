@@ -23,6 +23,6 @@ public class ModnyiApplication {
 
 	@PostConstruct
 	public void init(){
-		TimeZone.setDefault(TimeZone.getTimeZone("GMT+3"));
+		TimeZone.setDefault(TimeZone.getTimeZone("GMT+2"));
 	}
 }
