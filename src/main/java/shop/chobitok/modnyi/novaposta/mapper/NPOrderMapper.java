@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.springframework.util.StringUtils.isEmpty;
+
 
 @Service
 public class NPOrderMapper {
@@ -126,7 +128,7 @@ public class NPOrderMapper {
         List<Shoe> shoes = shoeRepository.findAll(new ShoeSpecification(""), PageRequest.of(0, 300, Sort.by(Sort.Direction.DESC, "createdDate"))).getContent();
         List<Shoe> matched = new ArrayList<>();
         for (Shoe shoe : shoes) {
-            if (StringUtils.isEmpty(shoe.getPatterns())) {
+            if (isEmpty(shoe.getPatterns())) {
                 continue;
             }
             if (matched.size() > 1) {
