@@ -26,8 +26,7 @@ public class CanceledOrderReasonSpecification implements Specification<CanceledO
     public CanceledOrderReasonSpecification() {
     }
 
-    public CanceledOrderReasonSpecification(LocalDateTime from, boolean statusNotReceived, String ttn, String phoneOrName, Boolean manual, Boolean withoutReason, String userId) {
-        this.from = from;
+    public CanceledOrderReasonSpecification(boolean statusNotReceived, String ttn, String phoneOrName, Boolean manual, Boolean withoutReason, String userId) {
         this.statusNotReceived = statusNotReceived;
         this.ttn = ttn;
         this.phoneOrName = phoneOrName;

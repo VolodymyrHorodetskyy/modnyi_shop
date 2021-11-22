@@ -4,7 +4,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.request.CancelOrderWithIdRequest;
 import shop.chobitok.modnyi.entity.request.CancelOrderWithOrderRequest;
@@ -27,6 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.time.LocalDateTime.now;
 import static org.springframework.util.StringUtils.isEmpty;
 import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
 import static shop.chobitok.modnyi.util.DateHelper.formDateTime;
@@ -135,7 +135,7 @@ public class CanceledOrderReasonService {
 
     @Transactional
     public List<CanceledOrderReason> setReturnTtnAndUpdateStatus() {
-        List<CanceledOrderReason> canceledOrderReasons = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(LocalDateTime.now().minusMonths(1), true));
+        List<CanceledOrderReason> canceledOrderReasons = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(now().minusMonths(1), true));
         List<CanceledOrderReason> updated = new ArrayList<>();
         for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
             if (isEmpty(canceledOrderReason.getReturnTtn()) && canceledOrderReason.getOrdered() != null
@@ -162,8 +162,7 @@ public class CanceledOrderReasonService {
                 updated.add(canceledOrderReason);
             }
         }
-        List<CanceledOrderReason> done = canceledOrderReasonRepository.saveAll(updated);
-        return done;
+        return canceledOrderReasonRepository.saveAll(updated);
     }
 
     public Data getReturnedEntity(String ttn) {
@@ -184,7 +183,7 @@ public class CanceledOrderReasonService {
 
     public GetCanceledResponse getAll(int page, int size, String ttn, String phoneOrName, Boolean manual, Boolean withoutReason, String userId) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdDate"));
-        Page page1 = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(LocalDateTime.now().minusMonths(1), false, removeSpaces(ttn), phoneOrName, manual, withoutReason, userId), pageRequest);
+        Page page1 = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(false, removeSpaces(ttn), phoneOrName, manual, withoutReason, userId), pageRequest);
         return new GetCanceledResponse(page1.getContent(), page1.getTotalElements());
     }
 
@@ -337,7 +336,7 @@ public class CanceledOrderReasonService {
         result.append("Платне зберігання").append("\n\n");
         for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
             if (canceledOrderReason.getDatePayedKeeping() != null &&
-                    LocalDateTime.now().plusDays(2).isAfter(canceledOrderReason.getDatePayedKeeping())) {
+                    now().plusDays(2).isAfter(canceledOrderReason.getDatePayedKeeping())) {
                 exist = true;
                 result.append(canceledOrderReason.getOrdered().getPostComment()).append("\n").
                         append(canceledOrderReason.getOrdered().getTtn()).append("\n").append(canceledOrderReason.getReturnTtn()).append(" ")
