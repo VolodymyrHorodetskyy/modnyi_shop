@@ -71,11 +71,11 @@ public class AppOrderService {
 
     public AppOrder catchOrder(String s) throws UnsupportedEncodingException {
         AppOrder appOrder = new AppOrder();
+        appOrder.setStatus(AppOrderStatus.Новий);
         appOrder.setNotDecodedInfo(s);
         appOrderRepository.save(appOrder);
         String decoded = decodeUrl(s);
         appOrder.setInfo(decoded);
-        appOrder.setStatus(AppOrderStatus.Новий);
         appOrderRepository.save(appOrder);
         Map<String, List<String>> splittedUrl = splitQuery(decoded);
         appOrder.setName(getValue(splittedUrl.get("name")));
