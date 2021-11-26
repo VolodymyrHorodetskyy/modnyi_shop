@@ -72,6 +72,7 @@ public class AppOrderService {
     public AppOrder catchOrder(String s) throws UnsupportedEncodingException {
         AppOrder appOrder = new AppOrder();
         appOrder.setNotDecodedInfo(s);
+        appOrderRepository.save(appOrder);
         String decoded = decodeUrl(s);
         appOrder.setInfo(decoded);
         appOrder.setStatus(AppOrderStatus.Новий);
@@ -114,6 +115,7 @@ public class AppOrderService {
     public String decodeUrl(String toDecode) throws UnsupportedEncodingException {
         toDecode = decode(toDecode, UTF_8.name());
         toDecode = remove(toDecode, "\"discountvalue\":\"10%\",");
+        toDecode = remove(toDecode, "\"discountvalue\":\"15%\",");
         return decode(toDecode, UTF_8.name());
     }
 
