@@ -35,6 +35,8 @@ public class ShoeUtil {
                 return Status.ПРИПИНЕНО_ЗБЕРІГАННЯ;
             } else if (statusCode == 112) {
                 return Status.ДАТА_ДОСТАВКИ_ПЕРЕНЕСЕНА_ОТРИМУВАЧЕМ;
+            } else if (statusCode == 111) {
+                return Status.НЕВДАЛА_СПРОБА_ДОСТАВКИ;
             }
         }
         return null;
