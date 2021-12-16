@@ -21,6 +21,10 @@ public class VariantsService {
         return variantsRepository.findAllByVariantTypeOrderByOrdering(type);
     }
 
+    public Variants getById(Long id){
+        return variantsRepository.findById(id).orElse(null);
+    }
+
     public Variants findInVariants(VariantType type, String value) {
         return variantsRepository.findOneByVariantTypeAndGetting(type, value);
     }

@@ -1,14 +1,23 @@
 package shop.chobitok.modnyi.entity.request;
 
-import shop.chobitok.modnyi.entity.SpendType;
-
-public class SaveAdsSpends {
+public class SaveAdsSpendsRequest {
 
     private String start;
     private String end;
     private Double spends;
-    private SpendType spendType;
+    private Long spendTypeId;
     private String description;
+
+    public SaveAdsSpendsRequest() {
+    }
+
+    public SaveAdsSpendsRequest(String start, String end, Double spends, Long spendTypeId, String description) {
+        this.start = start;
+        this.end = end;
+        this.spends = spends;
+        this.spendTypeId = spendTypeId;
+        this.description = description;
+    }
 
     public String getStart() {
         return start;
@@ -34,12 +43,12 @@ public class SaveAdsSpends {
         this.spends = spends;
     }
 
-    public SpendType getSpendType() {
-        return spendType;
+    public Long getSpendTypeId() {
+        return spendTypeId;
     }
 
-    public void setSpendType(SpendType spendType) {
-        this.spendType = spendType;
+    public void setSpendTypeId(Long spendTypeId) {
+        this.spendTypeId = spendTypeId;
     }
 
     public String getDescription() {

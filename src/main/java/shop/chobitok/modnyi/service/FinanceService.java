@@ -48,7 +48,10 @@ public class FinanceService {
         }
         int receivedPercentage = 0;
         try {
-            receivedPercentage = amountByStatus.get(Status.ОТРИМАНО) * 100 / (amountByStatus.get(Status.ОТРИМАНО) + amountByStatus.get(Status.ВІДМОВА));
+            Integer amountReceivedPlusDenied = amountByStatus.get(Status.ОТРИМАНО) + amountByStatus.get(Status.ВІДМОВА);
+            if (amountReceivedPlusDenied != 0) {
+                receivedPercentage = amountByStatus.get(Status.ОТРИМАНО) * 100 / amountReceivedPlusDenied;
+            }
         } catch (ArithmeticException e) {
             e.printStackTrace();
         }

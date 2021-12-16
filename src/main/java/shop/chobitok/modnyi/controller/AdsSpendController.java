@@ -1,11 +1,11 @@
 package shop.chobitok.modnyi.controller;
 
 import org.springframework.web.bind.annotation.*;
-import shop.chobitok.modnyi.entity.DaySpendRec;
+import shop.chobitok.modnyi.entity.DayCosts;
 import shop.chobitok.modnyi.entity.SpendType;
-import shop.chobitok.modnyi.entity.request.SaveAdsSpends;
+import shop.chobitok.modnyi.entity.request.SaveAdsSpendsRequest;
 import shop.chobitok.modnyi.entity.response.StringResponse;
-import shop.chobitok.modnyi.service.SpendsService;
+import shop.chobitok.modnyi.service.CostsService;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -16,20 +16,20 @@ import java.util.List;
 @RequestMapping("/AdsSpends")
 public class AdsSpendController {
 
-    private SpendsService spendsService;
+    private CostsService costsService;
 
-    public AdsSpendController(SpendsService spendsService) {
-        this.spendsService = spendsService;
+    public AdsSpendController(CostsService costsService) {
+        this.costsService = costsService;
     }
 
     @PostMapping
-    public List<DaySpendRec> saveAdsSpendRec(@RequestBody SaveAdsSpends saveAdsSpends) {
-        return spendsService.addOrEditRecord(saveAdsSpends);
+    public List<DayCosts> saveAdsSpendRec(@RequestBody SaveAdsSpendsRequest saveAdsSpendsRequest) {
+        return costsService.addOrEditRecord(saveAdsSpendsRequest);
     }
 
     @GetMapping("/getFinanceStatsString")
     public StringResponse getFinanceStatsStringResponse(@RequestParam String from, @RequestParam String to) {
-        return spendsService.getFinanceStatsStringResponse(from, to);
+        return costsService.getFinanceStatsStringResponse(from, to);
     }
 
     @GetMapping("/getSpendTypes")

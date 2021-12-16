@@ -12,6 +12,7 @@ import shop.chobitok.modnyi.facebook.entity.FacebookEvent;
 
 import static org.springframework.util.StringUtils.isEmpty;
 import static shop.chobitok.modnyi.facebook.helper.FBHelper.createFacebookPurchaseEvent;
+import static shop.chobitok.modnyi.facebook.helper.FBHelper.createFacebookPurchaseEventFOR_TEST;
 
 @Service
 public class FacebookApi2 {
@@ -19,13 +20,22 @@ public class FacebookApi2 {
     String url1 = "https://graph.facebook.com/v12.0/";
     String url2 = "/events?access_token=";
 
-    public RestResponseDTO send(AppOrder appOrder) {
+    public RestResponseDTO send(String testCode, AppOrder appOrder) {
         if (checkPixel(appOrder.getPixel())) {
+            FacebookEvent facebookEvent;
+            if (isEmpty(testCode)) {
+                facebookEvent = createFacebookPurchaseEvent(appOrder.getFbp(), appOrder.getFbc(), appOrder.getValidatedPhones(),
+                        appOrder.getMail(), appOrder.getEventSourceUrl(), appOrder.getClientUserAgent(),
+                        appOrder.getCityForFb(), appOrder.getFirstNameForFb(), appOrder.getLastNameForFb(),
+                        1699, appOrder.getCreatedDate());
+            } else {
+                facebookEvent = createFacebookPurchaseEventFOR_TEST(appOrder.getFbp(), appOrder.getFbc(), appOrder.getValidatedPhones(),
+                        appOrder.getMail(), appOrder.getEventSourceUrl(), appOrder.getClientUserAgent(),
+                        appOrder.getCityForFb(), appOrder.getFirstNameForFb(), appOrder.getLastNameForFb(),
+                        1699, appOrder.getCreatedDate(), testCode);
+            }
             return send(appOrder,
-                    createFacebookPurchaseEvent(appOrder.getFbp(), appOrder.getFbc(), appOrder.getValidatedPhones(),
-                            appOrder.getMail(), appOrder.getEventSourceUrl(), appOrder.getClientUserAgent(),
-                            appOrder.getCityForFb(), appOrder.getFirstNameForFb(), appOrder.getLastNameForFb(),
-                            1699));
+                    facebookEvent);
         } else {
             Long pixelId = null;
             if (appOrder.getPixel() != null) {
@@ -34,6 +44,10 @@ public class FacebookApi2 {
             return new RestResponseDTO("Apporder id = " + appOrder.getId() + " ,domain = " + appOrder.getDomain()
                     + " ,pixel = " + pixelId);
         }
+    }
+
+    public RestResponseDTO send(AppOrder appOrder) {
+        return send(null, appOrder);
     }
 
     private boolean checkPixel(Pixel pixel) {

@@ -1,6 +1,6 @@
 package shop.chobitok.modnyi.entity;
 
-import shop.chobitok.modnyi.entity.request.SaveAdsSpends;
+import shop.chobitok.modnyi.entity.request.SaveAdsSpendsRequest;
 
 import javax.persistence.Entity;
 import java.time.LocalDate;
@@ -14,12 +14,12 @@ public class SpendRec extends Audit {
     private SpendType spendType;
     private String comment;
 
-    public SpendRec(LocalDate start, LocalDate finish, SaveAdsSpends saveAdsSpends) {
+    public SpendRec(LocalDate start, LocalDate finish, SaveAdsSpendsRequest saveAdsSpendsRequest) {
         this.start = start;
         this.finish = finish;
-        this.spends = saveAdsSpends.getSpends();
-        this.spendType = saveAdsSpends.getSpendType();
-        this.comment = saveAdsSpends.getDescription();
+        this.spends = saveAdsSpendsRequest.getSpends();
+  //      this.spendType = saveAdsSpends.getSpendType();
+        this.comment = saveAdsSpendsRequest.getDescription();
     }
 
     public SpendRec() {
