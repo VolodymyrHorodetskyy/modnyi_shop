@@ -89,11 +89,10 @@ public class CostsService {
         return true;
     }
 
-    private List<DayCosts> getAdsSpendRecs(String from, String to) {
-        LocalDate fromLocalDate = formDate(from);
-        LocalDate toLocalDate = formDate(to);
+    private List<DayCosts> getAdsSpendRecs(LocalDate fromLocalDate, LocalDate toLocalDate) {
         return dayCostsRepository
-                .findAllBySpendDateGreaterThanEqualAndSpendDateLessThanEqual(fromLocalDate, toLocalDate);
+                .findAllBySpendDateGreaterThanEqualAndSpendDateLessThanEqual(fromLocalDate.plusDays(1),
+                        toLocalDate.plusDays(1));
     }
 
 
@@ -111,10 +110,12 @@ public class CostsService {
     }
 
     public StringResponse getFinanceStatsStringResponse(String from, String to) {
-        List<DayCosts> daySpendRecList = getAdsSpendRecs(from, to);
+        LocalDate fromLocalDate = formDate(from);
+        LocalDate toLocalDate = formDate(to);
+        List<DayCosts> daySpendRecList = getAdsSpendRecs(fromLocalDate, toLocalDate);
         FinanceStats financeStats = getFinanceStats(daySpendRecList, financeService.getEarnings(from, to));
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(findMissedDate(formDate(from), formDate(to), daySpendRecList));
+        stringBuilder.append(findMissedDate(fromLocalDate, toLocalDate, daySpendRecList));
         stringBuilder.append("Дохід : ").append(financeStats.getEarnings()).append("\n")
                 .append("Прогнозований дохід : ").append(financeStats.getProjectedEarnings()).append("\n")
                 .append("Реальний прогнозований дохід : ").append(financeStats.getRealisticEarning()).append("\n")
