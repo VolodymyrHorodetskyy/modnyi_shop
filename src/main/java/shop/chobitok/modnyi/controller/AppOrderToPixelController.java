@@ -17,9 +17,9 @@ public class AppOrderToPixelController {
         this.appOrderToPixelService = appOrderToPixelService;
     }
 
-    @PatchMapping("sendAllTrying1")
+    @PatchMapping("sendAllTrying0")
     public void sendAllTrying1() {
-        appOrderToPixelService.sendAllTrying1();
+        appOrderToPixelService.sendAllTrying0();
     }
 
 }

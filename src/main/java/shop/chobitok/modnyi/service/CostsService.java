@@ -90,9 +90,10 @@ public class CostsService {
     }
 
     private List<DayCosts> getAdsSpendRecs(LocalDate fromLocalDate, LocalDate toLocalDate) {
+        //TODO: кастиль
         return dayCostsRepository
                 .findAllBySpendDateGreaterThanEqualAndSpendDateLessThanEqual(fromLocalDate.plusDays(1),
-                        toLocalDate.plusDays(1));
+                        toLocalDate.plusDays(2));
     }
 
 

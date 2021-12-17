@@ -38,8 +38,8 @@ public class AppOrderToPixelService {
         appOrderToPixelRepository.save(appOrderToPixel);
     }
 
-    public void sendAllTrying1() {
-        sendAll(1);
+    public void sendAllTrying0() {
+        sendAll(0);
     }
 
     public void sendAll(int trying) {
