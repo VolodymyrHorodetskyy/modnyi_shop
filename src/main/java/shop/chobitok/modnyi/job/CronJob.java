@@ -38,7 +38,7 @@ public class CronJob {
     public void every2Hours() {
         canceledOrderReasonService.checkIfWithoutCancelReasonExistsAndCreateDefaultReason(LocalDateTime.now().minusDays(10));
         canceledOrderReasonService.setReturnTtnAndUpdateStatus();
-        orderService.updateOrdersByNovaPosta();
+        orderService.returnAllCanceled(true);
     }
 
     @Scheduled(cron = "0 0/3 * * * *")
