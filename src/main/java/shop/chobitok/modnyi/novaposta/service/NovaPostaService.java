@@ -11,6 +11,7 @@ import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.util.NPHelper;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
+import shop.chobitok.modnyi.repository.OrderRepository;
 
 import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
 
@@ -20,11 +21,13 @@ public class NovaPostaService {
     private NovaPostaRepository postaRepository;
     private NPOrderMapper npOrderMapper;
     private NPHelper npHelper;
+    private OrderRepository orderRepository;
 
-    public NovaPostaService(NovaPostaRepository postaRepository, NPOrderMapper npOrderMapper, NPHelper npHelper) {
+    public NovaPostaService(NovaPostaRepository postaRepository, NPOrderMapper npOrderMapper, NPHelper npHelper, OrderRepository orderRepository) {
         this.postaRepository = postaRepository;
         this.npOrderMapper = npOrderMapper;
         this.npHelper = npHelper;
+        this.orderRepository = orderRepository;
     }
 
     public Ordered createOrUpdateOrderFromNP(String ttn, Long npAccountId, Discount discount) {
@@ -61,6 +64,8 @@ public class NovaPostaService {
         if (checkPossibilityCreateReturnResponse.isSuccess()) {
             if (postaRepository.returnCargo(
                     npHelper.createReturnCargoRequest(ordered, checkPossibilityCreateReturnResponse.getData().get(0).getRef()))) {
+                ordered.setReturned(true);
+                orderRepository.save(ordered);
                 return ordered.getTtn() + "  ... заявку на повернення оформлено";
             }
         } else {

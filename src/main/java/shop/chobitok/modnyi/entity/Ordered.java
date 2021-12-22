@@ -84,10 +84,7 @@ public class Ordered extends Audit {
 
     @Column
     private boolean notForDeliveryFile;
-
-    @Column
-    private Boolean returned = false;
-
+    private boolean returned;
     @Column
     private String returnTtn;
 

@@ -54,11 +54,12 @@ public class OrderService {
     private HistoryService historyService;
     private ImportService importService;
     private NpAccountService npAccountService;
+    private NotificationService notificationService;
 
     @Value("${spring.datasource.username}")
     private String username;
 
-    public OrderService(OrderRepository orderRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, HistoryService historyService, ImportService importService, NpAccountService npAccountService) {
+    public OrderService(OrderRepository orderRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, HistoryService historyService, ImportService importService, NpAccountService npAccountService, NotificationService notificationService) {
         this.orderRepository = orderRepository;
         this.clientService = clientService;
         this.novaPostaService = novaPostaService;
@@ -74,6 +75,7 @@ public class OrderService {
         this.historyService = historyService;
         this.importService = importService;
         this.npAccountService = npAccountService;
+        this.notificationService = notificationService;
     }
 
     public Ordered findByTTN(String ttn) {
@@ -262,10 +264,10 @@ public class OrderService {
     }
 
 
-    public void updateCanceled() {
+    public void updateCanceled(int inDays) {
         List<Ordered> canceledAndDeniedOrders = orderRepository
-                .findAllByStatusInAndLastModifiedDateGreaterThan(Arrays.asList(Status.ВИДАЛЕНО, Status.ВІДМОВА, Status.ЗМІНА_АДРЕСУ),
-                        DateHelper.formLocalDateTimeStartOfTheDay(LocalDateTime.now().minusDays(5)));
+                .findAllByStatusInAndCreatedDateGreaterThan(Arrays.asList(Status.ВИДАЛЕНО, Status.ВІДМОВА, Status.ЗМІНА_АДРЕСУ, Status.НЕ_ЗНАЙДЕНО),
+                        DateHelper.formLocalDateTimeStartOfTheDay(LocalDateTime.now().minusDays(inDays)));
         for (Ordered ordered : canceledAndDeniedOrders) {
             CanceledOrderReason canceledOrderReason = canceledOrderReasonService.getCanceledOrderReasonByOrderId(ordered.getId());
             if (canceledOrderReason == null || !canceledOrderReason.isManual()) {
@@ -334,9 +336,12 @@ public class OrderService {
             , Double redeliverySum, Card card, LocalDateTime datePayedKeeping, Double deliveryCost,
                                       Double storagePrice) {
         Status oldStatus = ordered.getStatus();
-        if (oldStatus != null) {
-            Status newStatus = convertToStatus(statusCode);
-            updateOrderFieldsBeforeStatusesCheck(ordered, redeliverySum, card, datePayedKeeping, deliveryCost,
+        Status newStatus = convertToStatus(statusCode);
+        if (newStatus == Status.НЕ_ЗНАЙДЕНО) {
+            notificationService.createNotification("Статус Не знайдено", ordered.getTtn(),
+                    MessageType.ORDER_STATUS_NOT_FOUND);
+        } else if (oldStatus != null) {
+            updateOrderFieldsBeforeStatusesCheck(newStatus, ordered, redeliverySum, card, datePayedKeeping, deliveryCost,
                     storagePrice);
             if (oldStatus != newStatus) {
                 statusChangeService.createRecord(ordered, oldStatus, newStatus);
@@ -345,13 +350,13 @@ public class OrderService {
                 if (oldStatus == Status.СТВОРЕНО) {
                     ordered.setAddress(recipientAddress);
                 }
-                orderRepository.save(ordered);
                 if (newStatus == Status.ВІДМОВА) {
                     canceledOrderReasonService.createDefaultReasonOnCancel(ordered);
                 } else {
                     Client client = ordered.getClient();
                     if (client != null) {
-                        if (!isEmpty(client.getMail()) && !username.equals("root") && newStatus != Status.ВИДАЛЕНО) {
+                        if (!isEmpty(client.getMail()) && !username.equals("root")
+                                && newStatus != Status.ВИДАЛЕНО && newStatus != Status.НЕ_ЗНАЙДЕНО) {
                             mailService.sendStatusNotificationEmail(client.getMail(), newStatus);
                         }
                     }
@@ -364,18 +369,20 @@ public class OrderService {
         return orderRepository.save(ordered);
     }
 
-    private Ordered updateOrderFieldsBeforeStatusesCheck(Ordered ordered, Double redeliverySum, Card card,
+    private Ordered updateOrderFieldsBeforeStatusesCheck(Status actualStatus, Ordered ordered, Double redeliverySum, Card card,
                                                          LocalDateTime datePayedKeeping, Double deliveryCost,
                                                          Double storagePrice) {
         ordered.setDeliveryCost(deliveryCost);
+        if (actualStatus == Status.ВІДМОВА && ordered.getReturned()) {
+            ordered.setDatePayedKeepingNP(null);
+        } else {
+            ordered.setDatePayedKeepingNP(datePayedKeeping);
+        }
         if (redeliverySum != null) {
             ordered.setReturnSumNP(redeliverySum);
         }
         if (card != null) {
             ordered.setCard(card);
-        }
-        if (datePayedKeeping != null && (ordered.getDatePayedKeepingNP() == null || !datePayedKeeping.isEqual(ordered.getDatePayedKeepingNP()))) {
-            ordered.setDatePayedKeepingNP(datePayedKeeping);
         }
         if (storagePrice != null) {
             ordered.setStoragePrice(storagePrice);

@@ -28,7 +28,7 @@ public interface OrderRepository extends JpaRepository<Ordered, Long> {
 
     List<Ordered> findAllByAvailableTrueAndWithoutTTNFalseAndStatusIn(List<Status> statuses);
 
-    List<Ordered> findAllByStatusInAndLastModifiedDateGreaterThan(List<Status> statuses, LocalDateTime dateTime);
+    List<Ordered> findAllByStatusInAndDatePayedKeepingNPIsNotNull(List<Status> statuses);
 
     List<Ordered> findAllByStatusInAndCreatedDateGreaterThan(List<Status> statuses, LocalDateTime dateTime);
 

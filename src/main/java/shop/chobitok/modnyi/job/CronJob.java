@@ -28,7 +28,7 @@ public class CronJob {
         orderService.updateOrdersByNovaPosta();
         checkerService.checkPayedKeepingOrders();
         checkerService.makeAppOrderNewAgain();
-        orderService.updateCanceled();
+        orderService.updateCanceled(25);
         checkerService.checkSendOrdersAndTakeMoreFiveDays();
         orderService.returnAllCanceled(true);
         userService.makeUsersInactive();

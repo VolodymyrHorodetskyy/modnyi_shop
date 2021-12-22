@@ -93,4 +93,9 @@ public class OrderController {
     public StringResponse makeAllPayed() {
         return orderService.makeAllPayed();
     }
+
+    @PatchMapping("/updateCanceled")
+    public void updateCanceled(@RequestParam int inDays) {
+        orderService.updateCanceled(inDays);
+    }
 }

@@ -21,6 +21,9 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.valueOf;
 import static java.time.LocalDateTime.now;
+import static java.util.Arrays.asList;
+import static shop.chobitok.modnyi.entity.Status.ВІДМОВА;
+import static shop.chobitok.modnyi.entity.Status.ДОСТАВЛЕНО;
 import static shop.chobitok.modnyi.util.DateHelper.formDateFromOrGetDefault;
 import static shop.chobitok.modnyi.util.DateHelper.formDateToOrGetDefault;
 
@@ -59,20 +62,19 @@ public class CheckerService {
     public void checkPayedKeepingOrders() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         orderService.updateOrdersByNovaPosta();
-        List<Ordered> arrivedOrders = orderService.getOrdersByStatus(Status.ДОСТАВЛЕНО);
-        for (Ordered ordered : arrivedOrders) {
+        List<Ordered> arrivedAndDeniedOrders = orderRepository.findAllByStatusInAndDatePayedKeepingNPIsNotNull(
+                asList(ВІДМОВА, ДОСТАВЛЕНО));
+        for (Ordered ordered : arrivedAndDeniedOrders) {
             LocalDateTime datePayedKeeping = ordered.getDatePayedKeepingNP();
-            if (datePayedKeeping != null) {
-                if (now().plusDays(3).isAfter(datePayedKeeping)) {
-                    notificationService.createNotification("Платне зберігання з " + datePayedKeeping.format(formatter),
-                            ordered.getUser().getName(), MessageType.PAYED_KEEPING, ordered.getTtn());
-                }
+            if (now().plusDays(3).isAfter(datePayedKeeping)) {
+                notificationService.createNotification("Платне зберігання з " + datePayedKeeping.format(formatter),
+                        ordered.getUser().getName(), MessageType.PAYED_KEEPING, ordered.getTtn());
             }
         }
     }
 
     public void makeAppOrderNewAgain() {
-        makeAppOrdersNew(appOrderRepository.findByStatusIn(Arrays.asList(AppOrderStatus.Чекаємо_оплату, AppOrderStatus.Не_Відповідає, AppOrderStatus.В_обробці)));
+        makeAppOrdersNew(appOrderRepository.findByStatusIn(asList(AppOrderStatus.Чекаємо_оплату, AppOrderStatus.Не_Відповідає, AppOrderStatus.В_обробці)));
     }
 
     public void checkRemindOnAppOrdersAndMakeThemNewAgain() {
@@ -92,7 +94,7 @@ public class CheckerService {
     public void checkSendOrdersAndTakeMoreFiveDays() {
         List<StatusChangeRecord> statusChangeRecords = statusChangeRepository.findAllByCreatedDateGreaterThanEqualAndNewStatus(now().minusDays(30), Status.ВІДПРАВЛЕНО);
         for (StatusChangeRecord statusChangeRecord : statusChangeRecords) {
-            List<StatusChangeRecord> statusChangeRecordList = statusChangeRepository.findOneByNewStatusInAndOrderedId(Arrays.asList(Status.ДОСТАВЛЕНО, Status.ОТРИМАНО, Status.ВІДМОВА),
+            List<StatusChangeRecord> statusChangeRecordList = statusChangeRepository.findOneByNewStatusInAndOrderedId(asList(ДОСТАВЛЕНО, Status.ОТРИМАНО, ВІДМОВА),
                     statusChangeRecord.getOrdered().getId());
             if ((statusChangeRecordList == null || statusChangeRecordList.size() == 0)
                     && Duration.between(statusChangeRecord.getCreatedDate(), now()).toDays() > 4) {
