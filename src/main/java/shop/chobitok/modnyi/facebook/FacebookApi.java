@@ -38,7 +38,6 @@ public class FacebookApi {
 
         try {
             EventResponse response = eventRequest.execute();
-            System.out.println(String.format("Standard API response : %s ", response));
         } catch (APIException e) {
             e.printStackTrace();
         }

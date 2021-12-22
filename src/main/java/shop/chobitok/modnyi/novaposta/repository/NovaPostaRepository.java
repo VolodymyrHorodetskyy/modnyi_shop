@@ -71,7 +71,7 @@ public class NovaPostaRepository {
                 responseEntity = restTemplate.postForEntity(getTrackingURL, httpEntity, TrackingEntity.class);
                 break;
             } catch (ResourceAccessException | HttpServerErrorException.GatewayTimeout e) {
-                System.out.println(getTrackingRequest.getMethodProperties().getDocuments().get(0).getDocumentNumber());
+                e.printStackTrace();
             }
         }
         TrackingEntity trackingEntity = responseEntity.getBody();
