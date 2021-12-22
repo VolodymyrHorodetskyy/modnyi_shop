@@ -309,7 +309,7 @@ public class OrderService {
 
 
     private Ordered updateOrderByTrackingEntity(Ordered ordered, Data data) {
-        if (data != null && ordered != null && data.getStatusCode() != 1) {
+        if (data != null && ordered != null) {
             return updateOrderFields(ordered, checkNewStatusAndReturnStatusCode(data, ordered),
                     data.getRecipientAddress()
                     , data.getRedeliverySum(), cardService.getOrSaveAndGetCardByName(data.getCardMaskedNumber()),
