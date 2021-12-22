@@ -295,7 +295,10 @@ public class OrderService {
     }
 
     public String updateOrdersByNovaPosta() {
-        List<Ordered> orderedList = orderRepository.findAllByStatusInAndCreatedDateGreaterThan(Arrays.asList(Status.НЕ_ЗНАЙДЕНО, Status.ВІДМОВА), LocalDateTime.now().minusDays(30));
+        List<Ordered> orderedList = orderRepository.findAllByStatusInAndCreatedDateGreaterThan(
+                Arrays.asList(Status.НЕ_ЗНАЙДЕНО, Status.ВІДМОВА, Status.ДАТА_ДОСТАВКИ_ПЕРЕНЕСЕНА_ОТРИМУВАЧЕМ,
+                        Status.НЕВДАЛА_СПРОБА_ДОСТАВКИ),
+                LocalDateTime.now().minusDays(30));
         List<Ordered> toUpdate = new ArrayList<>();
         for (Ordered ordered : orderedList) {
             if (!(ordered.getStatus() == Status.ВІДМОВА &&
