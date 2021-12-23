@@ -345,14 +345,11 @@ public class OrderService {
                     MessageType.ORDER_STATUS_NOT_FOUND);
         } else if (oldStatus != null) {
             updateOrderFieldsBeforeStatusesCheck(newStatus, ordered, redeliverySum, card, datePayedKeeping, deliveryCost,
-                    storagePrice);
+                    storagePrice, recipientAddress);
             if (oldStatus != newStatus) {
                 statusChangeService.createRecord(ordered, oldStatus, newStatus);
                 ordered.setStatus(newStatus);
                 ordered.setStatusNP(statusCode);
-                if (oldStatus == Status.СТВОРЕНО) {
-                    ordered.setAddress(recipientAddress);
-                }
                 if (newStatus == Status.ВІДМОВА) {
                     canceledOrderReasonService.createDefaultReasonOnCancel(ordered);
                 } else {
@@ -374,7 +371,7 @@ public class OrderService {
 
     private Ordered updateOrderFieldsBeforeStatusesCheck(Status actualStatus, Ordered ordered, Double redeliverySum, Card card,
                                                          LocalDateTime datePayedKeeping, Double deliveryCost,
-                                                         Double storagePrice) {
+                                                         Double storagePrice, String recipientAddress) {
         ordered.setDeliveryCost(deliveryCost);
         if (actualStatus == Status.ВІДМОВА && ordered.getReturned()) {
             ordered.setDatePayedKeepingNP(null);
@@ -389,6 +386,9 @@ public class OrderService {
         }
         if (storagePrice != null) {
             ordered.setStoragePrice(storagePrice);
+        }
+        if (!isEmpty(recipientAddress)) {
+            ordered.setAddress(recipientAddress);
         }
         return ordered;
     }
