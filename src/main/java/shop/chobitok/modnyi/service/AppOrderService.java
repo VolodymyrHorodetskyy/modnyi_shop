@@ -216,8 +216,8 @@ public class AppOrderService {
         String value = idx > 0 && it.length() > idx + 1 ? it.substring(idx + 1) : null;
         assert value != null;
         simpleImmutableEntry = new SimpleImmutableEntry<>(
-                decode(key, UTF_8),
-                decode(value, UTF_8)
+                key!= null ? decode(key, UTF_8) : null,
+                value != null ? decode(value, UTF_8) : null
         );
         return simpleImmutableEntry;
     }
