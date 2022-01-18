@@ -6,10 +6,13 @@ import shop.chobitok.modnyi.entity.AppOrderToPixel;
 import shop.chobitok.modnyi.facebook.FacebookApi2;
 import shop.chobitok.modnyi.facebook.RestResponseDTO;
 import shop.chobitok.modnyi.repository.AppOrderToPixelRepository;
+import shop.chobitok.modnyi.util.DateHelper;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.OK;
+import static shop.chobitok.modnyi.util.DateHelper.formDateTime;
 
 @Service
 public class AppOrderToPixelService {
@@ -44,6 +47,15 @@ public class AppOrderToPixelService {
 
     public void sendAll(int trying) {
         List<AppOrderToPixel> appOrderToPixelList = appOrderToPixelRepository.findAllBySentFalseAndTrying(trying);
+        for (AppOrderToPixel appOrderToPixel : appOrderToPixelList) {
+            send(appOrderToPixel);
+        }
+    }
+
+    public void sendAll(int tryingGreaterThan, String fromString) {
+        LocalDateTime from = formDateTime(fromString);
+        List<AppOrderToPixel> appOrderToPixelList = appOrderToPixelRepository.findAllBySentFalseAndTryingGreaterThanEqualAndCreatedDateGreaterThanEqual(tryingGreaterThan,
+                from);
         for (AppOrderToPixel appOrderToPixel : appOrderToPixelList) {
             send(appOrderToPixel);
         }

@@ -17,8 +17,8 @@ import shop.chobitok.modnyi.repository.OrderRepository;
 import java.util.List;
 import java.util.Map;
 
-import static shop.chobitok.modnyi.util.DateHelper.formDateFromOrGetDefault;
-import static shop.chobitok.modnyi.util.DateHelper.formDateToOrGetDefault;
+import static shop.chobitok.modnyi.util.DateHelper.formDateTimeFromOrGetDefault;
+import static shop.chobitok.modnyi.util.DateHelper.formDateTimeToOrGetDefault;
 import static shop.chobitok.modnyi.util.OrderHelper.breakdownByStatuses;
 
 @Service
@@ -72,7 +72,7 @@ public class CardService {
                                                          String from, String to) {
         List<Ordered> orderedList = orderRepository
                 .findByCardIdAndNpAccountIdAndCreatedDateGreaterThanEqualAndCreatedDateLessThanEqual(id, npAccountId,
-                        formDateFromOrGetDefault(from), formDateToOrGetDefault(to));
+                        formDateTimeFromOrGetDefault(from), formDateTimeToOrGetDefault(to));
         Map<Status, List<Ordered>> statusListMap = breakdownByStatuses(orderedList);
         Double predictedSum = 0d;
         Double sum = 0d;

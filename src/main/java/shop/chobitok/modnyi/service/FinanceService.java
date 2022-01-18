@@ -69,8 +69,8 @@ public class FinanceService {
     }
 
     public EarningsResponse getEarnings(String dateTime1, String dateTime2) {
-        LocalDateTime fromDate = DateHelper.formDateFromOrGetDefault(dateTime1);
-        LocalDateTime toDate = DateHelper.formDateToOrGetDefault(dateTime2);
+        LocalDateTime fromDate = DateHelper.formDateTimeFromOrGetDefault(dateTime1);
+        LocalDateTime toDate = DateHelper.formDateTimeToOrGetDefault(dateTime2);
         return getEarnings(fromDate, toDate);
     }
 

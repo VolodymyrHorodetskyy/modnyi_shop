@@ -8,6 +8,7 @@ import shop.chobitok.modnyi.entity.response.StringDoubleObj;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
+import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.AppOrderRepository;
@@ -24,8 +25,8 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
-import static shop.chobitok.modnyi.util.DateHelper.formDateFromOrGetDefault;
-import static shop.chobitok.modnyi.util.DateHelper.formDateToOrGetDefault;
+import static shop.chobitok.modnyi.util.DateHelper.formDateTimeFromOrGetDefault;
+import static shop.chobitok.modnyi.util.DateHelper.formDateTimeToOrGetDefault;
 
 @Service
 public class StatisticService {
@@ -40,8 +41,10 @@ public class StatisticService {
     private ParamsService paramsService;
     private OurTtnService ourTtnService;
     private HistoryService historyService;
+    private NPOrderMapper npOrderMapper;
 
-    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, OrderService orderService, ShoePriceService shoePriceService, AppOrderRepository appOrderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, PayedOrderedService payedOrderedService, ParamsService paramsService, OurTtnService ourTtnService, HistoryService historyService) {
+
+    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, OrderService orderService, ShoePriceService shoePriceService, AppOrderRepository appOrderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, PayedOrderedService payedOrderedService, ParamsService paramsService, OurTtnService ourTtnService, HistoryService historyService, NPOrderMapper npOrderMapper) {
         this.postaRepository = postaRepository;
         this.orderRepository = orderRepository;
         this.orderService = orderService;
@@ -52,6 +55,7 @@ public class StatisticService {
         this.paramsService = paramsService;
         this.ourTtnService = ourTtnService;
         this.historyService = historyService;
+        this.npOrderMapper = npOrderMapper;
     }
 
     public StringResponse getIssueOrders() {
@@ -171,8 +175,8 @@ public class StatisticService {
     }
 
     public Map<Shoe, Integer> getOrderedShoesStats(String dateFrom, String dateTo, Status status) {
-        LocalDateTime fromDate = formDateFromOrGetDefault(dateFrom);
-        LocalDateTime toDate = formDateToOrGetDefault(dateTo);
+        LocalDateTime fromDate = formDateTimeFromOrGetDefault(dateFrom);
+        LocalDateTime toDate = formDateTimeToOrGetDefault(dateTo);
         List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate, status, true));
         final Map<Shoe, Integer> shoeIntegerMap = countShoesAmount(orderedList);
         final Map<Shoe, Integer> sortedByAmount = shoeIntegerMap.entrySet()
@@ -202,8 +206,8 @@ public class StatisticService {
 
 
     public List<StatShoe> getReceivedPercentage(String dateFrom, String dateTo) {
-        LocalDateTime fromDate = formDateFromOrGetDefault(dateFrom);
-        LocalDateTime toDate = formDateToOrGetDefault(dateTo);
+        LocalDateTime fromDate = formDateTimeFromOrGetDefault(dateFrom);
+        LocalDateTime toDate = formDateTimeToOrGetDefault(dateTo);
         List<Ordered> receivedOrderList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate, Status.ОТРИМАНО));
         List<Ordered> deniedOrderList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate, Status.ВІДМОВА));
         final Map<Shoe, Integer> receivedMap = countShoesAmount(receivedOrderList);
@@ -230,7 +234,8 @@ public class StatisticService {
         int newAppOrdersSize = appOrderRepository.findByStatusIn(singletonList(AppOrderStatus.Новий)).size();
         int canceledWithoutReasonSize = canceledOrderReasonRepository.findByReasonIn(singletonList(CancelReason.НЕ_ВИЗНАЧЕНО)).size();
         int ourTtnsSize = ourTtnService.getTtns(0, 100, false).getNumber();
-        return new AmountsInfoResponse(newAppOrdersSize, canceledWithoutReasonSize, ourTtnsSize);
+        int orderMistakes = checkMistakesInOrderAmount(null, null, null);
+        return new AmountsInfoResponse(newAppOrdersSize, canceledWithoutReasonSize, ourTtnsSize, orderMistakes);
     }
 
 
@@ -340,7 +345,7 @@ public class StatisticService {
         paramsService.saveDateFromAndDateToSearchNpAccount(dateFrom, dateTo);
         List<Ordered> orderedList = orderRepository.findAllByStatusInAndDateCreatedGreaterThanAndDateCreatedLessThanAndNpAccountId(
                 Arrays.asList(Status.ОТРИМАНО, Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО, Status.СТВОРЕНО),
-                formDateFromOrGetDefault(dateFrom), formDateToOrGetDefault(dateTo), npAccountId);
+                formDateTimeFromOrGetDefault(dateFrom), formDateTimeToOrGetDefault(dateTo), npAccountId);
         StringBuilder stringBuilder = new StringBuilder();
         Double sumReceived = 0d;
         Double sumPredicted = 0d;
@@ -358,5 +363,137 @@ public class StatisticService {
                 .append("Сума прогнозованих = ").append(sumPredicted).append("\n")
                 .append("80% = ").append(realisticSum).append("\n");
         return new StringResponse(stringBuilder.toString());
+    }
+
+
+    public StringResponse checkMistakesInOrder(Long userId, String from, String to) {
+        return new StringResponse(checkMistakesInOrderMistakeResponse(userId, from, to).response);
+    }
+
+    public int checkMistakesInOrderAmount(Long userId, String from, String to) {
+        return checkMistakesInOrderMistakeResponse(userId, from, to).amount;
+    }
+
+
+    private MistakesResponse checkMistakesInOrderMistakeResponse(Long userId, String from, String to) {
+        OrderedSpecification orderedSpecification = new OrderedSpecification();
+        LocalDateTime fromDate = formDateTimeFromOrGetDefault(from);
+        LocalDateTime toDate = formDateTimeToOrGetDefault(to);
+        orderedSpecification.setFrom(fromDate.minusDays(7));
+        orderedSpecification.setTo(toDate);
+        orderedSpecification.setStatusNotIn(Collections.singletonList(Status.ВИДАЛЕНО));
+        StringBuilder response = new StringBuilder();
+        response.append(fromDate).append(" - ")
+                .append(to == null ? "зараз" : to).append("\n\n");
+        if (userId != null) {
+            orderedSpecification.setUserId(userId.toString());
+            response.append("Id менеджера : ").append(userId).append("\n");
+        }
+        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
+        StringBuilder priceUnder500StringBuilder = null;
+        StringBuilder nullOrderedShoesStringBuilder = null;
+        StringBuilder commasNoEqualShoesSizeStringBuilder = null;
+        StringBuilder discountIsNull = null;
+        StringBuilder priceIsNotCorrect = null;
+        int mistakesAmount = 0;
+        for (Ordered ordered : orderedList) {
+            String ttn = ordered.getTtn();
+            String userName = ordered.getUser() != null ? ordered.getUser().getName() :
+                    "без менеджера";
+            if (ordered.getOrderedShoeList() == null || ordered.getOrderedShoeList().size() == 0) {
+                if (nullOrderedShoesStringBuilder == null) {
+                    nullOrderedShoesStringBuilder = new StringBuilder();
+                    nullOrderedShoesStringBuilder.append("Взуття не вибрано").append("\n");
+
+                }
+                nullOrderedShoesStringBuilder.append(ttn).append(" ").append(userName).append("\n");
+                ++mistakesAmount;
+            } else if (ordered.getPrice() < 500) {
+                if (priceUnder500StringBuilder == null) {
+                    priceUnder500StringBuilder = new StringBuilder();
+                    priceUnder500StringBuilder.append("Ціна нижча за 500").append("\n");
+                }
+                priceUnder500StringBuilder.append(ttn).append(" ").append(userName).append("\n");
+                ++mistakesAmount;
+            } else {
+                int commas = 0;
+                for (int i = 0; i < ordered.getPostComment().length(); i++) {
+                    if (ordered.getPostComment().charAt(i) == ';') commas++;
+                }
+                if (commas != ordered.getOrderedShoeList().size() - 1) {
+                    if (commasNoEqualShoesSizeStringBuilder == null) {
+                        commasNoEqualShoesSizeStringBuilder = new StringBuilder();
+                        commasNoEqualShoesSizeStringBuilder.append("Кількість крапок з комою не відповідає кількості взуття").append("\n");
+                    }
+                    commasNoEqualShoesSizeStringBuilder.append(ttn).append(" ").append(userName).append("\n");
+                    ++mistakesAmount;
+                }
+            }
+            if (ordered.getOrderedShoeList().size() > 1) {
+                if (checkDiscountIsNull(ordered)) {
+                    if (discountIsNull == null) {
+                        discountIsNull = new StringBuilder();
+                        discountIsNull.append("В замовленні більше двох пар, але немає знижки").append("\n");
+                    }
+                    discountIsNull.append(ttn).append(" ").append(userName)
+                            .append("\n");
+                    ++mistakesAmount;
+                } else if (checkPriceIsNotCorrect(ordered)) {
+                    if (priceIsNotCorrect == null) {
+                        priceIsNotCorrect = new StringBuilder();
+                        priceIsNotCorrect.append("Неправильна ціна в замовленні").append("\n");
+                    }
+                    priceIsNotCorrect.append("Ціна зараз: ").append(ordered.getPrice())
+                            .append(" ,ціна яка повинна бути: ")
+                            .append(npOrderMapper.countDiscount(ordered.getOrderedShoeList(), ordered.getDiscount()))
+                            .append("\n");
+                    priceIsNotCorrect.append(ttn).append(" ").append(userName)
+                            .append("\n\n");
+                    ++mistakesAmount;
+                }
+            }
+        }
+        if (priceUnder500StringBuilder != null) {
+            response.append(priceUnder500StringBuilder).append("\n");
+        }
+        if (nullOrderedShoesStringBuilder != null) {
+            response.append(nullOrderedShoesStringBuilder).append("\n");
+        }
+        if (commasNoEqualShoesSizeStringBuilder != null) {
+            response.append(commasNoEqualShoesSizeStringBuilder).append("\n");
+        }
+        if (discountIsNull != null) {
+            response.append(discountIsNull.toString()).append("\n");
+        }
+        if (priceIsNotCorrect != null) {
+            response.append(priceIsNotCorrect.toString()).append("\n");
+        }
+        return new MistakesResponse(response.toString(), mistakesAmount);
+    }
+
+    private class MistakesResponse {
+        public MistakesResponse(String response, int amount) {
+            this.response = response;
+            this.amount = amount;
+        }
+
+        String response;
+        int amount;
+    }
+
+    private boolean checkDiscountIsNull(Ordered ordered) {
+        boolean result = false;
+        if (ordered.getDiscount() == null) {
+            result = true;
+        }
+        return result;
+    }
+
+    private boolean checkPriceIsNotCorrect(Ordered ordered) {
+        boolean result = false;
+        if (Math.abs(npOrderMapper.countDiscount(ordered.getOrderedShoeList(), ordered.getDiscount()) - ordered.getPrice()) > 199) {
+            result = true;
+        }
+        return result;
     }
 }

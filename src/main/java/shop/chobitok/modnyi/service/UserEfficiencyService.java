@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-import static shop.chobitok.modnyi.util.DateHelper.formDateFromOrGetDefault;
+import static shop.chobitok.modnyi.util.DateHelper.formDateTimeFromOrGetDefault;
 
 @Service
 public class UserEfficiencyService {
@@ -51,7 +51,7 @@ public class UserEfficiencyService {
     }
 
     public StringResponse showUserEfficiency(String from, Long userId) {
-        LocalDateTime fromLocalDateTime = formDateFromOrGetDefault(from);
+        LocalDateTime fromLocalDateTime = formDateTimeFromOrGetDefault(from);
         List<UserEfficiency> userEfficiencyList = userEfficiencyRepository.findByCreatedDateGreaterThanEqualAndUserId(
                 fromLocalDateTime, userId);
         StringBuilder result = new StringBuilder();

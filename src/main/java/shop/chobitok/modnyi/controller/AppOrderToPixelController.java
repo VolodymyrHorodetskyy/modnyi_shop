@@ -1,10 +1,9 @@
 package shop.chobitok.modnyi.controller;
 
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.service.AppOrderToPixelService;
+
+import java.time.LocalDateTime;
 
 @RestController
 @CrossOrigin
@@ -22,4 +21,8 @@ public class AppOrderToPixelController {
         appOrderToPixelService.sendAllTrying0();
     }
 
+    @PatchMapping("sendAll")
+    public void sendAll(@RequestParam int tryingGreaterThan, @RequestParam String from) {
+        appOrderToPixelService.sendAll(tryingGreaterThan, from);
+    }
 }

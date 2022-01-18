@@ -18,7 +18,7 @@ public class OurTtnMapper {
         return data.stream().map(data1 -> toOurTtn(data1, npAccountId)).collect(Collectors.toList());
     }
 
-    private OurTTN toOurTtn(Data data, Long npAccountId) {
+    public OurTTN toOurTtn(Data data, Long npAccountId) {
         OurTTN ourTTN = null;
         if (data != null) {
             ourTTN = new OurTTN();

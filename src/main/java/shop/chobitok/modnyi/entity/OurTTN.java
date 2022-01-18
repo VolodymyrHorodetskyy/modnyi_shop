@@ -21,6 +21,12 @@ public class OurTTN extends Audit {
     private boolean deleted = false;
     @Column
     private Long npAccountId;
+    @Column
+    private String cargoDescription;
+    @Column
+    private CancelReason cancelReason;
+    @Column
+    private String comment;
 
 
     public String getTtn() {
@@ -77,5 +83,29 @@ public class OurTTN extends Audit {
 
     public void setNpAccountId(Long npAccountId) {
         this.npAccountId = npAccountId;
+    }
+
+    public String getCargoDescription() {
+        return cargoDescription;
+    }
+
+    public void setCargoDescription(String cargoDescription) {
+        this.cargoDescription = cargoDescription;
+    }
+
+    public CancelReason getCancelReason() {
+        return cancelReason;
+    }
+
+    public void setCancelReason(CancelReason cancelReason) {
+        this.cancelReason = cancelReason;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 }

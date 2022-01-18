@@ -11,15 +11,15 @@ import java.util.List;
 
 public class CanceledOrderReasonSpecification implements Specification<CanceledOrderReason> {
 
-    private LocalDateTime from;
-    private LocalDateTime lastModifiedDate;
+    private LocalDateTime fromCreatedDate;
+    private LocalDateTime fromLastModifiedDate;
     private boolean statusNotReceived;
     private CancelReason cancelReason;
     private String ttn;
     private String phoneOrName;
     private Boolean manual;
     private Boolean withoutReason;
-    private boolean hasReturnTtn;
+    private Boolean hasReturnTtn;
     private String userId;
     private Status status;
 
@@ -35,14 +35,14 @@ public class CanceledOrderReasonSpecification implements Specification<CanceledO
         this.userId = userId;
     }
 
-    public CanceledOrderReasonSpecification(LocalDateTime from, boolean statusNotReceived, CancelReason cancelReason) {
-        this.from = from;
+    public CanceledOrderReasonSpecification(LocalDateTime fromCreatedDate, boolean statusNotReceived, CancelReason cancelReason) {
+        this.fromCreatedDate = fromCreatedDate;
         this.statusNotReceived = statusNotReceived;
         this.cancelReason = cancelReason;
     }
 
-    public CanceledOrderReasonSpecification(LocalDateTime from, boolean statusNotReceived) {
-        this.from = from;
+    public CanceledOrderReasonSpecification(LocalDateTime fromCreatedDate, boolean statusNotReceived) {
+        this.fromCreatedDate = fromCreatedDate;
         this.statusNotReceived = statusNotReceived;
     }
 
@@ -55,12 +55,12 @@ public class CanceledOrderReasonSpecification implements Specification<CanceledO
     public Predicate toPredicate(Root<CanceledOrderReason> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicates = new ArrayList<>();
         Join<CanceledOrderReason, Ordered> orderedJoin = root.join("ordered");
-        if (from != null) {
-            Predicate predicateFrom = criteriaBuilder.greaterThanOrEqualTo(root.get("createdDate"), from);
+        if (fromCreatedDate != null) {
+            Predicate predicateFrom = criteriaBuilder.greaterThanOrEqualTo(root.get("createdDate"), fromCreatedDate);
             predicates.add(predicateFrom);
         }
-        if (lastModifiedDate != null) {
-            Predicate predicateLastModifiedDate = criteriaBuilder.greaterThanOrEqualTo(root.get("lastModifiedDate"), lastModifiedDate);
+        if (fromLastModifiedDate != null) {
+            Predicate predicateLastModifiedDate = criteriaBuilder.greaterThanOrEqualTo(root.get("lastModifiedDate"), fromLastModifiedDate);
             predicates.add(predicateLastModifiedDate);
         }
         if (statusNotReceived) {
@@ -85,18 +85,29 @@ public class CanceledOrderReasonSpecification implements Specification<CanceledO
             Predicate predicatePhone = criteriaBuilder.like(orderedClientJoin.get("phone"), "%" + phoneOrName + "%");
             predicates.add(criteriaBuilder.or(predicateName, predicateLastName, predicatePhone));
         }
-        if (manual != null && manual == true) {
-            Predicate manualPredicate = criteriaBuilder.isTrue(root.get("manual"));
-            predicates.add(manualPredicate);
+        if (manual != null) {
+            if(manual){
+                Predicate manualPredicate = criteriaBuilder.isTrue(root.get("manual"));
+                predicates.add(manualPredicate);
+            }else{
+                Predicate manualIsFalsePredicate = criteriaBuilder.isFalse(root.get("manual"));
+                predicates.add(manualIsFalsePredicate);
+            }
         }
         if (withoutReason != null && withoutReason == true) {
             Predicate withoutReasonPredicate = criteriaBuilder.equal(root.get("reason"), CancelReason.НЕ_ВИЗНАЧЕНО);
             predicates.add(withoutReasonPredicate);
         }
-        if (hasReturnTtn) {
-            Predicate notNullTtnPredicate = criteriaBuilder.isNotNull(root.get("returnTtn"));
-            Predicate isNotEmpty = criteriaBuilder.notEqual(root.get("returnTtn"), "");
-            predicates.add(criteriaBuilder.and(notNullTtnPredicate, isNotEmpty));
+        if (hasReturnTtn != null) {
+            if (hasReturnTtn) {
+                Predicate notNullTtnPredicate = criteriaBuilder.isNotNull(root.get("returnTtn"));
+                Predicate isNotEmpty = criteriaBuilder.notEqual(root.get("returnTtn"), "");
+                predicates.add(criteriaBuilder.and(notNullTtnPredicate, isNotEmpty));
+            } else {
+                Predicate nullReturnTtn = criteriaBuilder.isNull(root.get("returnTtn"));
+                Predicate isEmpty = criteriaBuilder.equal(root.get("returnTtn"), "");
+                predicates.add(criteriaBuilder.and(nullReturnTtn, isEmpty));
+            }
         }
         if (!StringUtils.isEmpty(userId)) {
             Join<Ordered, User> userJoin = orderedJoin.join("user");
@@ -110,20 +121,20 @@ public class CanceledOrderReasonSpecification implements Specification<CanceledO
         return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
     }
 
-    public LocalDateTime getFrom() {
-        return from;
+    public LocalDateTime getFromCreatedDate() {
+        return fromCreatedDate;
     }
 
-    public void setFrom(LocalDateTime from) {
-        this.from = from;
+    public void setFromCreatedDate(LocalDateTime fromCreatedDate) {
+        this.fromCreatedDate = fromCreatedDate;
     }
 
-    public LocalDateTime getLastModifiedDate() {
-        return lastModifiedDate;
+    public LocalDateTime getFromLastModifiedDate() {
+        return fromLastModifiedDate;
     }
 
-    public void setLastModifiedDate(LocalDateTime lastModifiedDate) {
-        this.lastModifiedDate = lastModifiedDate;
+    public void setFromLastModifiedDate(LocalDateTime fromLastModifiedDate) {
+        this.fromLastModifiedDate = fromLastModifiedDate;
     }
 
     public boolean isStatusNotReceived() {

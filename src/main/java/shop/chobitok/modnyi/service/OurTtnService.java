@@ -5,8 +5,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.OurTTN;
 import shop.chobitok.modnyi.entity.Status;
+import shop.chobitok.modnyi.entity.request.AddOurTtnRequest;
 import shop.chobitok.modnyi.entity.request.ImportOrdersFromStringRequest;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
@@ -20,6 +22,7 @@ import shop.chobitok.modnyi.repository.OurTtnRepository;
 
 import java.util.*;
 
+import static org.springframework.util.StringUtils.isEmpty;
 import static shop.chobitok.modnyi.util.StringHelper.splitTTNString;
 
 @Service
@@ -43,6 +46,19 @@ public class OurTtnService {
 
     public List<OurTTN> getAll(List<Status> statusesNotIn) {
         return ourTtnRepository.findAllByStatusNotIn(statusesNotIn);
+    }
+
+    public StringResponse addNewTtn(AddOurTtnRequest request) {
+        String result = checkIfExistOnImportWithReturnString(request.getTtn());
+        if (isEmpty(result)) {
+            OurTTN ourTTN = ourTtnMapper.toOurTtn(postaRepository.getTracking(request.getNpAccountId(), request.getTtn()).getData().get(0), request.getNpAccountId());
+            if (ourTTN == null || ourTTN.getStatus() == Status.НЕ_ЗНАЙДЕНО) {
+                result = request.getTtn() + " " + "Не Знайдено";
+            }else{
+                result = request.getTtn() + " " + "Добавлено";
+            }
+        }
+        return new StringResponse(result);
     }
 
     public StringResponse receive(ImportOrdersFromStringRequest request) {
@@ -112,15 +128,16 @@ public class OurTtnService {
 
     public String checkIfExistOnImportWithReturnString(String ttn) {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(ttn).append(" ");
+        String result = null;
         if (canceledOrderReasonService.getByReturnTtn(ttn) != null) {
             stringBuilder.append("існує в поверненнях");
         } else if (orderService.findByTTN(ttn) != null) {
             stringBuilder.append("Існує в замовленнях");
         } else if (ourTtnRepository.findFirstByTtn(ttn) != null) {
             stringBuilder.append("існує в наших ттн");
-        } else {
-            return null;
+        }
+        if (result != null) {
+            stringBuilder.append(ttn).append(" ").append(result);
         }
         return stringBuilder.toString();
     }

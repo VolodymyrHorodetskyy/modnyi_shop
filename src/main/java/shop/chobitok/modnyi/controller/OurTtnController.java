@@ -2,6 +2,7 @@ package shop.chobitok.modnyi.controller;
 
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
+import shop.chobitok.modnyi.entity.request.AddOurTtnRequest;
 import shop.chobitok.modnyi.entity.request.ImportOrdersFromStringRequest;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.service.OurTtnService;
@@ -18,6 +19,11 @@ public class OurTtnController {
         this.ourTtnService = ourTtnService;
     }
 
+    @PostMapping("addOurTtn")
+    public StringResponse addOurTtn(AddOurTtnRequest request){
+        return ourTtnService.addNewTtn(request);
+    }
+
     @PostMapping
     public StringResponse getOurTTNS(@RequestBody ImportOrdersFromStringRequest request) {
         return ourTtnService.receive(request);
@@ -32,6 +38,4 @@ public class OurTtnController {
     public Page getOurTtns(@RequestParam int page, @RequestParam int size, @RequestParam boolean showDeletedAndReceived) {
         return ourTtnService.getTtns(page, size, showDeletedAndReceived);
     }
-
-
 }

@@ -53,8 +53,8 @@ public class CanceledOrderController {
     }
 
     @PutMapping("/updateCanceled")
-    public List<CanceledOrderReason> updateCanceled() {
-        canceledOrderReasonService.checkIfWithoutCancelReasonExistsAndCreateDefaultReason(LocalDateTime.now().minusDays(10));
+    public List<CanceledOrderReason> updateCanceled(@RequestParam long days) {
+        canceledOrderReasonService.checkIfWithoutCancelReasonExistsAndCreateDefaultReason(LocalDateTime.now().minusDays(days));
         return canceledOrderReasonService.setReturnTtnAndUpdateStatus();
     }
 

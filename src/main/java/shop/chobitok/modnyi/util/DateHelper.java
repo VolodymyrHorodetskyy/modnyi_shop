@@ -24,7 +24,7 @@ public class DateHelper {
         return LocalDateTime.parse(date, formatter);
     }
 
-    public static LocalDateTime formDateFromOrGetDefault(String dateTimeFrom) {
+    public static LocalDateTime formDateTimeFromOrGetDefault(String dateTimeFrom) {
         LocalDateTime localDateTime = formDateTime(dateTimeFrom);
         if (localDateTime == null) {
             localDateTime = LocalDateTime.now().minusDays(7);
@@ -33,7 +33,7 @@ public class DateHelper {
     }
 
 
-    public static LocalDateTime formDateToOrGetDefault(String dateTimeTo) {
+    public static LocalDateTime formDateTimeToOrGetDefault(String dateTimeTo) {
         LocalDateTime localDateTime = formDateTime(dateTimeTo);
         if (localDateTime == null) {
             localDateTime = LocalDateTime.now();

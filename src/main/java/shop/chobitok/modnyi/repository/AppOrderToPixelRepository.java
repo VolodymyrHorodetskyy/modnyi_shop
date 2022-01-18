@@ -17,4 +17,6 @@ public interface AppOrderToPixelRepository extends JpaRepository<AppOrderToPixel
     List<AppOrderToPixel> findAllByCreatedDateGreaterThanEqual(LocalDateTime from);
 
     List<AppOrderToPixel> findAllBySentFalseAndTrying(int trying);
+
+    List<AppOrderToPixel> findAllBySentFalseAndTryingGreaterThanEqualAndCreatedDateGreaterThanEqual(int trying, LocalDateTime createdDate);
 }

@@ -10,13 +10,15 @@ import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.StatusChangeRepository;
 import shop.chobitok.modnyi.repository.UserRepository;
 import shop.chobitok.modnyi.specification.AppOrderSpecification;
-import shop.chobitok.modnyi.specification.OrderedSpecification;
 
 import javax.transaction.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.lang.String.valueOf;
@@ -24,8 +26,8 @@ import static java.time.LocalDateTime.now;
 import static java.util.Arrays.asList;
 import static shop.chobitok.modnyi.entity.Status.ВІДМОВА;
 import static shop.chobitok.modnyi.entity.Status.ДОСТАВЛЕНО;
-import static shop.chobitok.modnyi.util.DateHelper.formDateFromOrGetDefault;
-import static shop.chobitok.modnyi.util.DateHelper.formDateToOrGetDefault;
+import static shop.chobitok.modnyi.util.DateHelper.formDateTimeFromOrGetDefault;
+import static shop.chobitok.modnyi.util.DateHelper.formDateTimeToOrGetDefault;
 
 @Service
 public class CheckerService {
@@ -104,112 +106,6 @@ public class CheckerService {
         }
     }
 
-    public StringResponse checkMistakesInOrder(Long userId, String from, String to) {
-        OrderedSpecification orderedSpecification = new OrderedSpecification();
-        LocalDateTime fromDate = formDateFromOrGetDefault(from);
-        LocalDateTime toDate = formDateToOrGetDefault(to);
-        orderedSpecification.setFrom(fromDate.minusDays(7));
-        orderedSpecification.setTo(toDate);
-        orderedSpecification.setStatusNotIn(Collections.singletonList(Status.ВИДАЛЕНО));
-        StringBuilder response = new StringBuilder();
-        response.append(fromDate).append(" - ")
-                .append(to == null ? "зараз" : to).append("\n\n");
-        if (userId != null) {
-            orderedSpecification.setUserId(userId.toString());
-            response.append("Id менеджера : ").append(userId).append("\n");
-        }
-        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
-        StringBuilder priceUnder500StringBuilder = null;
-        StringBuilder nullOrderedShoesStringBuilder = null;
-        StringBuilder commasNoEqualShoesSizeStringBuilder = null;
-        StringBuilder discountIsNull = null;
-        StringBuilder priceIsNotCorrect = null;
-        for (Ordered ordered : orderedList) {
-            String ttn = ordered.getTtn();
-            String userName = ordered.getUser() != null ? ordered.getUser().getName() :
-                    "без менеджера";
-            if (ordered.getOrderedShoeList() == null || ordered.getOrderedShoeList().size() == 0) {
-                if (nullOrderedShoesStringBuilder == null) {
-                    nullOrderedShoesStringBuilder = new StringBuilder();
-                    nullOrderedShoesStringBuilder.append("Взуття не вибрано").append("\n");
-
-                }
-                nullOrderedShoesStringBuilder.append(ttn).append(" ").append(userName).append("\n");
-            } else if (ordered.getPrice() < 500) {
-                if (priceUnder500StringBuilder == null) {
-                    priceUnder500StringBuilder = new StringBuilder();
-                    priceUnder500StringBuilder.append("Ціна нижча за 500").append("\n");
-                }
-                priceUnder500StringBuilder.append(ttn).append(" ").append(userName).append("\n");
-            } else {
-                int commas = 0;
-                for (int i = 0; i < ordered.getPostComment().length(); i++) {
-                    if (ordered.getPostComment().charAt(i) == ';') commas++;
-                }
-                if (commas != ordered.getOrderedShoeList().size() - 1) {
-                    if (commasNoEqualShoesSizeStringBuilder == null) {
-                        commasNoEqualShoesSizeStringBuilder = new StringBuilder();
-                        commasNoEqualShoesSizeStringBuilder.append("Кількість крапок з комою не відповідає кількості взуття").append("\n");
-                    }
-                    commasNoEqualShoesSizeStringBuilder.append(ttn).append(" ").append(userName).append("\n");
-                }
-            }
-            if (ordered.getOrderedShoeList().size() > 1) {
-                if (checkDiscountIsNull(ordered)) {
-                    if (discountIsNull == null) {
-                        discountIsNull = new StringBuilder();
-                        discountIsNull.append("В замовленні більше двох пар, але немає знижки").append("\n");
-                    }
-                    discountIsNull.append(ttn).append(" ").append(userName)
-                            .append("\n");
-                } else if (checkPriceIsNotCorrect(ordered)) {
-                    if (priceIsNotCorrect == null) {
-                        priceIsNotCorrect = new StringBuilder();
-                        priceIsNotCorrect.append("Неправильна ціна в замовленні").append("\n");
-                    }
-                    priceIsNotCorrect.append("Ціна зараз: ").append(ordered.getPrice())
-                            .append(" ,ціна яка повинна бути: ")
-                            .append(npOrderMapper.countDiscount(ordered.getOrderedShoeList(), ordered.getDiscount()))
-                            .append("\n");
-                    priceIsNotCorrect.append(ttn).append(" ").append(userName)
-                            .append("\n\n");
-                }
-            }
-        }
-        if (priceUnder500StringBuilder != null) {
-            response.append(priceUnder500StringBuilder).append("\n");
-        }
-        if (nullOrderedShoesStringBuilder != null) {
-            response.append(nullOrderedShoesStringBuilder).append("\n");
-        }
-        if (commasNoEqualShoesSizeStringBuilder != null) {
-            response.append(commasNoEqualShoesSizeStringBuilder).append("\n");
-        }
-        if (discountIsNull != null) {
-            response.append(discountIsNull.toString()).append("\n");
-        }
-        if (priceIsNotCorrect != null) {
-            response.append(priceIsNotCorrect.toString()).append("\n");
-        }
-        return new StringResponse(response.toString());
-    }
-
-    private boolean checkDiscountIsNull(Ordered ordered) {
-        boolean result = false;
-        if (ordered.getDiscount() == null) {
-            result = true;
-        }
-        return result;
-    }
-
-    private boolean checkPriceIsNotCorrect(Ordered ordered) {
-        boolean result = false;
-        if (Math.abs(npOrderMapper.countDiscount(ordered.getOrderedShoeList(), ordered.getDiscount()) - ordered.getPrice()) > 199) {
-            result = true;
-        }
-        return result;
-    }
-
     public StringResponse checkAppOrdersBecameOrdersForAllUsers(String from, String to) {
         List<User> users = userRepository.findAll().stream().filter(user -> user.getId() != 1l).collect(Collectors.toList());
         StringBuilder response = new StringBuilder();
@@ -222,8 +118,8 @@ public class CheckerService {
 
     public StringResponse checkAppOrdersBecameOrders(Long userId, String from, String to) {
         AppOrderSpecification specification = new AppOrderSpecification();
-        LocalDateTime fromDate = formDateFromOrGetDefault(from);
-        LocalDateTime toDate = formDateToOrGetDefault(to);
+        LocalDateTime fromDate = formDateTimeFromOrGetDefault(from);
+        LocalDateTime toDate = formDateTimeToOrGetDefault(to);
         specification.setFromCreatedDate(fromDate);
         specification.setToCreatedDate(toDate);
         specification.setUserId(userId.toString());

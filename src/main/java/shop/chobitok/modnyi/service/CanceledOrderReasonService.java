@@ -221,7 +221,7 @@ public class CanceledOrderReasonService {
             canceledOrderReasonSpecification.setStatus(Status.ДОСТАВЛЕНО);
         }
         if (!isEmpty(dateFrom)) {
-            canceledOrderReasonSpecification.setLastModifiedDate(formDateTime(dateFrom));
+            canceledOrderReasonSpecification.setFromLastModifiedDate(formDateTime(dateFrom));
         }
         canceledOrderReasons = canceledOrderReasonRepository.findAll(canceledOrderReasonSpecification);
 

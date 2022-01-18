@@ -32,7 +32,7 @@ import static org.apache.commons.lang3.StringUtils.remove;
 import static org.apache.commons.lang3.StringUtils.substringBetween;
 import static org.springframework.util.StringUtils.isEmpty;
 import static shop.chobitok.modnyi.entity.VariantType.Domain;
-import static shop.chobitok.modnyi.util.DateHelper.formDateFromOrGetDefault;
+import static shop.chobitok.modnyi.util.DateHelper.formDateTimeFromOrGetDefault;
 import static shop.chobitok.modnyi.util.DateHelper.makeDateBeginningOfDay;
 import static shop.chobitok.modnyi.util.StringHelper.splitPhonesStringBySemiColonAndValidate;
 
@@ -523,7 +523,7 @@ public class AppOrderService {
     public Map<AppOrder, LocalDateTime> getAllAppOrderAndDateTimeWhenShouldBeProcessed(String from) {
         int minutesAppOrderShouldBeProcessed =
                 Integer.parseInt(paramsService.getParam("minutesAppOrderShouldBeProcessed").getGetting());
-        LocalDateTime fromLocalDateTime = formDateFromOrGetDefault(from);
+        LocalDateTime fromLocalDateTime = formDateTimeFromOrGetDefault(from);
         List<AppOrder> appOrders = appOrderRepository.findByCreatedDateGreaterThanEqualOrderByCreatedDateDesc(fromLocalDateTime);
         Map<AppOrder, LocalDateTime> appOrderDateTimeMap = new LinkedHashMap<>();
         LocalDateTime lastShouldBeProcessedDate = null;

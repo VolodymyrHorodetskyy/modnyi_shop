@@ -7,6 +7,7 @@ import shop.chobitok.modnyi.entity.UserLoggedIn;
 import shop.chobitok.modnyi.entity.request.LogInRequest;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.service.CheckerService;
+import shop.chobitok.modnyi.service.StatisticService;
 import shop.chobitok.modnyi.service.UserEfficiencyService;
 import shop.chobitok.modnyi.service.UserService;
 
@@ -20,11 +21,13 @@ public class UserController {
     private UserService userService;
     private UserEfficiencyService userEfficiencyService;
     private CheckerService checkerService;
+    private StatisticService statisticService;
 
-    public UserController(UserService userService, UserEfficiencyService userEfficiencyService, CheckerService checkerService) {
+    public UserController(UserService userService, UserEfficiencyService userEfficiencyService, CheckerService checkerService, StatisticService statisticService) {
         this.userService = userService;
         this.userEfficiencyService = userEfficiencyService;
         this.checkerService = checkerService;
+        this.statisticService = statisticService;
     }
 
     @GetMapping
@@ -56,7 +59,7 @@ public class UserController {
     public StringResponse getOrderMistakes(@RequestParam(required = false) String from,
                                            @RequestParam(required = false) String to,
                                            @RequestParam(required = false) Long userId) {
-        return checkerService.checkMistakesInOrder(userId, from, to);
+        return statisticService.checkMistakesInOrder(userId, from, to);
     }
 
     @GetMapping("checkAppOrdersBecameOrders")
