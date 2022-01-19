@@ -3,6 +3,7 @@ package shop.chobitok.modnyi.service;
 import com.google.api.client.util.Strings;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.*;
@@ -53,6 +54,13 @@ public class AppOrderService {
     private VariantsService variantsService;
     private AppOrderToPixelService appOrderToPixelService;
 
+    @Value("${params.fbpOpenTag}")
+    private String fbpOpenTagParamName;
+    @Value("${params.fbcOpenTag}")
+    private String fbcOpenTagParamName;
+    @Value("${params.closeTagForFbcAndFbp}")
+    private String closeTagForFbcAndFbpParamName;
+
     public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService, AppOrderProcessingRepository appOrderProcessingRepository, ParamsService paramsService, UserLoggedInRepository userLoggedInRepository, ImportService importService, PixelService pixelService, VariantsService variantsService, AppOrderToPixelService appOrderToPixelService) {
         this.appOrderRepository = appOrderRepository;
         this.orderService = orderService;
@@ -97,7 +105,7 @@ public class AppOrderService {
             appOrder.setProducts(orders);
         }
         appOrderRepository.save(appOrder);
-        setDataForFB(splittedUrl, appOrder);
+        setDataForFB(splittedUrl, decoded, appOrder);
         decoded = decode(decoded, UTF_8.name());
         setBrowserData(decoded, appOrder);
         appOrder = appOrderRepository.save(appOrder);
@@ -119,7 +127,7 @@ public class AppOrderService {
         return decode(toDecode, UTF_8.name());
     }
 
-    public void setDataForFB(Map<String, List<String>> spllitedMap, AppOrder appOrder) {
+    private void setDataForFB(Map<String, List<String>> spllitedMap, String decodedInfo, AppOrder appOrder) {
         String cookies = getValue(spllitedMap.get("COOKIES"));
         if (!isEmpty(cookies)) {
             String[] splittedCookies = cookies.split(";");
@@ -137,10 +145,22 @@ public class AppOrderService {
             }
             appOrder.setFbc(fbc);
             appOrder.setFbp(fbp);
+            setFbcAndFbpFromWholeInfo(decodedInfo, appOrder);
         }
     }
 
-    public void setBrowserData(String decoded, AppOrder appOrder) {
+    private void setFbcAndFbpFromWholeInfo(String decodedInfo, AppOrder appOrder) {
+        if (isEmpty(appOrder.getFbc())) {
+            String fbc = substringBetween(decodedInfo, paramsService.getParam(fbcOpenTagParamName).getGetting(), paramsService.getParam(closeTagForFbcAndFbpParamName).getGetting());
+            appOrder.setFbc(fbc);
+        }
+        if (isEmpty(appOrder.getFbp())) {
+            String fbp = substringBetween(decodedInfo, paramsService.getParam(fbpOpenTagParamName).getGetting(), paramsService.getParam(closeTagForFbcAndFbpParamName).getGetting());
+            appOrder.setFbp(fbp);
+        }
+    }
+
+    private void setBrowserData(String decoded, AppOrder appOrder) {
         String userAgent = null;
         String landingPage = null;
         try {
@@ -216,7 +236,7 @@ public class AppOrderService {
         String value = idx > 0 && it.length() > idx + 1 ? it.substring(idx + 1) : null;
         assert value != null;
         simpleImmutableEntry = new SimpleImmutableEntry<>(
-                key!= null ? decode(key, UTF_8) : null,
+                key != null ? decode(key, UTF_8) : null,
                 value != null ? decode(value, UTF_8) : null
         );
         return simpleImmutableEntry;
