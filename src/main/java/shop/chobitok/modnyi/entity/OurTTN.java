@@ -27,6 +27,7 @@ public class OurTTN extends Audit {
     private CancelReason cancelReason;
     @Column
     private String comment;
+    private Double deliveryCost;
 
 
     public String getTtn() {
@@ -107,5 +108,13 @@ public class OurTTN extends Audit {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public Double getDeliveryCost() {
+        return deliveryCost;
+    }
+
+    public void setDeliveryCost(Double deliveryCost) {
+        this.deliveryCost = deliveryCost;
     }
 }

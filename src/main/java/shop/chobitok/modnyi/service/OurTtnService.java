@@ -5,10 +5,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.OurTTN;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.request.AddOurTtnRequest;
+import shop.chobitok.modnyi.entity.request.EditOurTtnRequest;
 import shop.chobitok.modnyi.entity.request.ImportOrdersFromStringRequest;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
@@ -16,7 +16,6 @@ import shop.chobitok.modnyi.mapper.OurTtnMapper;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
-import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.OurTtnRepository;
 
@@ -33,15 +32,13 @@ public class OurTtnService {
     private OrderService orderService;
     private CanceledOrderReasonService canceledOrderReasonService;
     private OurTtnRepository ourTtnRepository;
-    private NovaPostaService novaPostaService;
 
-    public OurTtnService(OurTtnMapper ourTtnMapper, NovaPostaRepository postaRepository, OrderService orderService, CanceledOrderReasonService canceledOrderReasonService, OurTtnRepository ourTtnRepository, NovaPostaService novaPostaService) {
+    public OurTtnService(OurTtnMapper ourTtnMapper, NovaPostaRepository postaRepository, OrderService orderService, CanceledOrderReasonService canceledOrderReasonService, OurTtnRepository ourTtnRepository) {
         this.ourTtnMapper = ourTtnMapper;
         this.postaRepository = postaRepository;
         this.orderService = orderService;
         this.canceledOrderReasonService = canceledOrderReasonService;
         this.ourTtnRepository = ourTtnRepository;
-        this.novaPostaService = novaPostaService;
     }
 
     public List<OurTTN> getAll(List<Status> statusesNotIn) {
@@ -50,15 +47,36 @@ public class OurTtnService {
 
     public StringResponse addNewTtn(AddOurTtnRequest request) {
         String result = checkIfExistOnImportWithReturnString(request.getTtn());
+        StringResponse stringResponse = new StringResponse();
         if (isEmpty(result)) {
             OurTTN ourTTN = ourTtnMapper.toOurTtn(postaRepository.getTracking(request.getNpAccountId(), request.getTtn()).getData().get(0), request.getNpAccountId());
             if (ourTTN == null || ourTTN.getStatus() == Status.НЕ_ЗНАЙДЕНО) {
+                stringResponse.setOk(false);
                 result = request.getTtn() + " " + "Не Знайдено";
-            }else{
+            } else {
+                ourTTN.setCargoDescription(request.getCargoDescription());
+                ourTTN.setCancelReason(request.getCancelReason());
+                ourTTN.setComment(request.getComment());
                 result = request.getTtn() + " " + "Добавлено";
+                ourTtnRepository.save(ourTTN);
             }
+        } else {
+            stringResponse.setOk(false);
         }
-        return new StringResponse(result);
+        stringResponse.setResult(result);
+        return stringResponse;
+    }
+
+    public StringResponse editOurTtn(EditOurTtnRequest request) {
+        OurTTN ourTTN = ourTtnRepository.findById(request.getOurTtnId()).orElse(null);
+        if (ourTTN != null) {
+            ourTTN.setComment(request.getComment());
+            ourTTN.setNpAccountId(request.getNpAccountId());
+            ourTTN.setCargoDescription(request.getCargoDescription());
+            ourTTN.setCancelReason(request.getCancelReason());
+            ourTtnRepository.save(ourTTN);
+        }
+        return new StringResponse("Редаговано");
     }
 
     public StringResponse receive(ImportOrdersFromStringRequest request) {
@@ -120,7 +138,7 @@ public class OurTtnService {
             pageObject = ourTtnRepository.findAll(pageable);
         } else {
             pageObject = ourTtnRepository.findAllByDeletedFalseAndStatusNotIn(
-                    Arrays.asList(Status.ОТРИМАНО, Status.ВІДМОВА, Status.ВИДАЛЕНО), pageable);
+                    Arrays.asList(Status.СТВОРЕНО, Status.ОТРИМАНО, Status.ВІДМОВА, Status.ВИДАЛЕНО), pageable);
         }
         return pageObject;
     }
@@ -130,11 +148,11 @@ public class OurTtnService {
         StringBuilder stringBuilder = new StringBuilder();
         String result = null;
         if (canceledOrderReasonService.getByReturnTtn(ttn) != null) {
-            stringBuilder.append("існує в поверненнях");
+            result = "існує в поверненнях";
         } else if (orderService.findByTTN(ttn) != null) {
-            stringBuilder.append("Існує в замовленнях");
+            result = "Існує в замовленнях";
         } else if (ourTtnRepository.findFirstByTtn(ttn) != null) {
-            stringBuilder.append("існує в наших ттн");
+            result = "існує в наших ттн";
         }
         if (result != null) {
             stringBuilder.append(ttn).append(" ").append(result);

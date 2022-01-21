@@ -1,9 +1,9 @@
 package shop.chobitok.modnyi.mapper;
 
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.OurTTN;
 import shop.chobitok.modnyi.novaposta.entity.Data;
-import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 
 import java.util.List;
@@ -23,11 +23,12 @@ public class OurTtnMapper {
         if (data != null) {
             ourTTN = new OurTTN();
             ourTTN.setReceiverPhone(data.getPhoneRecipient());
-            ourTTN.setSenderPhone("+" + data.getPhoneSender());
+            ourTTN.setSenderPhone(!StringUtils.isEmpty(data.getPhoneSender()) ? "+" + data.getPhoneSender() : null);
             ourTTN.setTtn(data.getNumber());
             ourTTN.setDatePayedKeeping(ShoeUtil.toLocalDateTime(data.getDatePayedKeeping()));
             ourTTN.setStatus(convertToStatus(data.getStatusCode()));
             ourTTN.setNpAccountId(npAccountId);
+            ourTTN.setDeliveryCost(Double.valueOf(data.getDocumentCost()));
         }
         return ourTTN;
     }

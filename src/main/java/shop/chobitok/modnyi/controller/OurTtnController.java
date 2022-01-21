@@ -3,6 +3,7 @@ package shop.chobitok.modnyi.controller;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.request.AddOurTtnRequest;
+import shop.chobitok.modnyi.entity.request.EditOurTtnRequest;
 import shop.chobitok.modnyi.entity.request.ImportOrdersFromStringRequest;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.service.OurTtnService;
@@ -20,8 +21,13 @@ public class OurTtnController {
     }
 
     @PostMapping("addOurTtn")
-    public StringResponse addOurTtn(AddOurTtnRequest request){
+    public StringResponse addOurTtn(@RequestBody AddOurTtnRequest request) {
         return ourTtnService.addNewTtn(request);
+    }
+
+    @PatchMapping("editOurTtn")
+    public StringResponse editOurTtn(@RequestBody EditOurTtnRequest request) {
+        return ourTtnService.editOurTtn(request);
     }
 
     @PostMapping

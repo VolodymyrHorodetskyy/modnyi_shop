@@ -8,6 +8,8 @@ public class StringResponse {
 
     private List<String> listResult;
 
+    private boolean isOk = true;
+
     public StringResponse() {
     }
 
@@ -39,5 +41,13 @@ public class StringResponse {
 
     public void setListResult(List<String> listResult) {
         this.listResult = listResult;
+    }
+
+    public boolean isOk() {
+        return isOk;
+    }
+
+    public void setOk(boolean ok) {
+        isOk = ok;
     }
 }

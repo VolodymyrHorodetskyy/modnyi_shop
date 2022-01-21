@@ -108,10 +108,8 @@ public class Ordered extends Audit {
 
     @Column
     private String addressChangeTtn;
-
     @Column
     private Double deliveryCost;
-
     @Column
     private Double storagePrice;
 
