@@ -23,6 +23,7 @@ import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.repository.*;
 import shop.chobitok.modnyi.service.*;
 import shop.chobitok.modnyi.specification.AppOrderSpecification;
+import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 
 import javax.transaction.Transactional;
@@ -31,6 +32,7 @@ import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.lang.System.out;
 import static java.net.URLDecoder.decode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.LocalDateTime.now;
@@ -317,7 +319,7 @@ public class NovaPostaTest {
         List<Ordered> orderedList = orderRepository.findAll();
         for (Ordered ordered : orderedList) {
             if (ordered.getPrice() == 0 || ordered.getPrice() == null) {
-                System.out.println(ordered.getTtn());
+                out.println(ordered.getTtn());
             }
         }
     }
@@ -402,7 +404,7 @@ public class NovaPostaTest {
                         .append("\n");
             }
         }
-        System.out.println(stringBuilder.toString());
+        out.println(stringBuilder.toString());
     }
 
     @Autowired
@@ -474,7 +476,7 @@ public class NovaPostaTest {
     @Test
     public void addNPAccount() {
         LocalDateTime localDateTime = LocalDateTime.of(2021, 3, 19, 0, 0);
-        System.out.println(statusChangeService.getAllFromDateAndNewStatus(localDateTime, Status.ВІДПРАВЛЕНО).size());
+        out.println(statusChangeService.getAllFromDateAndNewStatus(localDateTime, Status.ВІДПРАВЛЕНО).size());
     }
 
     @Autowired
@@ -484,7 +486,7 @@ public class NovaPostaTest {
     public void getAllPrintedButNotDelivered() {
         List<Marking> markings = markingRepository.findByOrderedStatusAndPrintedTrue(Status.СТВОРЕНО);
         for (Marking marking : markings) {
-            System.out.println(marking.getOrdered().getTtn());
+            out.println(marking.getOrdered().getTtn());
         }
     }
 
@@ -500,7 +502,7 @@ public class NovaPostaTest {
         for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
             if (canceledOrderReason.getReason() == CancelReason.БРАК ||
                     canceledOrderReason.getReason() == CancelReason.ПОМИЛКА) {
-                System.out.println(canceledOrderReason.getReason() + "\n"
+                out.println(canceledOrderReason.getReason() + "\n"
                         + canceledOrderReason.getComment() + "\n"
                         + canceledOrderReason.getReturnTtn()
                         + "\n");
@@ -535,7 +537,7 @@ public class NovaPostaTest {
                     statusChangeRecord.getOrdered().getId());
             if ((statusChangeRecordList == null || statusChangeRecordList.size() == 0)
                     && Duration.between(statusChangeRecord.getCreatedDate(), now()).toDays() > 4) {
-                System.out.println(statusChangeRecord.getOrdered().getTtn());
+                out.println(statusChangeRecord.getOrdered().getTtn());
             }
         }
     }
@@ -546,7 +548,7 @@ public class NovaPostaTest {
         System.out.println(clients.size());*/
         StringBuilder stringBuilder = new StringBuilder();
         OrderedSpecification specification = new OrderedSpecification();
-        specification.setFrom(LocalDateTime.now().minusDays(120));
+        specification.setFrom(now().minusDays(120));
         List<Ordered> orderedList = orderRepository.findAll();
         int withoutClientCount = 0;
         for (Ordered ordered : orderedList) {
@@ -564,8 +566,8 @@ public class NovaPostaTest {
                 ++withoutClientCount;
             }
         }
-        System.out.println("Without client = " + withoutClientCount);
-        System.out.println(stringBuilder.toString());
+        out.println("Without client = " + withoutClientCount);
+        out.println(stringBuilder.toString());
     }
 
     @Autowired
@@ -589,7 +591,7 @@ public class NovaPostaTest {
             if (reason.isManual() && reason.getOrdered().getStatus() != Status.ВІДМОВА) {
                 //  reason.getOrdered().setStatus(Status.ВІДМОВА);
                 // orderRepository.save(reason.getOrdered());
-                System.out.println(reason.getOrdered().getTtn());
+                out.println(reason.getOrdered().getTtn());
             }
         }
     }
@@ -623,7 +625,7 @@ public class NovaPostaTest {
                 }
             }
         }
-        System.out.println(stringBuilder);
+        out.println(stringBuilder);
     }
 
     @Autowired
@@ -631,14 +633,17 @@ public class NovaPostaTest {
 
     @Test
     public void addParams() {
-        paramsService.saveOrChangeParam("workingHoursWeekDayFrom", "10");
+       /* paramsService.saveOrChangeParam("workingHoursWeekDayFrom", "10");
         paramsService.saveOrChangeParam("workingHoursWeekDayTo", "18");
         paramsService.saveOrChangeParam("workingHoursSaturdayFrom", "10");
         paramsService.saveOrChangeParam("workingHoursSaturdayTo", "17");
         paramsService.saveOrChangeParam("workingHoursSundayFrom", "10");
         paramsService.saveOrChangeParam("workingHoursSundayTo", "16");
         paramsService.saveOrChangeParam("minutesAppOrderShouldBeProcessed", "12");
-        paramsService.saveOrChangeParam("firstShouldBeProcessedDateOnNow", "true");
+        paramsService.saveOrChangeParam("firstShouldBeProcessedDateOnNow", "true");*/
+        paramsService.saveOrChangeParam("fbpOpenTag", "_fbp=");
+        paramsService.saveOrChangeParam("fbcOpenTag", "_fbc=");
+        paramsService.saveOrChangeParam("closeTagForFbcAndFbp", ";");
     }
 
     @Autowired
@@ -723,8 +728,11 @@ public class NovaPostaTest {
 
     @Test
     public void addPixel() {
-        Pixel pixel = pixelRepository.findById(3l).orElse(null);
+        Pixel pixel = new Pixel();
+        pixel.setPixelId("347812123487901");
+        pixel.setPixelAccessToken("EABFBSoi1TTkBAHb7HnOrrOQQMjlnZAjyIOItUZBQzvVYjQF7900budwsxTAZATm5mwAsUv83KZCLZBmWpUwz8ePlG9AZClKZC10lQmKFdMgd8bNnxCJtRORXrNnpZCvAP7FoDpCjPOeebhkwFGFFuMcWfWxmvGPhxfftHuCo0xCiJmLyRgvi1Xez");
         pixel.setSendEvents(true);
+        pixel.setAccName("w2_a_1");
         pixelRepository.save(pixel);
     }
 
@@ -748,7 +756,7 @@ public class NovaPostaTest {
         //   Map<String, List<String>> splittedUrl = appOrderService.splitQuery(decoded);
         // appOrderService.setTtnDataForFB(splittedUrl, appOrder);
         appOrder.setInfo(decoded);
-        appOrderService.setBrowserData(decoded, appOrder);
+     //   appOrderService.setBrowserData(decoded, appOrder);
         appOrderRepository.save(appOrder);
     }
     //   }
@@ -773,8 +781,8 @@ public class NovaPostaTest {
                 System.out.println(appOrderToPixel.getAppOrder().getPixel().getAccName());
             }
         }*/
-        System.out.println("ldt " + LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
-        System.out.println("ctm " + System.currentTimeMillis());
+        out.println("ldt " + now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+        out.println("ctm " + System.currentTimeMillis());
     }
 
     @Autowired
@@ -783,7 +791,7 @@ public class NovaPostaTest {
     @Test
     public void checkOrders() {
         OrderedSpecification orderedSpecification = new OrderedSpecification();
-        orderedSpecification.setFrom(LocalDateTime.now().minusDays(100));
+        orderedSpecification.setFrom(now().minusDays(100));
         orderedSpecification.setNpAccountId(2l);
         List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
         List<Ordered> toUpdate = new ArrayList<>();
@@ -794,7 +802,7 @@ public class NovaPostaTest {
             Data data = dataList.stream().filter(data1 -> data1.getNumber().equals(ordered.getTtn())).findFirst().orElse(null);
             if (data != null) {
                 if (data.getRedeliverySum() != null && !data.getRedeliverySum().equals(ordered.getReturnSumNP())) {
-                    System.out.println(ordered.getTtn() + "\n sum from np = " + data.getRedeliverySum() +
+                    out.println(ordered.getTtn() + "\n sum from np = " + data.getRedeliverySum() +
                             "\n sum on ordered = " + ordered.getReturnSumNP() + "\n");
                 }
             }
@@ -815,15 +823,14 @@ public class NovaPostaTest {
     @Test
     public void sendTestEvent() {
         AppOrder appOrder = appOrderRepository.findById(24349l).orElse(null);
-        appOrder.setCreatedDate(LocalDateTime.now());
-        appOrder.setPixel(pixelRepository.findById(10l).orElse(null));
-        facebookApi2.send("TEST41560", appOrder);
+        appOrder.setCreatedDate(now());
+        appOrder.setPixel(pixelRepository.findById(14l).orElse(null));
+        facebookApi2.send("TEST50372", appOrder);
     }
 
     @Test
     public void addVariants() {
-        variantsRepository.save(new Variants("реклама фб", VariantType.CostsType, 0));
-        variantsRepository.save(new Variants("інші", VariantType.CostsType, 1));
+        variantsRepository.save(new Variants("телефонія", VariantType.CostsType, 6));
     }
 
     @Test
@@ -871,8 +878,8 @@ public class NovaPostaTest {
         integerShoeMap.put(40, 0);
         integerShoeMap.put(41, 0);
         OrderedSpecification orderedSpecification = new OrderedSpecification();
-        orderedSpecification.setFrom(makeDateBeginningOfDay(LocalDateTime.now().withDayOfMonth(1).withMonth(1)));
-        orderedSpecification.setTo(makeDateEndOfDay(LocalDateTime.now().withDayOfMonth(31).withMonth(1)));
+        orderedSpecification.setFrom(makeDateBeginningOfDay(now().withDayOfMonth(1).withMonth(1)));
+        orderedSpecification.setTo(makeDateEndOfDay(now().withDayOfMonth(31).withMonth(1)));
         List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
         for (Ordered ordered : orderedList) {
             for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
@@ -881,31 +888,58 @@ public class NovaPostaTest {
             }
         }
         for (Map.Entry<Integer, Integer> integerIntegerEntry : integerShoeMap.entrySet()) {
-            System.out.println(integerIntegerEntry.getKey() + " " + integerIntegerEntry.getValue());
+            out.println(integerIntegerEntry.getKey() + " " + integerIntegerEntry.getValue());
         }
     }
 
     @Test
+    @Transactional
     public void checkPayedKeepingOrders() {
-    /*    List<CanceledOrderReason> canceledOrderReasons = canceledOrderReasonRepository.findAll();
-        List<Ordered> orderedList = new ArrayList<>();
-        for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
-            Ordered ordered = canceledOrderReason.getOrdered();
-            ordered.setReturned(true);
-            orderedList.add(ordered);
+        OrderedSpecification orderedSpecification = new OrderedSpecification();
+        orderedSpecification.setStatuses(Arrays.asList(Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО));
+        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
+        for (Ordered ordered : orderedList) {
+            for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
+                if (orderedShoe.getShoe().getModel().contains("130")) {
+                    out.println(ordered.getTtn() + " " + ordered.getPostComment());
+                }
+            }
         }
-        orderRepository.saveAll(orderedList);*/
-    /*    Ordered ordered = orderRepository.findById(21803l).orElse(null);
-        ordered.setReturned(true);
-        orderRepository.saveAndFlush(ordered);*/
-       /* List<Ordered> arrivedAndDeniedOrders = orderRepository.findAllByStatusInAndDatePayedKeepingNPIsNotNull(
-                asList(ВІДМОВА, ДОСТАВЛЕНО));
-        for (Ordered ordered : arrivedAndDeniedOrders) {
-            ordered.setDatePayedKeepingNP(null);
-        }
-        orderRepository.saveAll(arrivedAndDeniedOrders);*/
-               checkerService.checkPayedKeepingOrders();
     }
 
+    @Test
+    public void getCanceledWithoutReturnTtn() {
+        CanceledOrderReasonSpecification specification = new CanceledOrderReasonSpecification();
+        //      specification.setManual(false);
+        specification.setFromLastModifiedDate(now().minusDays(5));
+        List<CanceledOrderReason> canceledOrderReasons = canceledOrderReasonRepository.findAll(specification);
+        for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
+            if (canceledOrderReason.getStatus() == Status.ОТРИМАНО) {
+                out.println(canceledOrderReason.getReason() + " " +
+                        canceledOrderReason.getOrdered().getPostComment());
+            }
+        }
+    }
 
+    @Test
+    public void t() {
+        OrderedSpecification orderedSpecification = new OrderedSpecification();
+        orderedSpecification.setFrom(LocalDateTime.now().minusYears(1).minusDays(3));
+        orderedSpecification.setTo(LocalDateTime.now().minusYears(1).plusDays(45));
+        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
+        int hutro = 0;
+        int bayka = 0;
+        for (Ordered ordered : orderedList) {
+            String postComment = ordered.getPostComment().toLowerCase();
+            if (postComment.contains("хут")
+            || postComment.contains("мех") || postComment.contains("мєх")) {
+                ++hutro;
+            } else {
+               // out.println(ordered.getPostComment());
+                ++bayka;
+            }
+        }
+        out.println("hutro = " + hutro);
+        out.println("bayka = " + bayka);
+    }
 }
