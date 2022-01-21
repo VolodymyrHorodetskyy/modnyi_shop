@@ -208,11 +208,15 @@ public class NPOrderMapper {
                 for (OrderedShoe orderedShoe : orderedShoeList) {
                     generalAmount += countDiscPercentage(shoePriceService.getActualShoePrice(orderedShoe.getShoe()).getPrice(), discount.getDiscountPercentage());
                 }
-                return roundDouble(generalAmount);
+                generalAmount = roundDouble(generalAmount);
+            } else if (discount.getShoeNumber() == 0) {
+                generalAmount = Double.valueOf(orderedShoeList.size()) * Double.valueOf(discount.getDiscountPercentage());
+
             }
-        }
-        for (OrderedShoe orderedShoe : orderedShoeList) {
-            generalAmount += shoePriceService.getActualShoePrice(orderedShoe.getShoe()).getPrice();
+        } else {
+            for (OrderedShoe orderedShoe : orderedShoeList) {
+                generalAmount += shoePriceService.getActualShoePrice(orderedShoe.getShoe()).getPrice();
+            }
         }
         return generalAmount;
     }
