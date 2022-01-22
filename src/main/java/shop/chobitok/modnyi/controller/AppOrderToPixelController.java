@@ -25,4 +25,9 @@ public class AppOrderToPixelController {
     public void sendAll(@RequestParam int tryingGreaterThan, @RequestParam String from) {
         appOrderToPixelService.sendAll(tryingGreaterThan, from);
     }
+
+    @PatchMapping("sendById")
+    public void sendById(@RequestParam Long appOrderToPixelId) {
+        appOrderToPixelService.sendById(appOrderToPixelId);
+    }
 }

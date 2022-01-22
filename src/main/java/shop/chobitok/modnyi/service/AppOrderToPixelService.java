@@ -61,19 +61,18 @@ public class AppOrderToPixelService {
         }
     }
 
+    public void sendById(Long appOrderId) {
+        AppOrderToPixel appOrderToPixel = appOrderToPixelRepository.findById(appOrderId).orElse(null);
+        send(appOrderToPixel);
+    }
+
     public void send(AppOrderToPixel appOrderToPixel) {
         makeTry(appOrderToPixel);
-        RestResponseDTO restResponseDTO = null;
-        try {
-            restResponseDTO = facebookApi2.send(appOrderToPixel.getAppOrder());
-
-            if (OK == restResponseDTO.getHttpStatus()) {
-                appOrderToPixel.setSent(true);
-                appOrderToPixelRepository.save(appOrderToPixel);
-            }
-            sendEventsHistoryService.sendEventsHistory(restResponseDTO, appOrderToPixel);
-        } catch (ResourceAccessException e) {
-            sendEventsHistoryService.sendEventsHistory(e.getMessage(), appOrderToPixel);
+        RestResponseDTO restResponseDTO = facebookApi2.send(appOrderToPixel.getAppOrder());
+        if (OK == restResponseDTO.getHttpStatus()) {
+            appOrderToPixel.setSent(true);
+            appOrderToPixelRepository.save(appOrderToPixel);
         }
+        sendEventsHistoryService.sendEventsHistory(restResponseDTO, appOrderToPixel);
     }
 }

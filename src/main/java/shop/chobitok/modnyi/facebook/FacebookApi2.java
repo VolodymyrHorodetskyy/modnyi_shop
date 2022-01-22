@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import shop.chobitok.modnyi.entity.AppOrder;
 import shop.chobitok.modnyi.entity.Pixel;
@@ -79,8 +80,8 @@ public class FacebookApi2 {
                     facebookEvent, Object.class);
             return new RestResponseDTO(url, body, responseEntity != null ? responseEntity.getStatusCode() : null
                     , responseEntity, null);
-        } catch (HttpClientErrorException e) {
-            return new RestResponseDTO(url, body, e.getStatusCode(),
+        } catch (HttpClientErrorException | ResourceAccessException e) {
+            return new RestResponseDTO(url, body, null,
                     null, e.getMessage());
         }
     }
