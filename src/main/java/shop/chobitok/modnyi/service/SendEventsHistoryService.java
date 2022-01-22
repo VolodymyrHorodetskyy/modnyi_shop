@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.service;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.AppOrderToPixel;
 import shop.chobitok.modnyi.entity.SendEventsHistory;
@@ -16,14 +17,24 @@ public class SendEventsHistoryService {
     }
 
     public SendEventsHistory sendEventsHistory(RestResponseDTO restResponseDTO, AppOrderToPixel appOrderToPixel) {
+        return sendEventsHistory(restResponseDTO.getBody(), restResponseDTO.getHttpStatus(),
+                restResponseDTO.getUrl(), restResponseDTO.getMessage(), appOrderToPixel);
+    }
+
+    public SendEventsHistory sendEventsHistory(String message, AppOrderToPixel appOrderToPixel) {
+        return sendEventsHistory(null, null, null, message, appOrderToPixel);
+    }
+
+    public SendEventsHistory sendEventsHistory(String body, HttpStatus httpStatus, String url,
+                                               String message, AppOrderToPixel appOrderToPixel) {
         SendEventsHistory sendEventsHistory = new SendEventsHistory();
-        sendEventsHistory.setBody(restResponseDTO.getBody());
-        if (restResponseDTO.getHttpStatus() != null) {
+        sendEventsHistory.setBody(body);
+        if (httpStatus != null) {
             sendEventsHistory.setHttpStatus(
-                    restResponseDTO.getHttpStatus().value());
+                    httpStatus.value());
         }
-        sendEventsHistory.setUrl(restResponseDTO.getUrl());
-        sendEventsHistory.setMessage(restResponseDTO.getMessage());
+        sendEventsHistory.setUrl(url);
+        sendEventsHistory.setMessage(message);
         sendEventsHistory.setAppOrderToPixel(appOrderToPixel);
         return sendEventsHistoryRepository.save(sendEventsHistory);
     }

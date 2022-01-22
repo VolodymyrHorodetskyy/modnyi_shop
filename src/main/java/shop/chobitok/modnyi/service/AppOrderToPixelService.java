@@ -1,12 +1,12 @@
 package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResourceAccessException;
 import shop.chobitok.modnyi.entity.AppOrder;
 import shop.chobitok.modnyi.entity.AppOrderToPixel;
 import shop.chobitok.modnyi.facebook.FacebookApi2;
 import shop.chobitok.modnyi.facebook.RestResponseDTO;
 import shop.chobitok.modnyi.repository.AppOrderToPixelRepository;
-import shop.chobitok.modnyi.util.DateHelper;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -63,11 +63,17 @@ public class AppOrderToPixelService {
 
     public void send(AppOrderToPixel appOrderToPixel) {
         makeTry(appOrderToPixel);
-        RestResponseDTO restResponseDTO = facebookApi2.send(appOrderToPixel.getAppOrder());
-        if (OK == restResponseDTO.getHttpStatus()) {
-            appOrderToPixel.setSent(true);
-            appOrderToPixelRepository.save(appOrderToPixel);
+        RestResponseDTO restResponseDTO = null;
+        try {
+            restResponseDTO = facebookApi2.send(appOrderToPixel.getAppOrder());
+
+            if (OK == restResponseDTO.getHttpStatus()) {
+                appOrderToPixel.setSent(true);
+                appOrderToPixelRepository.save(appOrderToPixel);
+            }
+            sendEventsHistoryService.sendEventsHistory(restResponseDTO, appOrderToPixel);
+        } catch (ResourceAccessException e) {
+            sendEventsHistoryService.sendEventsHistory(e.getMessage(), appOrderToPixel);
         }
-        sendEventsHistoryService.sendEventsHistory(restResponseDTO, appOrderToPixel);
     }
 }
