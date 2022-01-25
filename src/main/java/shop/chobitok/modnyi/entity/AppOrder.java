@@ -60,6 +60,8 @@ public class AppOrder extends Audit {
     private String lastNameForFb;
     private boolean dataValid;
 
+    private boolean dataParsed;
+
     public AppOrder() {
     }
 
@@ -290,5 +292,13 @@ public class AppOrder extends Audit {
 
     public void setNotDecodedInfo(String notDecodedInfo) {
         this.notDecodedInfo = notDecodedInfo;
+    }
+
+    public boolean isDataParsed() {
+        return dataParsed;
+    }
+
+    public void setDataParsed(boolean dataParsed) {
+        this.dataParsed = dataParsed;
     }
 }

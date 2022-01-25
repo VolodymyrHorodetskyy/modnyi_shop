@@ -77,12 +77,15 @@ public class AppOrderService {
         this.appOrderToPixelService = appOrderToPixelService;
     }
 
-    public AppOrder catchOrder(String s) throws UnsupportedEncodingException {
+    public AppOrder catchOrder(String s) {
         AppOrder appOrder = new AppOrder();
         appOrder.setStatus(AppOrderStatus.Новий);
         appOrder.setNotDecodedInfo(s);
-        appOrderRepository.save(appOrder);
-        String decoded = decodeUrl(s);
+        return appOrderRepository.save(appOrder);
+    }
+
+    private AppOrder parseData(AppOrder appOrder) throws UnsupportedEncodingException {
+        String decoded = decodeUrl(appOrder.getNotDecodedInfo());
         appOrder.setInfo(decoded);
         appOrderRepository.save(appOrder);
         Map<String, List<String>> splittedUrl = splitQuery(decoded);
@@ -108,9 +111,16 @@ public class AppOrderService {
         setDataForFB(splittedUrl, decoded, appOrder);
         decoded = decode(decoded, UTF_8.name());
         setBrowserData(decoded, appOrder);
-        appOrder = appOrderRepository.save(appOrder);
+        appOrder.setDataParsed(true);
+        return appOrderRepository.save(appOrder);
         // assignAppOrderToUserAndSetShouldBeProcessedTime(appOrder);
-        return appOrder;
+    }
+
+    public void parseDataForAllAppOrders() throws UnsupportedEncodingException {
+        List<AppOrder> appOrders = appOrderRepository.findByDataParsedFalse();
+        for (AppOrder appOrder : appOrders) {
+            parseData(appOrder);
+        }
     }
 
     private String getValue(List<String> values) {

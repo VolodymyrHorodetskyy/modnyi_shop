@@ -24,6 +24,7 @@ import java.util.*;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.springframework.util.StringUtils.isEmpty;
 import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
 import static shop.chobitok.modnyi.util.DateHelper.formDateTimeFromOrGetDefault;
 import static shop.chobitok.modnyi.util.DateHelper.formDateTimeToOrGetDefault;
@@ -241,7 +242,7 @@ public class StatisticService {
 
     public StringResponse getOrdersAndAppordersByPhone(Long id) {
         AppOrder appOrderFromDb = appOrderRepository.findById(id).orElse(null);
-        if (appOrderFromDb != null) {
+        if (appOrderFromDb != null && !isEmpty(appOrderFromDb.getPhone())) {
             StringBuilder result = new StringBuilder();
             if (appOrderFromDb.getPhone().contains("0")) {
                 String phone = appOrderFromDb.getPhone().substring(appOrderFromDb.getPhone().indexOf("0"));

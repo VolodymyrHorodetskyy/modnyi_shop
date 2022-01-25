@@ -4,6 +4,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.service.*;
 
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 
 @Service
@@ -14,13 +15,15 @@ public class CronJob {
     private CanceledOrderReasonService canceledOrderReasonService;
     private UserService userService;
     private AppOrderToPixelService appOrderToPixelService;
+    private AppOrderService appOrderService;
 
-    public CronJob(CheckerService checkerService, OrderService orderService, CanceledOrderReasonService canceledOrderReasonService, UserService userService, AppOrderToPixelService appOrderToPixelService) {
+    public CronJob(CheckerService checkerService, OrderService orderService, CanceledOrderReasonService canceledOrderReasonService, UserService userService, AppOrderToPixelService appOrderToPixelService, AppOrderService appOrderService) {
         this.checkerService = checkerService;
         this.orderService = orderService;
         this.canceledOrderReasonService = canceledOrderReasonService;
         this.userService = userService;
         this.appOrderToPixelService = appOrderToPixelService;
+        this.appOrderService = appOrderService;
     }
 
     @Scheduled(cron = "0 0 4 * * *")
@@ -56,4 +59,8 @@ public class CronJob {
         checkerService.updateMonthlyReceivingPercentage();
     }
 
+    @Scheduled(cron = "*/10 * * * * *")
+    public void every1Minute() throws UnsupportedEncodingException {
+        appOrderService.parseDataForAllAppOrders();
+    }
 }
