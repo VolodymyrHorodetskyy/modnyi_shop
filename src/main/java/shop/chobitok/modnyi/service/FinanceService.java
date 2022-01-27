@@ -79,7 +79,11 @@ public class FinanceService {
         for (Ordered ordered : ordereds) {
             for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
                 ShoePrice shoePrice = shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered);
-                margin += shoePrice.getPrice() - shoePrice.getCost();
+                if (shoePrice == null) {
+                    margin += 0d;
+                } else {
+                    margin += shoePrice.getPrice() - shoePrice.getCost();
+                }
             }
         }
         return margin;
