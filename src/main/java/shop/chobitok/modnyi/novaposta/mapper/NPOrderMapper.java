@@ -193,20 +193,30 @@ public class NPOrderMapper {
         Double generalAmount = 0d;
         if (discount != null) {
             ShoePrice cheapestPrice = shoePriceService.getActualShoePrice(orderedShoeList.get(0).getShoe());
+            if (cheapestPrice == null) {
+                return 0d;
+            }
             if (discount.getShoeNumber() <= orderedShoeList.size() && discount.getShoeNumber() > 1) {
                 for (OrderedShoe orderedShoe : orderedShoeList) {
-                    ShoePrice shoePrice = shoePriceService.getActualShoePrice(orderedShoe.getShoe());
-                    if (cheapestPrice.getPrice() > shoePrice.getPrice()) {
-                        cheapestPrice = shoePrice;
+                    ShoePrice actualShoePrice = shoePriceService.getActualShoePrice(orderedShoe.getShoe());
+                    if (actualShoePrice == null) {
+                        return 0d;
                     }
-                    generalAmount += shoePrice.getPrice();
+                    if (cheapestPrice.getPrice() > actualShoePrice.getPrice()) {
+                        cheapestPrice = actualShoePrice;
+                    }
+                    generalAmount += actualShoePrice.getPrice();
                 }
                 generalAmount = generalAmount - cheapestPrice.getPrice();
                 Double discountPrice = countDiscPercentage(cheapestPrice.getPrice(), discount.getDiscountPercentage());
                 return generalAmount + discountPrice;
             } else if (discount.getShoeNumber() == 1) {
                 for (OrderedShoe orderedShoe : orderedShoeList) {
-                    generalAmount += countDiscPercentage(shoePriceService.getActualShoePrice(orderedShoe.getShoe()).getPrice(), discount.getDiscountPercentage());
+                    ShoePrice actualShoePrice = shoePriceService.getActualShoePrice(orderedShoe.getShoe());
+                    if (actualShoePrice == null) {
+                        return 0d;
+                    }
+                    generalAmount += countDiscPercentage(actualShoePrice.getPrice(), discount.getDiscountPercentage());
                 }
                 generalAmount = roundDouble(generalAmount);
             } else if (discount.getShoeNumber() == 0) {
@@ -215,7 +225,11 @@ public class NPOrderMapper {
             }
         } else {
             for (OrderedShoe orderedShoe : orderedShoeList) {
-                generalAmount += shoePriceService.getActualShoePrice(orderedShoe.getShoe()).getPrice();
+                ShoePrice actualShoePrice = shoePriceService.getActualShoePrice(orderedShoe.getShoe());
+                if (actualShoePrice == null) {
+                    return 0d;
+                }
+                generalAmount += actualShoePrice.getPrice();
             }
         }
         return generalAmount;
