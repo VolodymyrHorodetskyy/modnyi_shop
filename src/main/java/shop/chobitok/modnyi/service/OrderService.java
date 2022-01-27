@@ -55,11 +55,12 @@ public class OrderService {
     private ImportService importService;
     private NpAccountService npAccountService;
     private NotificationService notificationService;
+    private ShoePriceService shoePriceService;
 
     @Value("${spring.datasource.username}")
     private String username;
 
-    public OrderService(OrderRepository orderRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, HistoryService historyService, ImportService importService, NpAccountService npAccountService, NotificationService notificationService) {
+    public OrderService(OrderRepository orderRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, HistoryService historyService, ImportService importService, NpAccountService npAccountService, NotificationService notificationService, ShoePriceService shoePriceService) {
         this.orderRepository = orderRepository;
         this.clientService = clientService;
         this.novaPostaService = novaPostaService;
@@ -76,6 +77,7 @@ public class OrderService {
         this.importService = importService;
         this.npAccountService = npAccountService;
         this.notificationService = notificationService;
+        this.shoePriceService = shoePriceService;
     }
 
     public Ordered findByTTN(String ttn) {
@@ -442,10 +444,13 @@ public class OrderService {
     public StringResponse makeAllPayed() {
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndPayedFalseAndStatusIn(singletonList(Status.ОТРИМАНО));
         StringBuilder stringBuilder = new StringBuilder();
+        StringBuilder responseStringBuilder = new StringBuilder();
         for (Ordered ordered : orderedList) {
-            if (ordered.getOrderedShoeList().size() > 0) {
+            String couldBePayedResponse = checkIfCouldBePayed(ordered);
+            if (isEmpty(couldBePayedResponse)) {
                 ordered.setPayed(true);
-                stringBuilder.append(ordered.getTtn()).append("\n");
+            } else {
+                responseStringBuilder.append(couldBePayedResponse).append("\n");
             }
         }
         payedOrderedService.makeAllCounted();
@@ -453,9 +458,23 @@ public class OrderService {
         if (stringBuilder.length() > 0) {
             historyService.addHistoryRecord(HistoryType.PAYMENT_FOR_SHOES, stringBuilder.toString());
         }
-        return new StringResponse("готово");
+        responseStringBuilder.append("готово");
+        return new StringResponse(responseStringBuilder.toString());
     }
 
+    private String checkIfCouldBePayed(Ordered ordered) {
+        if (ordered.getOrderedShoeList().size() < 1) {
+            return "немає взуття в замовленні";
+        } else {
+            for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
+                ShoePrice shoePrice = shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered);
+                if (shoePrice == null) {
+                    return ordered.getTtn() + " у взуття немає ціни";
+                }
+            }
+        }
+        return null;
+    }
 
     public void updateGoogleDocsDeliveryFile() {
         //     googleDocsService.updateDeliveryFile(countNeedDeliveryFromDB(false).getResult());

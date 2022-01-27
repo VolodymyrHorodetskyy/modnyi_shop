@@ -96,15 +96,23 @@ public class StatisticService {
             } else {
                 for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
                     NeedToBePayed needToBePayed = companySumMap.get(orderedShoe.getShoe().getCompany().getName());
-                    if (needToBePayed == null) {
-                        needToBePayed = new NeedToBePayed();
-                        needToBePayed.sum = shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered).getCost();
-                        needToBePayed.ttns = new ArrayList<>();
-                        needToBePayed.ttns.add(ordered.getTtn());
-                        companySumMap.put(orderedShoe.getShoe().getCompany().getName(), needToBePayed);
+                    ShoePrice shoePrice = shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered);
+                    if (shoePrice == null) {
+                        result.append(ordered.getTtn()).append(" ").append(orderedShoe.getShoe().getModel()).append(" ")
+                                .append(orderedShoe.getShoe().getColor()).append(" - немає ціни\n\n");
+                        break;
                     } else {
-                        needToBePayed.sum += shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered).getCost();
-                        needToBePayed.ttns.add(ordered.getTtn());
+                        Double shoeCost = shoePrice.getCost();
+                        if (needToBePayed == null) {
+                            needToBePayed = new NeedToBePayed();
+                            needToBePayed.sum = shoeCost;
+                            needToBePayed.ttns = new ArrayList<>();
+                            needToBePayed.ttns.add(ordered.getTtn());
+                            companySumMap.put(orderedShoe.getShoe().getCompany().getName(), needToBePayed);
+                        } else {
+                            needToBePayed.sum += shoeCost;
+                            needToBePayed.ttns.add(ordered.getTtn());
+                        }
                     }
                 }
             }
