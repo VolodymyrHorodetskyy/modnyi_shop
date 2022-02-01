@@ -17,6 +17,7 @@ import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
+import shop.chobitok.modnyi.service.entity.OurTtnResp;
 import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 
@@ -44,8 +45,9 @@ public class CanceledOrderReasonService {
     private GoogleDocsService googleDocsService;
     private PayedOrderedService payedOrderedService;
     private ImportService importService;
+    private OurTtnService ourTtnService;
 
-    public CanceledOrderReasonService(OrderRepository orderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, NovaPostaRepository postaRepository, MailService mailService, StatusChangeService statusChangeService, ShoePriceService shoePriceService, GoogleDocsService googleDocsService, PayedOrderedService payedOrderedService, ImportService importService) {
+    public CanceledOrderReasonService(OrderRepository orderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, NovaPostaRepository postaRepository, MailService mailService, StatusChangeService statusChangeService, ShoePriceService shoePriceService, GoogleDocsService googleDocsService, PayedOrderedService payedOrderedService, ImportService importService, OurTtnService ourTtnService) {
         this.orderRepository = orderRepository;
         this.canceledOrderReasonRepository = canceledOrderReasonRepository;
         this.postaRepository = postaRepository;
@@ -55,6 +57,7 @@ public class CanceledOrderReasonService {
         this.googleDocsService = googleDocsService;
         this.payedOrderedService = payedOrderedService;
         this.importService = importService;
+        this.ourTtnService = ourTtnService;
     }
 
     public CanceledOrderReason getCanceledOrderReasonByOrderedId(Long id) {
@@ -211,6 +214,7 @@ public class CanceledOrderReasonService {
 
     public StringResponse getReturned(boolean excludeFromDeliveryFile, boolean showOnlyImportant,
                                       boolean showClientTtn, boolean showOnlyDelivered, String dateFrom) {
+        OurTtnResp ourTtnResp = ourTtnService.formOurTtnResp();
         List<Ordered> toSave = new ArrayList<>();
         StringBuilder result = new StringBuilder();
         List<CanceledOrderReason> canceledOrderReasons;
@@ -254,9 +258,13 @@ public class CanceledOrderReasonService {
                 ++countArrived;
             }
         }
+        result.append(ourTtnResp.getAll());
         //  String coincidencesString = getCoincidences(createdList, toFind, used, excludeFromDeliveryFile, toSave);
-        result.append(getPayedKeeping(canceledOrderReasons.stream().filter(canceledOrderReason -> canceledOrderReason.getDatePayedKeeping() != null).collect(Collectors.toList())));
-        result.append(getPayAttention(showOnlyImportant, showClientTtn, used));
+        result.append(
+                getPayedKeeping(canceledOrderReasons.stream().filter(canceledOrderReason -> canceledOrderReason.getDatePayedKeeping() != null).collect(Collectors.toList())))
+                .append(ourTtnResp.getPayedKeeping());
+        result.append(getPayAttention(showOnlyImportant, showClientTtn, used))
+                .append(ourTtnResp.getNeedAttention());
         //    result.append(coincidencesString);
 
         result.append("Кількість доставлених: ").append(countArrived).append("\n\n");
@@ -370,7 +378,6 @@ public class CanceledOrderReasonService {
                     .append(canceledOrderReason.getReturnTtn()).append(" ").append(canceledOrderReason.getStatus()).append("\n")
                     .append(canceledOrderReason.getReason()).append(" ").append(isEmpty(canceledOrderReason.getComment()) ? "" : canceledOrderReason.getComment())
                     .append("\n\n");
-
         }
         return result.toString();
     }

@@ -22,4 +22,5 @@ public interface OurTtnRepository extends JpaRepository<OurTTN, Long> {
 
     List<OurTTN> findAllByStatusNotIn(List<Status> statuses);
 
+    List<OurTTN> findAllByStatusIn(List<Status> statuses);
 }

@@ -5,6 +5,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import shop.chobitok.modnyi.entity.CancelReason;
 import shop.chobitok.modnyi.entity.OurTTN;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.request.AddOurTtnRequest;
@@ -17,10 +18,16 @@ import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
+import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
+import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.OurTtnRepository;
+import shop.chobitok.modnyi.service.entity.OurTtnResp;
 
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import static java.time.LocalDateTime.now;
+import static java.util.Arrays.asList;
 import static org.springframework.util.StringUtils.isEmpty;
 import static shop.chobitok.modnyi.util.StringHelper.splitTTNString;
 
@@ -29,15 +36,15 @@ public class OurTtnService {
 
     private OurTtnMapper ourTtnMapper;
     private NovaPostaRepository postaRepository;
-    private OrderService orderService;
-    private CanceledOrderReasonService canceledOrderReasonService;
+    private OrderRepository orderRepository;
+    private CanceledOrderReasonRepository canceledOrderReasonRepository;
     private OurTtnRepository ourTtnRepository;
 
-    public OurTtnService(OurTtnMapper ourTtnMapper, NovaPostaRepository postaRepository, OrderService orderService, CanceledOrderReasonService canceledOrderReasonService, OurTtnRepository ourTtnRepository) {
+    public OurTtnService(OurTtnMapper ourTtnMapper, NovaPostaRepository postaRepository, OrderRepository orderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, OurTtnRepository ourTtnRepository) {
         this.ourTtnMapper = ourTtnMapper;
         this.postaRepository = postaRepository;
-        this.orderService = orderService;
-        this.canceledOrderReasonService = canceledOrderReasonService;
+        this.orderRepository = orderRepository;
+        this.canceledOrderReasonRepository = canceledOrderReasonRepository;
         this.ourTtnRepository = ourTtnRepository;
     }
 
@@ -138,7 +145,7 @@ public class OurTtnService {
             pageObject = ourTtnRepository.findAll(pageable);
         } else {
             pageObject = ourTtnRepository.findAllByDeletedFalseAndStatusNotIn(
-                    Arrays.asList(Status.СТВОРЕНО, Status.ОТРИМАНО, Status.ВІДМОВА, Status.ВИДАЛЕНО), pageable);
+                    asList(Status.СТВОРЕНО, Status.ОТРИМАНО, Status.ВІДМОВА, Status.ВИДАЛЕНО, Status.НЕ_ЗНАЙДЕНО), pageable);
         }
         return pageObject;
     }
@@ -147,27 +154,60 @@ public class OurTtnService {
     public String checkIfExistOnImportWithReturnString(String ttn) {
         StringBuilder stringBuilder = new StringBuilder();
         String result = null;
-        if (canceledOrderReasonService.getByReturnTtn(ttn) != null) {
+        if (canceledOrderReasonRepository.findFirstByReturnTtn(ttn) != null) {
             result = "існує в поверненнях";
-        } else if (orderService.findByTTN(ttn) != null) {
+        } else if (orderRepository.findOneByAvailableTrueAndTtn(ttn) != null) {
             result = "Існує в замовленнях";
         } else if (ourTtnRepository.findFirstByTtn(ttn) != null) {
             result = "існує в наших ттн";
         }
         if (result != null) {
-            stringBuilder.append(ttn).append(" ").append(result);
+            stringBuilder.append(ttn).append(" ").append(result).append("\n");
         }
         return stringBuilder.toString();
     }
 
     public boolean checkIfExist(String ttn) {
         boolean result = false;
-        if (canceledOrderReasonService.getByReturnTtn(ttn) != null) {
+        if (canceledOrderReasonRepository.findFirstByReturnTtn(ttn) != null) {
             result = true;
-        } else if (orderService.findByTTN(ttn) != null) {
+        } else if (orderRepository.findOneByAvailableTrueAndTtn(ttn) != null) {
             result = true;
         }
         return result;
     }
 
+    public OurTtnResp formOurTtnResp() {
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("d.MM");
+        List<OurTTN> ourTTNS = ourTtnRepository.findAllByStatusIn(asList(Status.ВІДПРАВЛЕНО, Status.ДОСТАВЛЕНО));
+        StringBuilder allOurTtnsStringBuilder = new StringBuilder();
+        StringBuilder payedKeepingStringBuilder = new StringBuilder();
+        StringBuilder needAttentionStringBuilder = new StringBuilder();
+        for (OurTTN ourTTN : ourTTNS) {
+            allOurTtnsStringBuilder.append(ourTTN.getTtn()).append(" ").append(ourTTN.getStatus()).append("\n")
+                    .append(ourTTN.getCancelReason()).append(" ").append(ourTTN.getComment()).append("\n")
+                    .append(ourTTN.getCargoDescription()).append("\n\n");
+            if (ourTTN.getDatePayedKeeping() != null &&
+                    now().plusDays(2).isAfter(ourTTN.getDatePayedKeeping())) {
+                payedKeepingStringBuilder.append(ourTTN.getComment()).append("\n").
+                        append(ourTTN.getTtn()).append("\n")
+                        .append(ourTTN.getStatus()).append(" ").append(ourTTN.getCancelReason())
+                        .append(" ").append(isEmpty(ourTTN.getComment()) ? "" : ourTTN.getComment())
+                        .append("\n")
+                        .append(ourTTN.getDatePayedKeeping().format(timeFormatter))
+                        .append("\n\n");
+            }
+            if (ourTTN.getCancelReason() == CancelReason.БРАК
+                    || ourTTN.getCancelReason() == CancelReason.ПОМИЛКА) {
+                needAttentionStringBuilder
+                        .append(ourTTN.getTtn()).append(" ").append(ourTTN.getStatus()).append("\n")
+                        .append(ourTTN.getCancelReason()).append(" ")
+                        .append(isEmpty(ourTTN.getComment()) ? "" : ourTTN.getComment())
+                        .append("\n\n");
+            }
+        }
+        return new OurTtnResp(allOurTtnsStringBuilder.toString(),
+                payedKeepingStringBuilder.toString(),
+                needAttentionStringBuilder.toString());
+    }
 }

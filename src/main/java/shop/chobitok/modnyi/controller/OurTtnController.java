@@ -31,7 +31,7 @@ public class OurTtnController {
     }
 
     @PostMapping
-    public StringResponse getOurTTNS(@RequestBody ImportOrdersFromStringRequest request) {
+    public StringResponse importOurTTNS(@RequestBody ImportOrdersFromStringRequest request) {
         return ourTtnService.receive(request);
     }
 
