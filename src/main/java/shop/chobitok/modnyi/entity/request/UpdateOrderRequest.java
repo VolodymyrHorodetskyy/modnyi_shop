@@ -25,6 +25,7 @@ public class UpdateOrderRequest {
     private String postComment;
     private Boolean urgent;
     private Long discountId;
+    private boolean allCorrect;
 
     public String getName() {
         return name;
@@ -160,5 +161,13 @@ public class UpdateOrderRequest {
 
     public void setDiscountId(Long discountId) {
         this.discountId = discountId;
+    }
+
+    public boolean isAllCorrect() {
+        return allCorrect;
+    }
+
+    public void setAllCorrect(boolean allCorrect) {
+        this.allCorrect = allCorrect;
     }
 }

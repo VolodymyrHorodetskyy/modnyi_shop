@@ -146,6 +146,7 @@ public class OrderService {
         clientService.updateOrCreateClient(ordered.getClient(), updateOrderRequest);
         ordered.setPrePayment(updateOrderRequest.getPrepayment());
         ordered.setPrice(updateOrderRequest.getPrice());
+        ordered.setAllCorrect(updateOrderRequest.isAllCorrect());
         if (ordered.isWithoutTTN()) {
             ordered.setStatus(updateOrderRequest.getStatus());
         }

@@ -391,6 +391,7 @@ public class StatisticService {
         orderedSpecification.setFrom(fromDate.minusDays(7));
         orderedSpecification.setTo(toDate);
         orderedSpecification.setStatusNotIn(Collections.singletonList(Status.ВИДАЛЕНО));
+        orderedSpecification.setAllCorrect(false);
         StringBuilder response = new StringBuilder();
         response.append(fromDate).append(" - ")
                 .append(to == null ? "зараз" : to).append("\n\n");

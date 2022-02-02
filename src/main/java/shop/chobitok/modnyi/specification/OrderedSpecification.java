@@ -28,6 +28,7 @@ public class OrderedSpecification implements Specification<Ordered> {
     private List<Status> statuses;
     private List<Status> statusNotIn;
     private Long npAccountId;
+    private Boolean allCorrect;
 
     public OrderedSpecification() {
     }
@@ -162,6 +163,15 @@ public class OrderedSpecification implements Specification<Ordered> {
             }
             predicateList.add(criteriaBuilder.or(statusNotInPredicates.toArray(Predicate[]::new)));
         }
+        if (allCorrect != null) {
+            Predicate allCorrectPredicate;
+            if (allCorrect) {
+                allCorrectPredicate = criteriaBuilder.isTrue(root.get("allCorrect"));
+            } else {
+                allCorrectPredicate = criteriaBuilder.isFalse(root.get("allCorrect"));
+            }
+            predicateList.add(allCorrectPredicate);
+        }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }
 
@@ -295,5 +305,17 @@ public class OrderedSpecification implements Specification<Ordered> {
 
     public void setStatusNotIn(List<Status> statusNotIn) {
         this.statusNotIn = statusNotIn;
+    }
+
+    public List<Status> getStatusNotIn() {
+        return statusNotIn;
+    }
+
+    public Boolean getAllCorrect() {
+        return allCorrect;
+    }
+
+    public void setAllCorrect(Boolean allCorrect) {
+        this.allCorrect = allCorrect;
     }
 }
