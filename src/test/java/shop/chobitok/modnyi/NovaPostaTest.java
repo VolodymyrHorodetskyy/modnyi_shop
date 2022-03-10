@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.*;
@@ -36,11 +38,13 @@ import static java.lang.System.out;
 import static java.net.URLDecoder.decode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.LocalDateTime.now;
+import static java.util.Arrays.asList;
 import static shop.chobitok.modnyi.util.DateHelper.makeDateBeginningOfDay;
 import static shop.chobitok.modnyi.util.DateHelper.makeDateEndOfDay;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@ActiveProfiles("dev")
 public class NovaPostaTest {
 
     @Autowired
@@ -336,7 +340,7 @@ public class NovaPostaTest {
 
     @Test
     public void tt() {
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndWithoutTTNFalseAndStatusIn(Arrays.asList(Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО));
+        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndWithoutTTNFalseAndStatusIn(asList(Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО));
         for (Ordered ordered : orderedList) {
             ordered.setNpAccountId(2l);
             orderRepository.save(ordered);
@@ -393,7 +397,7 @@ public class NovaPostaTest {
 
     @Test
     public void getToRecreate() {
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndWithoutTTNFalseAndStatusIn(Arrays.asList(Status.СТВОРЕНО));
+        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndWithoutTTNFalseAndStatusIn(asList(Status.СТВОРЕНО));
         StringBuilder stringBuilder = new StringBuilder();
         for (Ordered ordered : orderedList) {
             if (ordered.getUser().getId() == 2l) {
@@ -434,7 +438,7 @@ public class NovaPostaTest {
         localDateTime = localDateTime.withMinute(0);
         localDateTime = localDateTime.withHour(0);
         localDateTime = localDateTime.withSecond(0);
-        List<AppOrder> appOrders = appOrderRepository.findByCreatedDateLessThanAndStatusIn(localDateTime, Arrays.asList(AppOrderStatus.В_обробці, AppOrderStatus.Не_Відповідає, AppOrderStatus.Чекаємо_оплату));
+        List<AppOrder> appOrders = appOrderRepository.findByCreatedDateLessThanAndStatusIn(localDateTime, asList(AppOrderStatus.В_обробці, AppOrderStatus.Не_Відповідає, AppOrderStatus.Чекаємо_оплату));
         for (AppOrder appOrder : appOrders) {
             appOrder.setStatus(AppOrderStatus.Новий);
         }
@@ -492,7 +496,7 @@ public class NovaPostaTest {
 
     @Test
     public void getAdressChangedOrders() {
-        orderRepository.findAllByStatusInAndCreatedDateGreaterThan(Arrays.asList(Status.ЗМІНА_АДРЕСУ), now().minusDays(50));
+        orderRepository.findAllByStatusInAndCreatedDateGreaterThan(asList(Status.ЗМІНА_АДРЕСУ), now().minusDays(50));
     }
 
     @Test
@@ -533,7 +537,7 @@ public class NovaPostaTest {
 
         List<StatusChangeRecord> statusChangeRecords = statusChangeRepository.findAllByCreatedDateGreaterThanEqualAndNewStatus(now().minusDays(30), Status.ВІДПРАВЛЕНО);
         for (StatusChangeRecord statusChangeRecord : statusChangeRecords) {
-            List<StatusChangeRecord> statusChangeRecordList = statusChangeRepository.findOneByNewStatusInAndOrderedId(Arrays.asList(Status.ДОСТАВЛЕНО, Status.ОТРИМАНО, Status.ВІДМОВА),
+            List<StatusChangeRecord> statusChangeRecordList = statusChangeRepository.findOneByNewStatusInAndOrderedId(asList(Status.ДОСТАВЛЕНО, Status.ОТРИМАНО, Status.ВІДМОВА),
                     statusChangeRecord.getOrdered().getId());
             if ((statusChangeRecordList == null || statusChangeRecordList.size() == 0)
                     && Duration.between(statusChangeRecord.getCreatedDate(), now()).toDays() > 4) {
@@ -692,7 +696,7 @@ public class NovaPostaTest {
     public void appOrderTest() throws UnsupportedEncodingException {
         String s = "name=Володимир&phone=0637638967&paymentsystem=cash&payment={\"orderid\":\"1682210314\",\"products\":[\"Ботинки Челси Milana кожа лаковая (208 лак, Размер: 36, Внутри: Байка)=1699\"],\"amount\":\"1699\"}&COOKIES=_fbp=fb.1.1630946970781.281861911; _ga=GA1.2.1071984855.1630946972; _gcl_au=1.1.1071273065.1634718711; _fbc=fb.1.1635431217940.IwAR3Ee60DgwDJZal6A3E3LDyHK2ryNNQqaktFfodboctLgNI4DDsY1Z88G9o; tildauid=1635608913319.913695; _gid=GA1.2.191167613.1635608913; TILDAUTM=utm_term%3D12345%7C%7C%7C; tildasid=1635933524682.871298; previousUrl=chobitok.co%2F; _gat_gtag_UA_196612521_1=1; biatv-cookie={%22firstVisitAt%22:1630946970%2C%22visitsCount%22:55%2C%22campaignCount%22:9%2C%22currentVisitStartedAt%22:1635933522%2C%22currentVisitLandingPage%22:%22https://chobitok.co/%22%2C%22currentVisitOpenPages%22:3%2C%22location%22:%22https://chobitok.co/%22%2C%22userAgent%22:%22Mozilla/5.0%20(Windows%20NT%2010.0%3B%20Win64%3B%20x64)%20AppleWebKit/537.36%20(KHTML%2C%20like%20Gecko)%20Chrome/95.0.4638.54%20Safari/537.36%22%2C%22language%22:%22en-us%22%2C%22encoding%22:%22utf-8%22%2C%22screenResolution%22:%221536x864%22%2C%22currentVisitUpdatedAt%22:1635933837%2C%22utmDataCurrent%22:{%22utm_source%22:%22l.facebook.com%22%2C%22utm_medium%22:%22referral%22%2C%22utm_campaign%22:%22(referral)%22%2C%22utm_content%22:%22/%22%2C%22utm_term%22:%22(not%20set)%22%2C%22beginning_at%22:1635431217}%2C%22campaignTime%22:1635431217%2C%22utmDataFirst%22:{%22utm_source%22:%22(direct)%22%2C%22utm_medium%22:%22(none)%22%2C%22utm_campaign%22:%22(direct)%22%2C%22utm_content%22:%22(not%20set)%22%2C%22utm_term%22:%22(not%20set)%22%2C%22beginning_at%22:1630946970}%2C%22geoipData%22:{%22country%22:%22Ukraine%22%2C%22region%22:%22L'vivs'ka%20Oblast'%22%2C%22city%22:%22Lviv%22%2C%22org%22:%22Kyivstar%20PJSC%22}}; bingc-activity-data={%22numberOfImpressions%22:0%2C%22activeFormSinceLastDisplayed%22:21%2C%22pageviews%22:3%2C%22callWasMade%22:0%2C%22updatedAt%22:1635933850}&formid=form313256838&formname=Cart&utm_term=12345";
         appOrderService.splitQuery(s).get("COOKIES").get(0);
-        Arrays.asList(appOrderService.splitQuery(s).get("COOKIES").get(0).split(";")).contains("chobitok.co");
+        asList(appOrderService.splitQuery(s).get("COOKIES").get(0).split(";")).contains("chobitok.co");
 
         //  facebookApi.sendEvent();
     }
@@ -896,7 +900,7 @@ public class NovaPostaTest {
     @Transactional
     public void checkPayedKeepingOrders() {
         OrderedSpecification orderedSpecification = new OrderedSpecification();
-        orderedSpecification.setStatuses(Arrays.asList(Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО));
+        orderedSpecification.setStatuses(asList(Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО));
         List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
         for (Ordered ordered : orderedList) {
             for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
@@ -941,5 +945,29 @@ public class NovaPostaTest {
         }
         out.println("hutro = " + hutro);
         out.println("bayka = " + bayka);
+    }
+
+    @Test
+    public void getSentAndDelivered(){
+        OrderedSpecification orderedSpecification = new OrderedSpecification();
+        orderedSpecification.setStatuses(asList(Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО));
+        List<Ordered>orderedList = orderRepository.findAll(orderedSpecification);
+        for (Ordered ordered: orderedList){
+            out.println(ordered.getTtn() + " "+ ordered.getStatus());
+        }
+    }
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Test
+    public void addRoles(){
+        User user = userRepository.findById(1l).orElse(null);
+     //   user.setRoles(asList(Role.ADMIN));
+        user.setPassword(passwordEncoder.encode("123456"));
+        userRepository.save(user);
     }
 }

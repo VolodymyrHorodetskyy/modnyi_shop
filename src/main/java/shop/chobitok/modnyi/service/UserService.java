@@ -16,9 +16,9 @@ import static shop.chobitok.modnyi.util.DateHelper.makeDateEndOfDay;
 @Service
 public class UserService {
 
-    private UserRepository userRepository;
-    private UserLoggedInRepository userLoggedInRepository;
-    private AppOrderService appOrderService;
+    private final UserRepository userRepository;
+    private final UserLoggedInRepository userLoggedInRepository;
+    private final AppOrderService appOrderService;
 
     public UserService(UserRepository userRepository, UserLoggedInRepository userLoggedInRepository, AppOrderService appOrderService) {
         this.userRepository = userRepository;
@@ -26,12 +26,16 @@ public class UserService {
         this.appOrderService = appOrderService;
     }
 
+    public User getUserByName(String name) {
+        return userRepository.findFirstByName(name);
+    }
+
     public List<User> getAll() {
         return userRepository.findAll();
     }
 
     public UserLoggedIn logIn(LogInRequest request) {
-        User user = userRepository.findOneByNameAndPassword(request.getName(), request.getPassword());
+        User user = userRepository.findOneByNameAndPassword(request.getUsername(), request.getPassword());
         LocalDateTime beginningOfDay = makeDateBeginningOfDay(LocalDateTime.now());
         LocalDateTime endOfDay = makeDateEndOfDay(LocalDateTime.now());
         UserLoggedIn userLoggedIn = null;

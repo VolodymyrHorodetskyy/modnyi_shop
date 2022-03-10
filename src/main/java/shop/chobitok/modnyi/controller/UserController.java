@@ -1,11 +1,21 @@
 package shop.chobitok.modnyi.controller;
 
 
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.User;
 import shop.chobitok.modnyi.entity.UserLoggedIn;
+import shop.chobitok.modnyi.entity.request.JwtRequest;
 import shop.chobitok.modnyi.entity.request.LogInRequest;
+import shop.chobitok.modnyi.entity.response.JwtResponse;
 import shop.chobitok.modnyi.entity.response.StringResponse;
+import shop.chobitok.modnyi.security.JwtTokenUtil;
+import shop.chobitok.modnyi.security.JwtUserDetailsService;
 import shop.chobitok.modnyi.service.CheckerService;
 import shop.chobitok.modnyi.service.StatisticService;
 import shop.chobitok.modnyi.service.UserEfficiencyService;
@@ -18,19 +28,26 @@ import java.util.List;
 @RequestMapping("/user")
 public class UserController {
 
-    private UserService userService;
-    private UserEfficiencyService userEfficiencyService;
-    private CheckerService checkerService;
-    private StatisticService statisticService;
+    private final UserService userService;
+    private final UserEfficiencyService userEfficiencyService;
+    private final CheckerService checkerService;
+    private final StatisticService statisticService;
+    private final JwtUserDetailsService jwtUserDetailsService;
+    private final JwtTokenUtil jwtTokenUtil;
+    private final AuthenticationManager authenticationManager;
 
-    public UserController(UserService userService, UserEfficiencyService userEfficiencyService, CheckerService checkerService, StatisticService statisticService) {
+    public UserController(UserService userService, UserEfficiencyService userEfficiencyService, CheckerService checkerService, StatisticService statisticService, JwtUserDetailsService jwtUserDetailsService, JwtTokenUtil jwtTokenUtil, AuthenticationManager authenticationManager) {
         this.userService = userService;
         this.userEfficiencyService = userEfficiencyService;
         this.checkerService = checkerService;
         this.statisticService = statisticService;
+        this.jwtUserDetailsService = jwtUserDetailsService;
+        this.jwtTokenUtil = jwtTokenUtil;
+        this.authenticationManager = authenticationManager;
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public List<User> getUsers() {
         return userService.getAll();
     }
@@ -66,10 +83,32 @@ public class UserController {
     public StringResponse checkAppOrdersBecameOrders(@RequestParam(required = false) String from,
                                                      @RequestParam(required = false) String to,
                                                      @RequestParam(required = false) Long userId) {
-        if (userId == 1l) {
+        if (userId == 1L) {
             return checkerService.checkAppOrdersBecameOrdersForAllUsers(from, to);
         } else {
             return checkerService.checkAppOrdersBecameOrders(userId, from, to);
+        }
+    }
+
+    @PostMapping(value = "/authenticate")
+    public JwtResponse createAuthenticationToken(@RequestBody JwtRequest authenticationRequest) throws Exception {
+
+        authenticate(authenticationRequest.getUsername(), authenticationRequest.getPassword());
+
+        final UserDetails userDetails = jwtUserDetailsService.loadUserByUsername(authenticationRequest.getUsername());
+
+        final String token = jwtTokenUtil.generateToken(userDetails);
+
+        return new JwtResponse(token);
+    }
+
+    private void authenticate(String username, String password) throws Exception {
+        try {
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+        } catch (DisabledException e) {
+            throw new Exception("USER_DISABLED", e);
+        } catch (BadCredentialsException e) {
+            throw new Exception("INVALID_CREDENTIALS", e);
         }
     }
 }

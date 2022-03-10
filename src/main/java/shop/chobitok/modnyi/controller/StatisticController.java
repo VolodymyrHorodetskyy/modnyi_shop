@@ -1,6 +1,7 @@
 package shop.chobitok.modnyi.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.response.AmountsInfoResponse;
@@ -18,11 +19,12 @@ import java.util.List;
 @RestController
 @CrossOrigin
 @RequestMapping("/statistic")
+@PreAuthorize("hasAuthority('ADMIN')")
 public class StatisticController {
 
-    private StatisticService statisticService;
-    private OrderService orderService;
-    private CanceledOrderReasonService canceledOrderReasonService;
+    private final StatisticService statisticService;
+    private final OrderService orderService;
+    private final CanceledOrderReasonService canceledOrderReasonService;
 
     public StatisticController(StatisticService statisticService, OrderService orderService, CanceledOrderReasonService canceledOrderReasonService) {
         this.statisticService = statisticService;

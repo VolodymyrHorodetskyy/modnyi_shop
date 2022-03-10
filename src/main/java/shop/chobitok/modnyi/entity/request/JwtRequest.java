@@ -1,6 +1,6 @@
 package shop.chobitok.modnyi.entity.request;
 
-public class LogInRequest {
+public class JwtRequest {
 
     private String username;
     private String password;
