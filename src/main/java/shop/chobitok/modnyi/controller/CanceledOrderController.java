@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.AppOrderCancellationReason;
 import shop.chobitok.modnyi.entity.CanceledOrderReason;
@@ -17,9 +18,10 @@ import static java.util.Arrays.asList;
 @RestController
 @CrossOrigin
 @RequestMapping("/CancelOrder")
+@PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
 public class CanceledOrderController {
 
-    private CanceledOrderReasonService canceledOrderReasonService;
+    private final CanceledOrderReasonService canceledOrderReasonService;
 
     public CanceledOrderController(CanceledOrderReasonService canceledOrderReasonService) {
         this.canceledOrderReasonService = canceledOrderReasonService;

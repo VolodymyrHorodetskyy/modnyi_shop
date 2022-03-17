@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.VariantType;
 import shop.chobitok.modnyi.entity.Variants;
@@ -10,9 +11,10 @@ import java.util.List;
 @RestController
 @CrossOrigin
 @RequestMapping("/variants")
+@PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
 public class VariantsController {
 
-    private VariantsService variantsService;
+    private final VariantsService variantsService;
 
     public VariantsController(VariantsService variantsService) {
         this.variantsService = variantsService;

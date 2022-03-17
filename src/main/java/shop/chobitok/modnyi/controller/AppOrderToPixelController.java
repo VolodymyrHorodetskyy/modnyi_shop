@@ -1,16 +1,16 @@
 package shop.chobitok.modnyi.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.service.AppOrderToPixelService;
-
-import java.time.LocalDateTime;
 
 @RestController
 @CrossOrigin
 @RequestMapping("/AppOrderToPixel")
+@PreAuthorize("hasAuthority('ADMIN')")
 public class AppOrderToPixelController {
 
-    private AppOrderToPixelService appOrderToPixelService;
+    private final AppOrderToPixelService appOrderToPixelService;
 
     public AppOrderToPixelController(AppOrderToPixelService appOrderToPixelService) {
         this.appOrderToPixelService = appOrderToPixelService;

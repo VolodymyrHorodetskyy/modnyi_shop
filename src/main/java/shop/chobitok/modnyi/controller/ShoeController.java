@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Shoe;
@@ -12,9 +13,10 @@ import java.util.List;
 @RestController
 @CrossOrigin
 @RequestMapping("/shoe")
+@PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
 public class ShoeController {
 
-    private ShoeService shoeService;
+    private final ShoeService shoeService;
 
     public ShoeController(ShoeService shoeService) {
         this.shoeService = shoeService;
@@ -33,11 +35,6 @@ public class ShoeController {
     @PatchMapping
     public Shoe updateShoe(@RequestBody UpdateShoeRequest updateShoeRequest) {
         return shoeService.updateShoe(updateShoeRequest);
-    }
-
-    @DeleteMapping
-    public boolean deleteShoe(@RequestParam Long id) {
-        return shoeService.removeShoe(id);
     }
 
     @PatchMapping("/addPattern")

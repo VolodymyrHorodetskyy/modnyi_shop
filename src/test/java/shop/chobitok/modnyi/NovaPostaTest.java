@@ -947,16 +947,6 @@ public class NovaPostaTest {
         out.println("bayka = " + bayka);
     }
 
-    @Test
-    public void getSentAndDelivered(){
-        OrderedSpecification orderedSpecification = new OrderedSpecification();
-        orderedSpecification.setStatuses(asList(Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО));
-        List<Ordered>orderedList = orderRepository.findAll(orderedSpecification);
-        for (Ordered ordered: orderedList){
-            out.println(ordered.getTtn() + " "+ ordered.getStatus());
-        }
-    }
-
     @Autowired
     private UserRepository userRepository;
 
@@ -965,9 +955,9 @@ public class NovaPostaTest {
 
     @Test
     public void addRoles(){
-        User user = userRepository.findById(1l).orElse(null);
-     //   user.setRoles(asList(Role.ADMIN));
-        user.setPassword(passwordEncoder.encode("123456"));
+        User user = userRepository.findById(2l).orElse(null);
+        user.setRoles(asList(Role.EMPLOYEE));
+    //    user.setPassword(passwordEncoder.encode("222"));
         userRepository.save(user);
     }
 }

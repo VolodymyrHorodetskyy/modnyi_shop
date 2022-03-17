@@ -1,13 +1,14 @@
 package shop.chobitok.modnyi.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.CancelReason;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.dto.StatusDto;
-import shop.chobitok.modnyi.entity.request.*;
+import shop.chobitok.modnyi.entity.request.ImportOrdersFromStringRequest;
+import shop.chobitok.modnyi.entity.request.UpdateOrderRequest;
 import shop.chobitok.modnyi.entity.response.GetAllOrderedResponse;
 import shop.chobitok.modnyi.entity.response.StringResponse;
-import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.service.OrderService;
 import shop.chobitok.modnyi.service.UtilService;
 
@@ -18,16 +19,15 @@ import java.util.List;
 @RestController
 @CrossOrigin
 @RequestMapping("/order")
+@PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
 public class OrderController {
 
-    private OrderService orderService;
-    private NovaPostaService novaPostaService;
-    private UtilService utilService;
+    private final OrderService orderService;
+    private final UtilService utilService;
 
 
-    public OrderController(OrderService orderService, NovaPostaService novaPostaService, UtilService utilService) {
+    public OrderController(OrderService orderService, UtilService utilService) {
         this.orderService = orderService;
-        this.novaPostaService = novaPostaService;
         this.utilService = utilService;
     }
 

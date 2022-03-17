@@ -1,6 +1,7 @@
 package shop.chobitok.modnyi.controller;
 
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.request.AddOurTtnRequest;
 import shop.chobitok.modnyi.entity.request.EditOurTtnRequest;
@@ -12,9 +13,10 @@ import shop.chobitok.modnyi.service.OurTtnService;
 @RestController
 @CrossOrigin
 @RequestMapping("/ourttn")
+@PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
 public class OurTtnController {
 
-    private OurTtnService ourTtnService;
+    private final OurTtnService ourTtnService;
 
     public OurTtnController(OurTtnService ourTtnService) {
         this.ourTtnService = ourTtnService;

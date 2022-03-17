@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.AppOrder;
 import shop.chobitok.modnyi.entity.AppOrderStatus;
@@ -8,16 +9,18 @@ import shop.chobitok.modnyi.entity.response.ChangeAppOrderResponse;
 import shop.chobitok.modnyi.service.AppOrderService;
 import shop.chobitok.modnyi.service.CheckerService;
 
-import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @RestController
 @CrossOrigin
 @RequestMapping("/AppOrder")
 public class AppOrderController {
 
-    private AppOrderService appOrderService;
-    private CheckerService checkerService;
+    private final AppOrderService appOrderService;
+    private final CheckerService checkerService;
 
     public AppOrderController(AppOrderService appOrderService, CheckerService checkerService) {
         this.appOrderService = appOrderService;
@@ -25,21 +28,24 @@ public class AppOrderController {
     }
 
     @PostMapping("/catchOrder")
-    public AppOrder webhook(@RequestBody String s) throws UnsupportedEncodingException {
+    public AppOrder webhook(@RequestBody String s) {
         return appOrderService.catchOrder(s);
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
     public Map<AppOrderStatus, Set<AppOrder>> getAll(Long id, String phoneAndName, String comment, String fromForNotReady, String fromForReady, String userId) {
         return appOrderService.getAll(id, phoneAndName, comment, fromForNotReady, fromForReady, userId);
     }
 
     @PatchMapping("/changeStatusAndComment")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
     public ChangeAppOrderResponse changeStatus(@RequestBody ChangeAppOrderRequest request) {
         return appOrderService.changeAppOrder(request);
     }
 
     @GetMapping("statuses")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
     public List<AppOrderStatus> getStatus() {
         List<AppOrderStatus> appOrderStatuses = new ArrayList<>();
         appOrderStatuses.add(AppOrderStatus.Новий);
@@ -53,6 +59,7 @@ public class AppOrderController {
     }
 
     @PatchMapping("makeAppOrdersNewAgain")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
     public void makeAppOrdersNewAgain() {
         checkerService.makeAppOrderNewAgain();
     }

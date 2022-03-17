@@ -36,4 +36,7 @@ public class User extends Audit {
         return roles;
     }
 
+    public void setRoles(List<Role> roles) {
+        this.roles = roles;
+    }
 }

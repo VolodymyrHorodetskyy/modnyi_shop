@@ -18,8 +18,8 @@ import static shop.chobitok.modnyi.util.StringHelper.formCardStatsInfo;
 @RequestMapping("/npAccountAndCard")
 public class NpAccountAndCardController {
 
-    private NpAccountService npAccountService;
-    private CardService cardService;
+    private final NpAccountService npAccountService;
+    private final CardService cardService;
 
     public NpAccountAndCardController(NpAccountService npAccountService, CardService cardService) {
         this.npAccountService = npAccountService;
@@ -41,11 +41,6 @@ public class NpAccountAndCardController {
             , @RequestParam String from, @RequestParam String to) {
         return formCardStatsInfo(cardService.getSumByCardIdAndNpAccountId(cardId, npAccountId, from, to));
     }
-
-/*    @GetMapping("/getActualCardSum")
-    public EarningsResponse getActualCardSum() {
-        return cardService.getSumByActualCard();
-    }*/
 
     @GetMapping("/getActualCard")
     public Card getActualCard() {

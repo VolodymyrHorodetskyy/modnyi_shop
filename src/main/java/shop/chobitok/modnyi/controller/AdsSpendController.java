@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.DayCosts;
 import shop.chobitok.modnyi.entity.SpendType;
@@ -14,9 +15,10 @@ import java.util.List;
 @RestController
 @CrossOrigin
 @RequestMapping("/AdsSpends")
+@PreAuthorize("hasAuthority('ADMIN')")
 public class AdsSpendController {
 
-    private CostsService costsService;
+    private final CostsService costsService;
 
     public AdsSpendController(CostsService costsService) {
         this.costsService = costsService;
@@ -41,5 +43,4 @@ public class AdsSpendController {
     public LocalDateTime now(){
         return LocalDateTime.now();
     }
-
 }

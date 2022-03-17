@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.History;
 import shop.chobitok.modnyi.entity.HistoryType;
@@ -10,9 +11,10 @@ import java.util.List;
 @RestController
 @CrossOrigin
 @RequestMapping("history")
+@PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
 public class HistoryController {
 
-    private HistoryService historyService;
+    private final HistoryService historyService;
 
     public HistoryController(HistoryService historyService) {
         this.historyService = historyService;

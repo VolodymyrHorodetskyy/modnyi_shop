@@ -1,6 +1,7 @@
 package shop.chobitok.modnyi.controller;
 
-
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -10,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.User;
 import shop.chobitok.modnyi.entity.UserLoggedIn;
+import shop.chobitok.modnyi.entity.request.CheckTokenRequest;
 import shop.chobitok.modnyi.entity.request.JwtRequest;
 import shop.chobitok.modnyi.entity.request.LogInRequest;
 import shop.chobitok.modnyi.entity.response.JwtResponse;
@@ -47,7 +49,7 @@ public class UserController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
     public List<User> getUsers() {
         return userService.getAll();
     }
@@ -95,11 +97,12 @@ public class UserController {
 
         authenticate(authenticationRequest.getUsername(), authenticationRequest.getPassword());
 
+        User user = userService.getUserByName(authenticationRequest.getUsername());
         final UserDetails userDetails = jwtUserDetailsService.loadUserByUsername(authenticationRequest.getUsername());
 
         final String token = jwtTokenUtil.generateToken(userDetails);
 
-        return new JwtResponse(token);
+        return new JwtResponse(user.getId(), token);
     }
 
     private void authenticate(String username, String password) throws Exception {
@@ -110,5 +113,14 @@ public class UserController {
         } catch (BadCredentialsException e) {
             throw new Exception("INVALID_CREDENTIALS", e);
         }
+    }
+
+    @PostMapping(value = "/isTokenExpired")
+    public ResponseEntity isTokenExpired(@RequestBody CheckTokenRequest jwtRequest) {
+        ResponseEntity.BodyBuilder responseEntity = ResponseEntity.ok();
+        if (jwtTokenUtil.isTokenExpired(jwtRequest.getJwtToken())) {
+            responseEntity = ResponseEntity.status(HttpStatus.UNAUTHORIZED);
+        }
+        return responseEntity.build();
     }
 }

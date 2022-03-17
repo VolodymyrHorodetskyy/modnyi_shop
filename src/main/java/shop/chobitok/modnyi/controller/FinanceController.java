@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.response.EarningsResponse;
 import shop.chobitok.modnyi.entity.response.StringResponse;
@@ -9,9 +10,10 @@ import shop.chobitok.modnyi.util.StringHelper;
 @RestController
 @CrossOrigin
 @RequestMapping("/finance")
+@PreAuthorize("hasAuthority('ADMIN')")
 public class FinanceController {
 
-    private FinanceService financeService;
+    private final FinanceService financeService;
 
     public FinanceController(FinanceService financeService) {
         this.financeService = financeService;

@@ -19,7 +19,7 @@ import java.util.List;
 @RestController
 @CrossOrigin
 @RequestMapping("/statistic")
-@PreAuthorize("hasAuthority('ADMIN')")
+@PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
 public class StatisticController {
 
     private final StatisticService statisticService;
