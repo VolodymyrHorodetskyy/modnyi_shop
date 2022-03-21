@@ -57,9 +57,6 @@ public class OrderService {
     private NotificationService notificationService;
     private ShoePriceService shoePriceService;
 
-    @Value("${spring.datasource.username}")
-    private String username;
-
     public OrderService(OrderRepository orderRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, HistoryService historyService, ImportService importService, NpAccountService npAccountService, NotificationService notificationService, ShoePriceService shoePriceService) {
         this.orderRepository = orderRepository;
         this.clientService = clientService;
@@ -358,7 +355,8 @@ public class OrderService {
                 } else {
                     Client client = ordered.getClient();
                     if (client != null) {
-                        if (!isEmpty(client.getMail()) && !username.equals("root")
+                        //TODO: зробити що б не відправлялись мейли на дев профілі
+                        if (!isEmpty(client.getMail())
                                 && newStatus != Status.ВИДАЛЕНО && newStatus != Status.НЕ_ЗНАЙДЕНО) {
                             mailService.sendStatusNotificationEmail(client.getMail(), newStatus);
                         }
