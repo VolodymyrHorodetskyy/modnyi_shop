@@ -8,10 +8,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import shop.chobitok.modnyi.entity.CanceledOrderReason;
 import shop.chobitok.modnyi.entity.Ordered;
+import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
+import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 
@@ -50,5 +52,15 @@ public class ProdTest {
         for (CanceledOrderReason c : canceledOrderReasons) {
             out.println(novaPostaRepository.getTracking(4l, c.getReturnTtn()).getData().get(0).getRecipientAddress());
         }
+    }
+
+    @Autowired
+    private ShoeRepository shoeRepository;
+
+    @Test
+    public void renameShoe() {
+        Shoe shoe = shoeRepository.findById(17913l).orElse(null);
+        shoe.setModel("174");
+        shoeRepository.save(shoe);
     }
 }
