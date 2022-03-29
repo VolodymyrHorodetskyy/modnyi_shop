@@ -29,6 +29,7 @@ public class OrderedSpecification implements Specification<Ordered> {
     private List<Status> statusNotIn;
     private Long npAccountId;
     private Boolean allCorrect;
+    private Boolean available;
 
     public OrderedSpecification() {
     }
@@ -72,8 +73,6 @@ public class OrderedSpecification implements Specification<Ordered> {
     @Override
     public Predicate toPredicate(Root<Ordered> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicateList = new ArrayList<>();
-        Predicate availablePredicate = criteriaBuilder.isTrue(root.get("available"));
-        predicateList.add(availablePredicate);
         criteriaQuery.distinct(true);
 
         if (!StringUtils.isEmpty(ttn)) {
@@ -171,6 +170,15 @@ public class OrderedSpecification implements Specification<Ordered> {
                 allCorrectPredicate = criteriaBuilder.isFalse(root.get("allCorrect"));
             }
             predicateList.add(allCorrectPredicate);
+        }
+        if (available != null) {
+            Predicate availablePredicate;
+            if (available) {
+                availablePredicate = criteriaBuilder.isTrue(root.get("available"));
+            } else {
+                availablePredicate = criteriaBuilder.isFalse(root.get("available"));
+            }
+            predicateList.add(availablePredicate);
         }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }
@@ -317,5 +325,13 @@ public class OrderedSpecification implements Specification<Ordered> {
 
     public void setAllCorrect(Boolean allCorrect) {
         this.allCorrect = allCorrect;
+    }
+
+    public Boolean getAvailable() {
+        return available;
+    }
+
+    public void setAvailable(Boolean available) {
+        this.available = available;
     }
 }
