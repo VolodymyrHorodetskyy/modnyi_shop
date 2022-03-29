@@ -26,7 +26,7 @@ public class CronJob {
         this.appOrderService = appOrderService;
     }
 
-    @Scheduled(cron = "0 0 4 * * *")
+    @Scheduled(cron = "0 0 1 * * *")
     public void dailyJob() {
         orderService.updateOrdersByNovaPosta();
         checkerService.checkPayedKeepingOrders();

@@ -45,7 +45,7 @@ import static shop.chobitok.modnyi.util.DateHelper.makeDateEndOfDay;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("dev")
-public class NovaPostaTest {
+public class DevTest {
 
     @Autowired
     private NovaPostaRepository postaRepository;
