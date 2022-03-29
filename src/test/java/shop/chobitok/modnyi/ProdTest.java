@@ -17,6 +17,7 @@ import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static java.lang.System.out;
@@ -62,5 +63,17 @@ public class ProdTest {
         Shoe shoe = shoeRepository.findById(17913l).orElse(null);
         shoe.setModel("174");
         shoeRepository.save(shoe);
+    }
+
+    @Test
+    public void setUnAvailableForOrders(){
+        OrderedSpecification orderedSpecification = new OrderedSpecification();
+        orderedSpecification.setFrom(LocalDateTime.now().minusMonths(2));
+        orderedSpecification.setTo(LocalDateTime.now().minusMonths(1));
+        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
+        for(Ordered ordered: orderedList){
+            ordered.setAvailable(false);
+        }
+        orderRepository.saveAll(orderedList);
     }
 }

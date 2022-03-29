@@ -5,6 +5,6 @@ import shop.chobitok.modnyi.entity.AccountingRecord;
 
 public interface AccountingRecordRepository extends JpaRepository<AccountingRecord, Long> {
 
-    public AccountingRecord findFirstOrderByCreatedDateDesc();
+    AccountingRecord findFirstByOrderByCreatedDateDesc();
 
 }

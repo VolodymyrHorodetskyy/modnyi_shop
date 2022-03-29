@@ -960,4 +960,16 @@ public class DevTest {
     //    user.setPassword(passwordEncoder.encode("222"));
         userRepository.save(user);
     }
+
+    @Test
+    public void setAvailable(){
+        OrderedSpecification orderedSpecification = new OrderedSpecification();
+        orderedSpecification.setFrom(LocalDateTime.now().minusMonths(2));
+        orderedSpecification.setTo(LocalDateTime.now().minusMonths(1));
+        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
+        for(Ordered ordered: orderedList){
+            ordered.setAvailable(false);
+        }
+        orderRepository.saveAll(orderedList);
+    }
 }

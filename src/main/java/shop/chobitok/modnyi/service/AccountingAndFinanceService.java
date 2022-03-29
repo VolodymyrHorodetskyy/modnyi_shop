@@ -15,7 +15,7 @@ public class AccountingAndFinanceService {
     }
 
     public AccountingRecord addRecord(AccountingRecordRequest request) {
-        AccountingRecord lastAccountingRecord = arr.findFirstOrderByCreatedDateDesc();
+        AccountingRecord lastAccountingRecord = arr.findFirstByOrderByCreatedDateDesc();
         return arr.save(new AccountingRecord(request, lastAccountingRecord.getCurrentValue() + request.getOperationValue()));
     }
 
