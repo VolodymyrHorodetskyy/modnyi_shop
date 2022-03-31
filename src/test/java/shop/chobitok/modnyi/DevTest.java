@@ -760,7 +760,7 @@ public class DevTest {
         //   Map<String, List<String>> splittedUrl = appOrderService.splitQuery(decoded);
         // appOrderService.setTtnDataForFB(splittedUrl, appOrder);
         appOrder.setInfo(decoded);
-     //   appOrderService.setBrowserData(decoded, appOrder);
+        //   appOrderService.setBrowserData(decoded, appOrder);
         appOrderRepository.save(appOrder);
     }
     //   }
@@ -936,10 +936,10 @@ public class DevTest {
         for (Ordered ordered : orderedList) {
             String postComment = ordered.getPostComment().toLowerCase();
             if (postComment.contains("хут")
-            || postComment.contains("мех") || postComment.contains("мєх")) {
+                    || postComment.contains("мех") || postComment.contains("мєх")) {
                 ++hutro;
             } else {
-               // out.println(ordered.getPostComment());
+                // out.println(ordered.getPostComment());
                 ++bayka;
             }
         }
@@ -954,22 +954,31 @@ public class DevTest {
     private PasswordEncoder passwordEncoder;
 
     @Test
-    public void addRoles(){
-        User user = userRepository.findById(2l).orElse(null);
+    public void addRoles() {
+        User user = userRepository.findById(1l).orElse(null);
         user.setRoles(asList(Role.EMPLOYEE));
-    //    user.setPassword(passwordEncoder.encode("222"));
+        user.setPassword(passwordEncoder.encode("123456"));
         userRepository.save(user);
     }
 
     @Test
-    public void setAvailable(){
+    public void setAvailable() {
         OrderedSpecification orderedSpecification = new OrderedSpecification();
         orderedSpecification.setFrom(LocalDateTime.now().minusMonths(2));
         orderedSpecification.setTo(LocalDateTime.now().minusMonths(1));
         List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
-        for(Ordered ordered: orderedList){
+        for (Ordered ordered : orderedList) {
             ordered.setAvailable(false);
         }
         orderRepository.saveAll(orderedList);
+    }
+
+    @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Test
+    public void removeNotifications() {
+        List<Notification> notifications = notificationRepository.findByCreatedDateIsGreaterThan(LocalDateTime.now().minusDays(1));
+        notificationRepository.deleteAll(notifications);
     }
 }

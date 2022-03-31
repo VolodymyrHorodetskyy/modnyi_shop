@@ -6,14 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import shop.chobitok.modnyi.entity.CanceledOrderReason;
-import shop.chobitok.modnyi.entity.Ordered;
-import shop.chobitok.modnyi.entity.Shoe;
-import shop.chobitok.modnyi.entity.Status;
+import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
+import shop.chobitok.modnyi.repository.NotificationRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
+import shop.chobitok.modnyi.service.CheckerService;
 import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 
@@ -75,5 +74,22 @@ public class ProdTest {
             ordered.setAvailable(false);
         }
         orderRepository.saveAll(orderedList);
+    }
+
+    @Autowired
+    private CheckerService checkerService;
+
+    @Test
+    public void checkPayedKeepingOrders(){
+        checkerService.checkPayedKeepingOrders();
+    }
+
+    @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Test
+    public void removeNotifications() {
+        List<Notification> notifications = notificationRepository.findByCreatedDateIsGreaterThan(LocalDateTime.now().minusDays(1));
+        notificationRepository.deleteAll(notifications);
     }
 }
