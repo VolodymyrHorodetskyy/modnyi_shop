@@ -18,6 +18,7 @@ import shop.chobitok.modnyi.specification.OrderedSpecification;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.lang.System.out;
 import static java.util.Arrays.asList;
@@ -65,12 +66,12 @@ public class ProdTest {
     }
 
     @Test
-    public void setUnAvailableForOrders(){
+    public void setUnAvailableForOrders() {
         OrderedSpecification orderedSpecification = new OrderedSpecification();
         orderedSpecification.setFrom(LocalDateTime.now().minusMonths(2));
         orderedSpecification.setTo(LocalDateTime.now().minusMonths(1));
         List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
-        for(Ordered ordered: orderedList){
+        for (Ordered ordered : orderedList) {
             ordered.setAvailable(false);
         }
         orderRepository.saveAll(orderedList);
@@ -80,7 +81,7 @@ public class ProdTest {
     private CheckerService checkerService;
 
     @Test
-    public void checkPayedKeepingOrders(){
+    public void checkPayedKeepingOrders() {
         checkerService.checkPayedKeepingOrders();
     }
 
@@ -91,5 +92,22 @@ public class ProdTest {
     public void removeNotifications() {
         List<Notification> notifications = notificationRepository.findByCreatedDateIsGreaterThan(LocalDateTime.now().minusDays(1));
         notificationRepository.deleteAll(notifications);
+    }
+
+    @Test
+    public void payedKeepingCheck() {
+        checkerService.checkPayedKeepingOrders();
+    }
+
+    @Test
+    public void showAllDm() {
+        OrderedSpecification orderedSpecification = new OrderedSpecification();
+        orderedSpecification.setFrom(LocalDateTime.now().minusDays(20));
+        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
+        orderedList = orderedList.stream().filter(ordered -> (ordered.getPostComment().contains("дм") || ordered.getPostComment().contains("Дм")
+                || ordered.getPostComment().contains("ДМ")) && ordered.getPostComment().contains("40")).collect(Collectors.toList());
+        for (Ordered ordered : orderedList) {
+            out.println(ordered.getTtn() + " " + ordered.getPostComment() + " " + ordered.getStatus() + "\n");
+        }
     }
 }

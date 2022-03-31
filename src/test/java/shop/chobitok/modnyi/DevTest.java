@@ -330,11 +330,6 @@ public class DevTest {
 
     @Test
     public void payedKeepingCheck() {
-       /* List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndStatusIn(Arrays.asList(Status.ДОСТАВЛЕНО));
-        for (Ordered ordered : orderedList) {
-            novaPostaService.updateDatePayedKeeping(ordered);
-        }
-        orderRepository.saveAll(orderedList);*/
         checkerService.checkPayedKeepingOrders();
     }
 
