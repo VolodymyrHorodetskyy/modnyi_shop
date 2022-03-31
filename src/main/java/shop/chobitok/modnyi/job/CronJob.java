@@ -10,12 +10,12 @@ import java.time.LocalDateTime;
 @Service
 public class CronJob {
 
-    private CheckerService checkerService;
-    private OrderService orderService;
-    private CanceledOrderReasonService canceledOrderReasonService;
-    private UserService userService;
-    private AppOrderToPixelService appOrderToPixelService;
-    private AppOrderService appOrderService;
+    private final CheckerService checkerService;
+    private final OrderService orderService;
+    private final CanceledOrderReasonService canceledOrderReasonService;
+    private final UserService userService;
+    private final AppOrderToPixelService appOrderToPixelService;
+    private final AppOrderService appOrderService;
 
     public CronJob(CheckerService checkerService, OrderService orderService, CanceledOrderReasonService canceledOrderReasonService, UserService userService, AppOrderToPixelService appOrderToPixelService, AppOrderService appOrderService) {
         this.checkerService = checkerService;
@@ -30,11 +30,15 @@ public class CronJob {
     public void dailyJob() {
         orderService.updateOrdersByNovaPosta();
         checkerService.checkPayedKeepingOrders();
-        checkerService.makeAppOrderNewAgain();
         orderService.updateCanceled(25);
         checkerService.checkSendOrdersAndTakeMoreFiveDays();
         orderService.returnAllCanceled(true);
         userService.makeUsersInactive();
+    }
+
+    @Scheduled(cron = "0 1 1 * * ?")
+    public void dailyJob2() {
+        checkerService.makeAppOrderNewAgain();
     }
 
     @Scheduled(cron = "0 0 */2 * * *")

@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.response.StringResponse;
-import shop.chobitok.modnyi.novaposta.mapper.NPOrderMapper;
 import shop.chobitok.modnyi.repository.AppOrderRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.StatusChangeRepository;
@@ -38,7 +37,6 @@ public class CheckerService {
     private final AppOrderRepository appOrderRepository;
     private final AppOrderService appOrderService;
     private final StatusChangeRepository statusChangeRepository;
-    private final NPOrderMapper npOrderMapper;
     private final StatisticService statisticService;
     private final ParamsService paramsService;
     private final FinanceService financeService;
@@ -47,14 +45,13 @@ public class CheckerService {
     @Value("${params.monthlyReceivingPercentage}")
     private String monthlyReceivingPercentage;
 
-    public CheckerService(OrderService orderService, OrderRepository orderRepository, NotificationService notificationService, AppOrderRepository appOrderRepository, AppOrderService appOrderService, StatusChangeRepository statusChangeRepository, NPOrderMapper npOrderMapper, StatisticService statisticService, ParamsService paramsService, FinanceService financeService, UserRepository userRepository) {
+    public CheckerService(OrderService orderService, OrderRepository orderRepository, NotificationService notificationService, AppOrderRepository appOrderRepository, AppOrderService appOrderService, StatusChangeRepository statusChangeRepository, StatisticService statisticService, ParamsService paramsService, FinanceService financeService, UserRepository userRepository) {
         this.orderService = orderService;
         this.orderRepository = orderRepository;
         this.notificationService = notificationService;
         this.appOrderRepository = appOrderRepository;
         this.appOrderService = appOrderService;
         this.statusChangeRepository = statusChangeRepository;
-        this.npOrderMapper = npOrderMapper;
         this.statisticService = statisticService;
         this.paramsService = paramsService;
         this.financeService = financeService;
@@ -65,12 +62,16 @@ public class CheckerService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         orderService.updateOrdersByNovaPosta();
         List<Ordered> arrivedAndDeniedOrders = orderRepository.findAllByStatusInAndDatePayedKeepingNPIsNotNull(
-                asList(ВІДМОВА, ДОСТАВЛЕНО));
+                List.of(ДОСТАВЛЕНО));
         for (Ordered ordered : arrivedAndDeniedOrders) {
             LocalDateTime datePayedKeeping = ordered.getDatePayedKeepingNP();
             if (now().plusDays(3).isAfter(datePayedKeeping)) {
+                String userName = "";
+                if (ordered.getUser() != null) {
+                    userName = ordered.getUser().getName();
+                }
                 notificationService.createNotification("Платне зберігання з " + datePayedKeeping.format(formatter),
-                        ordered.getUser().getName(), MessageType.PAYED_KEEPING, ordered.getTtn());
+                        userName, MessageType.PAYED_KEEPING, ordered.getTtn());
             }
         }
     }
@@ -107,7 +108,7 @@ public class CheckerService {
     }
 
     public StringResponse checkAppOrdersBecameOrdersForAllUsers(String from, String to) {
-        List<User> users = userRepository.findAll().stream().filter(user -> user.getId() != 1l).collect(Collectors.toList());
+        List<User> users = userRepository.findAll().stream().filter(user -> user.getId() != 1L).collect(Collectors.toList());
         StringBuilder response = new StringBuilder();
         for (User user : users) {
             response.append(checkAppOrdersBecameOrders(user.getId(), from, to).getResult())
@@ -134,9 +135,9 @@ public class CheckerService {
 
         List<AppOrder> appOrders = appOrderRepository.findAll(specification);
         long amountWithoutFakeData = appOrders.stream().filter(
-                appOrder -> !(appOrder.getStatus() == AppOrderStatus.Скасовано
-                        && (appOrder.getCancellationReason() == AppOrderCancellationReason.НЕ_ВІРНІ_ДАНІ
-                        || appOrder.getCancellationReason() == AppOrderCancellationReason.ДУБЛІКАТ)))
+                        appOrder -> !(appOrder.getStatus() == AppOrderStatus.Скасовано
+                                && (appOrder.getCancellationReason() == AppOrderCancellationReason.НЕ_ВІРНІ_ДАНІ
+                                || appOrder.getCancellationReason() == AppOrderCancellationReason.ДУБЛІКАТ)))
                 .count();
         long amountWithTtn = appOrders.stream().filter(appOrder -> appOrder.getTtn() != null).count();
         Map<AppOrderCancellationReason, Integer> appOrderCancellationReasonIntegerMap = new HashMap<>();
@@ -169,9 +170,9 @@ public class CheckerService {
                 .append("\n").append("% : ")
                 .append(appOrders.size() != 0 ? amountWithTtn * 100 / amountWithoutFakeData : 0)
                 .append("\n").append("Статистика причин скасування заявок : ")
-                .append(cancellationReasonStats.toString())
+                .append(cancellationReasonStats)
                 .append("\n").append("Інша причина, коменти : ")
-                .append(reasonCommentsForOther.toString());
+                .append(reasonCommentsForOther);
         return new StringResponse(response.toString());
     }
 
