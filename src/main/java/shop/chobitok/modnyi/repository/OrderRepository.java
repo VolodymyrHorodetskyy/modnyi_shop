@@ -24,9 +24,7 @@ public interface OrderRepository extends JpaRepository<Ordered, Long> {
 
     Ordered findOneByAvailableTrueAndTtn(String ttn);
 
-    List<Ordered> findAllByAvailableTrueAndNotForDeliveryFileFalseAndStatusOrderByDateCreated(Status status);
-
-    List<Ordered> findAllByAvailableTrueAndWithoutTTNFalseAndStatusIn(List<Status> statuses);
+    List<Ordered> findAllByWithoutTTNFalseAndStatusIn(List<Status> statuses);
 
     List<Ordered> findAllByStatusInAndDatePayedKeepingNPIsNotNull(List<Status> statuses);
 
@@ -34,27 +32,15 @@ public interface OrderRepository extends JpaRepository<Ordered, Long> {
 
     List<Ordered> findAllByStatusInAndDateCreatedGreaterThanAndDateCreatedLessThanAndNpAccountId(List<Status> statuses, LocalDateTime dateTimeFrom, LocalDateTime dateTimeTo, Long npAccountId);
 
-    List<Ordered> findAllByAvailableTrueAndStatusInOrderByUrgentDesc(List<Status> statuses);
-
     List<Ordered> findAllByAvailableTrueAndPayedFalseAndStatusIn(List<Status> statuses);
-
-    List<Ordered> findByCreatedDateGreaterThan(LocalDateTime dateTime);
 
     List<Ordered> findByCreatedDateGreaterThanAndCityIsNull(LocalDateTime dateTime);
 
-    List<Ordered> findAllByAvailableTrueAndReturnedFalseAndCanceledAfterFalseAndStatus(Status status);
-
     List<Ordered> findBystatusNP(Integer status);
-
-    List<Ordered> findByNotForDeliveryFileTrue();
-
-    List<Ordered> findByClientPhone(String phone);
 
     List<Ordered> findByClientId(Long id);
 
     List<Ordered> findAllByAvailableTrueAndUserIdAndStatusAndPayedForUserFalse(Long id, Status status);
-
-    List<Ordered> findByNpAccountId(Long npAccountId);
 
     List<Ordered> findByCardIdAndNpAccountIdAndCreatedDateGreaterThanEqualAndCreatedDateLessThanEqual(Long id, Long npAccountId, LocalDateTime from, LocalDateTime to);
 

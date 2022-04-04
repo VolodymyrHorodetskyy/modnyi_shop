@@ -335,15 +335,6 @@ public class NovaPostaTest {
     }
 
     @Test
-    public void tt() {
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndWithoutTTNFalseAndStatusIn(Arrays.asList(Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО));
-        for (Ordered ordered : orderedList) {
-            ordered.setNpAccountId(2l);
-            orderRepository.save(ordered);
-        }
-    }
-
-    @Test
     public void setNpAccount() {
         List<String> splitted = splitTTNString("");
         StringBuilder result = new StringBuilder();
@@ -388,23 +379,6 @@ public class NovaPostaTest {
                 }
             }
         }
-    }
-
-
-    @Test
-    public void getToRecreate() {
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndWithoutTTNFalseAndStatusIn(Arrays.asList(Status.СТВОРЕНО));
-        StringBuilder stringBuilder = new StringBuilder();
-        for (Ordered ordered : orderedList) {
-            if (ordered.getUser().getId() == 2l) {
-                stringBuilder.append(ordered.getTtn()).append(", ").append(ordered.getReturnSumNP()).append(", ")
-                        .append(ordered.getAddress()).append(", ").append(ordered.getPostComment()).append(", ")
-                        .append(ordered.getClient().getPhone()).append(", ").append(ordered.getClient().getName())
-                        .append(", ").append(ordered.getClient().getLastName())
-                        .append("\n");
-            }
-        }
-        out.println(stringBuilder.toString());
     }
 
     @Autowired
