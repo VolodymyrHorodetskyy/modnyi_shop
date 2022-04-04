@@ -892,21 +892,6 @@ public class DevTest {
     }
 
     @Test
-    @Transactional
-    public void checkPayedKeepingOrders() {
-        OrderedSpecification orderedSpecification = new OrderedSpecification();
-        orderedSpecification.setStatuses(asList(Status.ДОСТАВЛЕНО, Status.ВІДПРАВЛЕНО));
-        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
-        for (Ordered ordered : orderedList) {
-            for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
-                if (orderedShoe.getShoe().getModel().contains("130")) {
-                    out.println(ordered.getTtn() + " " + ordered.getPostComment());
-                }
-            }
-        }
-    }
-
-    @Test
     public void getCanceledWithoutReturnTtn() {
         CanceledOrderReasonSpecification specification = new CanceledOrderReasonSpecification();
         //      specification.setManual(false);
@@ -976,4 +961,6 @@ public class DevTest {
         List<Notification> notifications = notificationRepository.findByCreatedDateIsGreaterThan(LocalDateTime.now().minusDays(1));
         notificationRepository.deleteAll(notifications);
     }
+
+
 }
