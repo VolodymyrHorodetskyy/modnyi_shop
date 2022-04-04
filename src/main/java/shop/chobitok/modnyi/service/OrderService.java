@@ -481,10 +481,13 @@ public class OrderService {
 
     public StringResponse countNeedDeliveryFromDB(boolean updateStatuses) {
         StringBuilder stringBuilder = new StringBuilder();
+        OrderedSpecification orderedSpecification = new OrderedSpecification(Status.СТВОРЕНО, false);
+        orderedSpecification.setAvailable(true);
+        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification, Sort.by("dateCreated"));
         if (updateStatuses) {
-            updateOrdersByStatusesByNovaPosta(singletonList(Status.СТВОРЕНО));
+            updateOrdersByNovaPosta(orderedList);
         }
-        List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(Status.СТВОРЕНО, false), Sort.by("dateCreated"));
+        orderedList = orderRepository.findAll(orderedSpecification, Sort.by("dateCreated"));
         stringBuilder.append(countNeedDelivery(orderedList));
         stringBuilder.append("Кількість : ").append(orderedList.size());
         return new StringResponse(stringBuilder.toString());
