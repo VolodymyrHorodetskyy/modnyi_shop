@@ -109,11 +109,6 @@ public class OrderService {
         return orderRepository.findById(id).orElse(null);
     }
 
-    public List<Ordered> getOrdersByStatus(Status status) {
-        updateOrdersByNovaPosta();
-        return orderRepository.findAllByAvailableTrueAndWithoutTTNFalseAndStatusIn(singletonList(status));
-    }
-
     private Sort createSort(String orderBy) {
         Sort.Direction direction = Sort.Direction.DESC;
         if ("dateEdited".equals(orderBy)) {
@@ -176,7 +171,7 @@ public class OrderService {
 
 
     public String updateOrdersByStatusesByNovaPosta(List<Status> statuses) {
-        return updateOrdersByNovaPosta(orderRepository.findAllByAvailableTrueAndWithoutTTNFalseAndStatusIn(statuses));
+        return updateOrdersByNovaPosta(orderRepository.findAllByWithoutTTNFalseAndStatusIn(statuses));
     }
 
     public String updateOrdersByNovaPosta(List<Ordered> orderedList) {
