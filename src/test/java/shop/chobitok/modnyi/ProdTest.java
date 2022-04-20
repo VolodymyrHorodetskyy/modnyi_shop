@@ -8,11 +8,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
-import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
-import shop.chobitok.modnyi.repository.NotificationRepository;
-import shop.chobitok.modnyi.repository.OrderRepository;
-import shop.chobitok.modnyi.repository.ShoeRepository;
+import shop.chobitok.modnyi.repository.*;
 import shop.chobitok.modnyi.service.CheckerService;
+import shop.chobitok.modnyi.service.ParamsService;
 import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 
@@ -51,7 +49,7 @@ public class ProdTest {
         cors.setStatus(Status.ДОСТАВЛЕНО);
         List<CanceledOrderReason> canceledOrderReasons = canceledOrderReasonRepository.findAll(cors);
         for (CanceledOrderReason c : canceledOrderReasons) {
-            out.println(novaPostaRepository.getTracking(4l, c.getReturnTtn()).getData().get(0).getRecipientAddress());
+            out.println(novaPostaRepository.getTracking(4L, c.getReturnTtn()).getData().get(0).getRecipientAddress());
         }
     }
 
@@ -60,7 +58,8 @@ public class ProdTest {
 
     @Test
     public void renameShoe() {
-        Shoe shoe = shoeRepository.findById(17913l).orElse(null);
+        Shoe shoe = shoeRepository.findById(17913L).orElse(null);
+        assert shoe != null;
         shoe.setModel("174");
         shoeRepository.save(shoe);
     }
@@ -109,5 +108,23 @@ public class ProdTest {
         for (Ordered ordered : orderedList) {
             out.println(ordered.getTtn() + " " + ordered.getPostComment() + " " + ordered.getStatus() + "\n");
         }
+    }
+
+    @Autowired
+    private ClientRepository clientRepository;
+
+    @Test
+    public void changeEmail(){
+        Client client= clientRepository.findFirstByMail("berezalesa8@gnail.co.com");
+        client.setMail("berezalesa8@gmail.com");
+        clientRepository.save(client);
+    }
+
+    @Autowired
+    private ParamsService paramsService;
+
+    @Test
+    public void changeMainNp(){
+        paramsService.saveOrChangeParam("mainNpAccount", "1");
     }
 }

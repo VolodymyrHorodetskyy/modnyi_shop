@@ -15,4 +15,6 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     List<Client> findByMailNotNull();
 
+    Client findFirstByMail(String mail);
+
 }
