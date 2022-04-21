@@ -58,6 +58,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests().antMatchers("/user/authenticate", "/register",
                         "/AppOrder/catchOrder",
                         "/markings",
+                        "/markings/setPrinted",
                         "/v2/api-docs",
                         "/configuration/ui",
                         "/swagger-resources/**",
