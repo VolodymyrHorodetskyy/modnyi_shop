@@ -19,7 +19,6 @@ import java.util.List;
 @RestController
 @CrossOrigin
 @RequestMapping("/statistic")
-@PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
 public class StatisticController {
 
     private final StatisticService statisticService;
@@ -32,11 +31,13 @@ public class StatisticController {
         this.canceledOrderReasonService = canceledOrderReasonService;
     }
 
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
     @GetMapping("/getAllReceivedAndDeniedCount")
     public String getReceivedAndDeniedCount(@RequestParam String path) {
         return statisticService.countAllReceivedAndDenied(path);
     }
 
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
     @GetMapping("/getAllDenied")
     public String getAllDenied(@RequestParam String pathAllTTNFile, @RequestParam(required = false) boolean returned) {
         return statisticService.getAllDenied(pathAllTTNFile, returned);
@@ -47,11 +48,13 @@ public class StatisticController {
         return orderService.countNeedDeliveryFromDB(updateStatuses);
     }
 
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
     @GetMapping("/getIssueOrdered")
     public StringResponse getIssueOrders() {
         return statisticService.getIssueOrders();
     }
 
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
     @PostMapping("/needToPayedFromFile")
     public StringResponse needToPayed(@RequestParam(required = false) boolean updateStatuses) {
         return statisticService.needToPayed(updateStatuses);
@@ -90,16 +93,19 @@ public class StatisticController {
         return statisticService.countAmounts();
     }
 
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
     @GetMapping("/getOrdersAndAppOrdersByPhone")
     public StringResponse getOrdersAndAppOrdersByPhone(@RequestParam Long id) {
         return statisticService.getOrdersAndAppordersByPhone(id);
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PatchMapping
     public void payAllForOperator(@RequestParam Long userId) {
         statisticService.payAllForOperator(userId);
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/getRedeliveryStatsByNpAccount")
     public StringResponse getByNpAccount(@RequestParam Long npAccountId, @RequestParam String dateFrom, @RequestParam String dateTo) {
         return statisticService.getRedeliverySumByNpAccountId(npAccountId, dateFrom, dateTo);
