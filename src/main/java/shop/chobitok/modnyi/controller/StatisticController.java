@@ -60,12 +60,14 @@ public class StatisticController {
         return statisticService.needToPayed(updateStatuses);
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/returned")
     public StringResponse returned(@RequestParam boolean showClientTTN,
                                    @RequestParam boolean showOnlyDelivered) {
         return canceledOrderReasonService.getReturned(false, false, showClientTTN, showOnlyDelivered, null);
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/canceled")
     public StringResponse canceled(@RequestParam(required = false) boolean updateStatuses) {
         return orderService.getCanceledString(updateStatuses);

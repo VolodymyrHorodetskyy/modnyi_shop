@@ -64,6 +64,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                         "/statistic/getSoldShoeRating",
                         "/statistic/getStatisticGoogleChart",
                         "/statistic/getReceivedShoePercentage",
+                        "/statistic/getSoldShoeRating",
                         "/markings/setPrinted",
                         "/v2/api-docs",
                         "/configuration/ui",
