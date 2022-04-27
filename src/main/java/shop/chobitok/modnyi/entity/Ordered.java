@@ -113,6 +113,8 @@ public class Ordered extends Audit {
     @Column
     private Double storagePrice;
     private boolean allCorrect;
+    @OneToOne
+    private Variants sourceOfOrder;
 
     public boolean isNotForDeliveryFile() {
         return notForDeliveryFile;
@@ -416,5 +418,13 @@ public class Ordered extends Audit {
 
     public void setAllCorrect(boolean allCorrect) {
         this.allCorrect = allCorrect;
+    }
+
+    public Variants getSourceOfOrder() {
+        return sourceOfOrder;
+    }
+
+    public void setSourceOfOrder(Variants sourceOfOrder) {
+        this.sourceOfOrder = sourceOfOrder;
     }
 }

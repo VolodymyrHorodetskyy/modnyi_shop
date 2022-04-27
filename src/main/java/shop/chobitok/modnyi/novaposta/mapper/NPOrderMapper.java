@@ -3,7 +3,6 @@ package shop.chobitok.modnyi.novaposta.mapper;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.DataForList;
@@ -43,7 +42,8 @@ public class NPOrderMapper {
         this.npAccountService = npAccountService;
     }
 
-    public Ordered toOrdered(Ordered ordered, TrackingEntity trackingEntity, Discount discount) {
+    public Ordered toOrdered(Ordered ordered, TrackingEntity trackingEntity, Discount discount,
+                             Variants sourceOfOrder) {
         if (trackingEntity != null) {
             List<Data> dataList = trackingEntity.getData();
             if (dataList != null && dataList.size() > 0) {
@@ -71,6 +71,7 @@ public class NPOrderMapper {
                 ordered.setDateCreated(ShoeUtil.toLocalDateTime(data.getDateCreated()));
                 ordered.setDeliveryCost(Double.valueOf(data.getDocumentCost()));
                 ordered.setStoragePrice(!data.getStoragePrice().isEmpty() ? Double.valueOf(data.getStoragePrice()) : null);
+                ordered.setSourceOfOrder(sourceOfOrder);
                 if (ordered.getOrderedShoeList() == null || ordered.getOrderedShoeList().size() == 0) {
                     setShoeAndSizeFromDescriptionNP(ordered, data.getCargoDescriptionString());
                 }
@@ -85,11 +86,11 @@ public class NPOrderMapper {
         return ordered;
     }
 
-    public Ordered toOrdered(TrackingEntity trackingEntity, Discount discount) {
-        return toOrdered(null, trackingEntity, discount);
+    public Ordered toOrdered(TrackingEntity trackingEntity, Discount discount, Variants sourceOfOrder) {
+        return toOrdered(null, trackingEntity, discount, sourceOfOrder);
     }
 
-    public Ordered toOrdered(DataForList dataForList, Discount discount) {
+    public Ordered toOrdered(DataForList dataForList, Discount discount, Variants sourceOfOrder) {
         Ordered ordered = null;
         if (dataForList != null) {
             ordered = new Ordered();
@@ -108,7 +109,7 @@ public class NPOrderMapper {
             ordered.setDiscount(discount);
             ordered.setDeliveryCost(dataForList.getCostOnSite() != null ?
                     Double.valueOf(dataForList.getCostOnSite()) : null);
-
+            ordered.setSourceOfOrder(sourceOfOrder);
             //TODO: setLastCreatedOnTheBasisDocumentTypeNP ?
             if (ordered.getOrderedShoeList() == null || ordered.getOrderedShoeList().size() == 0) {
                 setShoeAndSizeFromDescriptionNP(ordered, dataForList.getDescription());

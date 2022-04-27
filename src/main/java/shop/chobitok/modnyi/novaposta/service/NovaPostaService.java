@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.Discount;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Status;
+import shop.chobitok.modnyi.entity.Variants;
 import shop.chobitok.modnyi.novaposta.entity.CheckPossibilityCreateReturnResponse;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
@@ -30,15 +31,18 @@ public class NovaPostaService {
         this.orderRepository = orderRepository;
     }
 
-    public Ordered createOrUpdateOrderFromNP(String ttn, Long npAccountId, Discount discount) {
-        return formOrderedFromNPEntity(null, ttn, postaRepository.getTracking(npAccountId, ttn), discount);
+    public Ordered createOrUpdateOrderFromNP(String ttn, Long npAccountId, Discount discount,
+                                             Variants sourceOfOrdered) {
+        return formOrderedFromNPEntity(null, ttn, postaRepository.getTracking(npAccountId, ttn), discount, sourceOfOrdered);
     }
 
-    public Ordered createOrUpdateOrderFromNP(Ordered ordered, String ttn, Discount discount) {
-        return formOrderedFromNPEntity(ordered, ttn, postaRepository.getTracking(ordered), discount);
+    public Ordered createOrUpdateOrderFromNP(Ordered ordered, String ttn, Discount discount,
+                                             Variants sourceOfOrdered) {
+        return formOrderedFromNPEntity(ordered, ttn, postaRepository.getTracking(ordered), discount, sourceOfOrdered);
     }
 
-    public Ordered formOrderedFromNPEntity(Ordered ordered, String ttn, TrackingEntity trackingEntity, Discount discount) {
+    public Ordered formOrderedFromNPEntity(Ordered ordered, String ttn, TrackingEntity trackingEntity, Discount discount,
+                                           Variants sourceOfOrdered) {
         if (trackingEntity.getData().size() > 0) {
             Data data = trackingEntity.getData().get(0);
             //if status created
@@ -46,14 +50,14 @@ public class NovaPostaService {
                 Ordered ordered1 = npOrderMapper.toOrdered(
                         postaRepository.getDataForListFromListTrackingEntityInFiveDaysPeriod(ttn, 10,
                                 ordered != null ? ordered.getNpAccountId() : null),
-                        discount);
+                        discount, sourceOfOrdered);
                 if (ordered1 != null) {
                     return ordered1;
                 } else {
-                    return npOrderMapper.toOrdered(ordered, trackingEntity, discount);
+                    return npOrderMapper.toOrdered(ordered, trackingEntity, discount, sourceOfOrdered);
                 }
             } else {
-                return npOrderMapper.toOrdered(ordered, trackingEntity, discount);
+                return npOrderMapper.toOrdered(ordered, trackingEntity, discount, sourceOfOrdered);
             }
         }
         return null;

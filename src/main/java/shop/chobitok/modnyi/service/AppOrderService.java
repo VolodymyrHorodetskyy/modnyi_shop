@@ -40,19 +40,19 @@ import static shop.chobitok.modnyi.util.StringHelper.splitPhonesStringBySemiColo
 @Service
 public class AppOrderService {
 
-    private AppOrderRepository appOrderRepository;
-    private OrderService orderService;
-    private ClientRepository clientRepository;
-    private OrderRepository orderRepository;
-    private UserRepository userRepository;
-    private DiscountService discountService;
-    private AppOrderProcessingRepository appOrderProcessingRepository;
-    private ParamsService paramsService;
-    private UserLoggedInRepository userLoggedInRepository;
-    private ImportService importService;
-    private PixelService pixelService;
-    private VariantsService variantsService;
-    private AppOrderToPixelService appOrderToPixelService;
+    private final AppOrderRepository appOrderRepository;
+    private final OrderService orderService;
+    private final ClientRepository clientRepository;
+    private final OrderRepository orderRepository;
+    private final UserRepository userRepository;
+    private final DiscountService discountService;
+    private final AppOrderProcessingRepository appOrderProcessingRepository;
+    private final ParamsService paramsService;
+    private final UserLoggedInRepository userLoggedInRepository;
+    private final ImportService importService;
+    private final PixelService pixelService;
+    private final VariantsService variantsService;
+    private final AppOrderToPixelService appOrderToPixelService;
 
     @Value("${params.fbpOpenTag}")
     private String fbpOpenTagParamName;
@@ -60,6 +60,8 @@ public class AppOrderService {
     private String fbcOpenTagParamName;
     @Value("${params.closeTagForFbcAndFbp}")
     private String closeTagForFbcAndFbpParamName;
+    @Value("${params.default.source.apporders}")
+    private String defaultVariantIdForOrder;
 
     public AppOrderService(AppOrderRepository appOrderRepository, OrderService orderService, ClientRepository clientRepository, OrderRepository orderRepository, UserRepository userRepository, DiscountService discountService, AppOrderProcessingRepository appOrderProcessingRepository, ParamsService paramsService, UserLoggedInRepository userLoggedInRepository, ImportService importService, PixelService pixelService, VariantsService variantsService, AppOrderToPixelService appOrderToPixelService) {
         this.appOrderRepository = appOrderRepository;
@@ -267,7 +269,7 @@ public class AppOrderService {
         List<UserLoggedIn> usersLoggedIn = userLoggedInRepository.findAllByActiveTrueAndCreatedDateGreaterThanEqual(
                 DateHelper.formLocalDateTimeStartOfTheDay(now()));
         User userToAssign = usersLoggedIn.stream().filter(userLoggedIn -> userLoggedIn.isActive() &&
-                !userLoggedIn.getUser().getId().equals(lastAppOrder.getUser())).map(UserLoggedIn::getUser)
+                        !userLoggedIn.getUser().getId().equals(lastAppOrder.getUser())).map(UserLoggedIn::getUser)
                 .findFirst().orElse(usersLoggedIn.size() > 0 ? usersLoggedIn.get(0).getUser() : null);
         if (userToAssign != null) {
             int endOfDayWorkingHour = getEndOfWorkingDayHour(now().getDayOfWeek());
@@ -460,7 +462,8 @@ public class AppOrderService {
     public String processAppOrderTtn(String ttn, AppOrder appOrder, ChangeAppOrderRequest request,
                                      User user) {
         String message;
-        message = importService.importOrderFromTTNString(ttn, request.getUserId(), discountService.getById(request.getDiscountId()));
+        message = importService.importOrderFromTTNString(ttn, request.getUserId(), discountService.getById(request.getDiscountId()),
+                variantsService.getById(Long.parseLong(defaultVariantIdForOrder)));
         appOrder.setTtn(ttn);
         String mail = appOrder.getMail();
         Ordered ordered = orderService.findByTTN(ttn);
@@ -537,17 +540,6 @@ public class AppOrderService {
             appOrder.setRemindOn(null);
         }
         return appOrder;
-    }
-
-    public String importNotImported() {
-        StringBuilder result = new StringBuilder();
-        List<AppOrder> appOrders = appOrderRepository.findByTtnIsNotNullAndLastModifiedDateIsGreaterThan(now().minusDays(3));
-        for (AppOrder appOrder : appOrders) {
-            if (!isEmpty(appOrder.getTtn()) && orderRepository.findOneByAvailableTrueAndTtn(appOrder.getTtn()) == null) {
-                result.append(importService.importOrderFromTTNString(appOrder.getTtn(), appOrder.getUser().getId(), null));
-            }
-        }
-        return result.toString();
     }
 
     public Map<AppOrder, LocalDateTime> getAllAppOrderAndDateTimeWhenShouldBeProcessed(String from) {

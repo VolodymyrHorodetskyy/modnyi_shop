@@ -138,17 +138,6 @@ public class DevTest {
         canceledOrderReasonService.setReturnTtnAndUpdateStatus();
     }
 
-    @Test
-    public void setCityAndCityRef() {
-        List<Ordered> orderedList = orderRepository.findByCreatedDateGreaterThanAndCityIsNull(now().minusMonths(5));
-        for (Ordered ordered : orderedList) {
-            Ordered fromNP = novaPostaService.createOrUpdateOrderFromNP(ordered.getTtn(), ordered.getNpAccountId(), null);
-            ordered.setCity(fromNP.getCity());
-            ordered.setCityRefNP(fromNP.getCityRefNP());
-            orderRepository.save(ordered);
-        }
-    }
-
     @Autowired
     CompanyService companyService;
 
@@ -489,5 +478,38 @@ public class DevTest {
     public void removeNotifications() {
         List<Notification> notifications = notificationRepository.findByCreatedDateIsGreaterThan(LocalDateTime.now().minusDays(1));
         notificationRepository.deleteAll(notifications);
+    }
+
+    @Test
+    public void addVariantsForOrderSource(){
+/*        Variants variants = new Variants();
+        variants.setVariantType(VariantType.Source_of_order);
+        variants.setGetting("заявка з сайту (фб, інста)");
+        variantsRepository.save(variants);
+
+        Variants variants2 = new Variants();
+        variants2.setVariantType(VariantType.Source_of_order);
+        variants2.setGetting("переписка в фб");
+        variantsRepository.save(variants2);
+
+        Variants variants3 = new Variants();
+        variants3.setVariantType(VariantType.Source_of_order);
+        variants3.setGetting("переписка в фб (бот)");
+        variantsRepository.save(variants3);
+
+        Variants variants4 = new Variants();
+        variants4.setVariantType(VariantType.Source_of_order);
+        variants4.setGetting("переписка в інста");
+        variantsRepository.save(variants4);
+
+        Variants variants5 = new Variants();
+        variants5.setVariantType(VariantType.Source_of_order);
+        variants5.setGetting("переписка в інста (бот)");
+        variantsRepository.save(variants5);*/
+
+        Variants variants6 = new Variants();
+        variants6.setVariantType(VariantType.Source_of_order);
+        variants6.setGetting("не визначено");
+        variantsRepository.save(variants6);
     }
 }

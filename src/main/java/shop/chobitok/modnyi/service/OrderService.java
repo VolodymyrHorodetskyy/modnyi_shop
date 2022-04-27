@@ -1,6 +1,5 @@
 package shop.chobitok.modnyi.service;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -39,25 +38,26 @@ import static shop.chobitok.modnyi.util.StringHelper.splitTTNString;
 @Service
 public class OrderService {
 
-    private OrderRepository orderRepository;
-    private ClientService clientService;
-    private NovaPostaService novaPostaService;
-    private MailService mailService;
-    private CanceledOrderReasonService canceledOrderReasonService;
-    private UserRepository userRepository;
-    private StatusChangeService statusChangeService;
-    private NovaPostaRepository postaRepository;
-    private GoogleDocsService googleDocsService;
-    private DiscountService discountService;
-    private PayedOrderedService payedOrderedService;
-    private CardService cardService;
-    private HistoryService historyService;
-    private ImportService importService;
-    private NpAccountService npAccountService;
-    private NotificationService notificationService;
-    private ShoePriceService shoePriceService;
+    private final OrderRepository orderRepository;
+    private final ClientService clientService;
+    private final NovaPostaService novaPostaService;
+    private final MailService mailService;
+    private final CanceledOrderReasonService canceledOrderReasonService;
+    private final UserRepository userRepository;
+    private final StatusChangeService statusChangeService;
+    private final NovaPostaRepository postaRepository;
+    private final GoogleDocsService googleDocsService;
+    private final DiscountService discountService;
+    private final PayedOrderedService payedOrderedService;
+    private final CardService cardService;
+    private final HistoryService historyService;
+    private final ImportService importService;
+    private final NpAccountService npAccountService;
+    private final NotificationService notificationService;
+    private final ShoePriceService shoePriceService;
+    private final VariantsService variantsService;
 
-    public OrderService(OrderRepository orderRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, HistoryService historyService, ImportService importService, NpAccountService npAccountService, NotificationService notificationService, ShoePriceService shoePriceService) {
+    public OrderService(OrderRepository orderRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, HistoryService historyService, ImportService importService, NpAccountService npAccountService, NotificationService notificationService, ShoePriceService shoePriceService, VariantsService variantsService) {
         this.orderRepository = orderRepository;
         this.clientService = clientService;
         this.novaPostaService = novaPostaService;
@@ -75,6 +75,7 @@ public class OrderService {
         this.npAccountService = npAccountService;
         this.notificationService = notificationService;
         this.shoePriceService = shoePriceService;
+        this.variantsService = variantsService;
     }
 
     public Ordered findByTTN(String ttn) {
@@ -95,7 +96,7 @@ public class OrderService {
                                         String userId) {
         GetAllOrderedResponse getAllOrderedResponse = new GetAllOrderedResponse();
         if (pageRequest != null) {
-            Page orderedPage = orderRepository.findAll(new OrderedSpecification(model, removeSpaces(TTN), phoneOrName, withoutTTN, userId), pageRequest);
+            Page<Ordered> orderedPage = orderRepository.findAll(new OrderedSpecification(model, removeSpaces(TTN), phoneOrName, withoutTTN, userId), pageRequest);
             getAllOrderedResponse.setOrderedList(orderedPage.getContent());
             PaginationInfo paginationInfo = new PaginationInfo(orderedPage.getPageable().getPageNumber(), orderedPage.getPageable().getPageSize(), orderedPage.getTotalPages(), orderedPage.getTotalElements());
             getAllOrderedResponse.setPaginationInfo(paginationInfo);
@@ -139,6 +140,7 @@ public class OrderService {
         ordered.setPrePayment(updateOrderRequest.getPrepayment());
         ordered.setPrice(updateOrderRequest.getPrice());
         ordered.setAllCorrect(updateOrderRequest.isAllCorrect());
+        ordered.setSourceOfOrder(variantsService.getById(updateOrderRequest.getSourceOfOrderId()));
         if (ordered.isWithoutTTN()) {
             ordered.setStatus(updateOrderRequest.getStatus());
         }
@@ -164,7 +166,8 @@ public class OrderService {
         List<String> splitted = splitTTNString(request.getTtns());
         StringBuilder result = new StringBuilder();
         for (String ttn : splitted) {
-            result.append(importService.importOrderFromTTNString(ttn, request.getUserId(), discountService.getById(request.getDiscountId())));
+            result.append(importService.importOrderFromTTNString(ttn, request.getUserId(), discountService.getById(request.getDiscountId()),
+                    variantsService.getById(request.getSourceOfOrderId())));
         }
         return new StringResponse(result.toString());
     }

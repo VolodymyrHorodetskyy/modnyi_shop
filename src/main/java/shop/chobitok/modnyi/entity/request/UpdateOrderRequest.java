@@ -26,6 +26,7 @@ public class UpdateOrderRequest {
     private Boolean urgent;
     private Long discountId;
     private boolean allCorrect;
+    private Long sourceOfOrderId;
 
     public String getName() {
         return name;
@@ -169,5 +170,13 @@ public class UpdateOrderRequest {
 
     public void setAllCorrect(boolean allCorrect) {
         this.allCorrect = allCorrect;
+    }
+
+    public Long getSourceOfOrderId() {
+        return sourceOfOrderId;
+    }
+
+    public void setSourceOfOrderId(Long sourceOfOrderId) {
+        this.sourceOfOrderId = sourceOfOrderId;
     }
 }

@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import shop.chobitok.modnyi.entity.*;
@@ -126,5 +127,19 @@ public class ProdTest {
     @Test
     public void changeMainNp(){
         paramsService.saveOrChangeParam("mainNpAccount", "1");
+    }
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Test
+    public void addRoles() {
+        User user2 = userRepository.findById(2L).orElse(null);
+        user2.setRoles(asList(Role.EMPLOYEE));
+        userRepository.save(user2);
+
     }
 }

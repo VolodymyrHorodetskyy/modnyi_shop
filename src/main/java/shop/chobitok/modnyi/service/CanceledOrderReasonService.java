@@ -36,16 +36,16 @@ import static shop.chobitok.modnyi.util.StringHelper.removeSpaces;
 @Service
 public class CanceledOrderReasonService {
 
-    private OrderRepository orderRepository;
-    private CanceledOrderReasonRepository canceledOrderReasonRepository;
-    private NovaPostaRepository postaRepository;
-    private MailService mailService;
-    private StatusChangeService statusChangeService;
-    private ShoePriceService shoePriceService;
-    private GoogleDocsService googleDocsService;
-    private PayedOrderedService payedOrderedService;
-    private ImportService importService;
-    private OurTtnService ourTtnService;
+    private final OrderRepository orderRepository;
+    private final CanceledOrderReasonRepository canceledOrderReasonRepository;
+    private final NovaPostaRepository postaRepository;
+    private final MailService mailService;
+    private final StatusChangeService statusChangeService;
+    private final ShoePriceService shoePriceService;
+    private final GoogleDocsService googleDocsService;
+    private final PayedOrderedService payedOrderedService;
+    private final ImportService importService;
+    private final OurTtnService ourTtnService;
 
     public CanceledOrderReasonService(OrderRepository orderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, NovaPostaRepository postaRepository, MailService mailService, StatusChangeService statusChangeService, ShoePriceService shoePriceService, GoogleDocsService googleDocsService, PayedOrderedService payedOrderedService, ImportService importService, OurTtnService ourTtnService) {
         this.orderRepository = orderRepository;
@@ -70,7 +70,7 @@ public class CanceledOrderReasonService {
             throw new ConflictException("Немає такого замовлення");
         }
         String newTTN = cancelOrderRequest.getNewTTN();
-        importNewTtnFromCanceled(newTTN, ordered.getUser().getId());
+        importNewTtnFromCanceled(newTTN, ordered.getUser().getId(), ordered.getSourceOfOrder());
         statusChangeService.createRecord(ordered, ordered.getStatus(), Status.ВІДМОВА);
         payedOrderedService.createPayedOrdered(ordered);
         ordered.setStatus(Status.ВІДМОВА);
@@ -90,11 +90,11 @@ public class CanceledOrderReasonService {
         return ordered;
     }
 
-    private String importNewTtnFromCanceled(String newTtn, Long userId) {
+    private String importNewTtnFromCanceled(String newTtn, Long userId, Variants sourceOfOrder) {
         String result = null;
         if (newTtn != null && !newTtn.isBlank()) {
             if (orderRepository.findOneByAvailableTrueAndTtn(newTtn) == null) {
-                result = importService.importOrderFromTTNString(newTtn, userId, null);
+                result = importService.importOrderFromTTNString(newTtn, userId, null, sourceOfOrder);
             }
         }
         return result;
@@ -147,7 +147,7 @@ public class CanceledOrderReasonService {
                 if (returned != null) {
                     canceledOrderReason.setReturnTtn(returned.getNumber());
                     canceledOrderReason.setStatus(convertToStatus(returned.getStatusCode()));
-                    canceledOrderReason.setDeliveryCost(Double.valueOf(returned.getDocumentCost()));
+                    canceledOrderReason.setDeliveryCost((double) returned.getDocumentCost());
                     canceledOrderReason.setStoragePrice(!isEmpty(returned.getStoragePrice()) ? Double.valueOf(returned.getStoragePrice()) : null);
                     if (returned.getDatePayedKeeping() != null && canceledOrderReason.getDatePayedKeeping() == null) {
                         canceledOrderReason.setDatePayedKeeping(ShoeUtil.toLocalDateTime(returned.getDatePayedKeeping()));
@@ -157,7 +157,7 @@ public class CanceledOrderReasonService {
             } else if (!isEmpty(canceledOrderReason.getReturnTtn())) {
                 Data returned = postaRepository.getTracking(null, canceledOrderReason.getReturnTtn()).getData().get(0);
                 canceledOrderReason.setStatus(convertToStatus(returned.getStatusCode()));
-                canceledOrderReason.setDeliveryCost(Double.valueOf(returned.getDocumentCost()));
+                canceledOrderReason.setDeliveryCost((double) returned.getDocumentCost());
                 canceledOrderReason.setStoragePrice(!isEmpty(returned.getStoragePrice()) ? Double.valueOf(returned.getStoragePrice()) : null);
                 if (returned.getDatePayedKeeping() != null && canceledOrderReason.getDatePayedKeeping() == null) {
                     canceledOrderReason.setDatePayedKeeping(ShoeUtil.toLocalDateTime(returned.getDatePayedKeeping()));
@@ -186,7 +186,7 @@ public class CanceledOrderReasonService {
 
     public GetCanceledResponse getAll(int page, int size, String ttn, String phoneOrName, Boolean manual, Boolean withoutReason, String userId) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdDate"));
-        Page page1 = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(false, removeSpaces(ttn), phoneOrName, manual, withoutReason, userId), pageRequest);
+        Page<CanceledOrderReason> page1 = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(false, removeSpaces(ttn), phoneOrName, manual, withoutReason, userId), pageRequest);
         return new GetCanceledResponse(page1.getContent(), page1.getTotalElements());
     }
 
@@ -196,7 +196,8 @@ public class CanceledOrderReasonService {
             throw new ConflictException("CancelOrderReason не існує");
         }
         String newTTN = cancelOrderWithIdRequest.getNewTTN();
-        importNewTtnFromCanceled(newTTN, canceledOrderReason.getOrdered().getUser().getId());
+        importNewTtnFromCanceled(newTTN, canceledOrderReason.getOrdered().getUser().getId(),
+                canceledOrderReason.getOrdered().getSourceOfOrder());
         canceledOrderReason.setNewTtn(newTTN);
         canceledOrderReason.setReason(cancelOrderWithIdRequest.getReason());
         canceledOrderReason.setComment(cancelOrderWithIdRequest.getComment());
@@ -261,7 +262,7 @@ public class CanceledOrderReasonService {
         result.append(ourTtnResp.getAll());
         //  String coincidencesString = getCoincidences(createdList, toFind, used, excludeFromDeliveryFile, toSave);
         result.append(
-                getPayedKeeping(canceledOrderReasons.stream().filter(canceledOrderReason -> canceledOrderReason.getDatePayedKeeping() != null).collect(Collectors.toList())))
+                        getPayedKeeping(canceledOrderReasons.stream().filter(canceledOrderReason -> canceledOrderReason.getDatePayedKeeping() != null).collect(Collectors.toList())))
                 .append(ourTtnResp.getPayedKeeping());
         result.append(getPayAttention(showOnlyImportant, showClientTtn, used))
                 .append(ourTtnResp.getNeedAttention());
@@ -337,7 +338,7 @@ public class CanceledOrderReasonService {
         }
     */
     private String getPayedKeeping(List<CanceledOrderReason> canceledOrderReasons) {
-        canceledOrderReasons.sort(Comparator.comparing(canceledOrderReason -> canceledOrderReason.getDatePayedKeeping()));
+        canceledOrderReasons.sort(Comparator.comparing(CanceledOrderReason::getDatePayedKeeping));
         StringBuilder result = new StringBuilder();
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("d.MM");
         boolean exist = false;

@@ -10,7 +10,7 @@ import java.util.List;
 @Service
 public class VariantsService {
 
-    private VariantsRepository variantsRepository;
+    private final VariantsRepository variantsRepository;
 
     public VariantsService(VariantsRepository variantsRepository) {
         this.variantsRepository = variantsRepository;

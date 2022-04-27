@@ -6,6 +6,7 @@ public class ImportOrdersFromStringRequest {
     private Long discountId;
     private Long userId;
     private Long npAccountId;
+    private Long sourceOfOrderId;
 
     public String getTtns() {
         return ttns;
@@ -37,5 +38,13 @@ public class ImportOrdersFromStringRequest {
 
     public void setDiscountId(Long discountId) {
         this.discountId = discountId;
+    }
+
+    public Long getSourceOfOrderId() {
+        return sourceOfOrderId;
+    }
+
+    public void setSourceOfOrderId(Long sourceOfOrderId) {
+        this.sourceOfOrderId = sourceOfOrderId;
     }
 }

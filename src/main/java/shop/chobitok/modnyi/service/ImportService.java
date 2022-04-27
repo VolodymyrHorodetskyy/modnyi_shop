@@ -1,10 +1,7 @@
 package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
-import shop.chobitok.modnyi.entity.Discount;
-import shop.chobitok.modnyi.entity.Ordered;
-import shop.chobitok.modnyi.entity.Status;
-import shop.chobitok.modnyi.entity.User;
+import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.repository.OrderRepository;
@@ -25,7 +22,8 @@ public class ImportService {
         this.notificationService = notificationService;
     }
 
-    public String importOrderFromTTNString(String ttn, Long userId, Discount discount) {
+    public String importOrderFromTTNString(String ttn, Long userId, Discount discount,
+                                           Variants sourceOfOrder) {
         if (userId == null) {
             throw new ConflictException("UserId must not be null");
         } else {
@@ -36,7 +34,7 @@ public class ImportService {
             StringBuilder result = new StringBuilder();
             if (orderRepository.findOneByAvailableTrueAndTtn(ttn) == null) {
                 try {
-                    Ordered ordered = novaPostaService.createOrUpdateOrderFromNP(ttn, null, discount);
+                    Ordered ordered = novaPostaService.createOrUpdateOrderFromNP(ttn, null, discount, sourceOfOrder);
                     ordered.setUser(user);
                     if (ordered.getStatus() != Status.НЕ_ЗНАЙДЕНО) {
                         orderRepository.save(ordered);
