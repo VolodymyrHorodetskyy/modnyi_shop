@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.util;
 
+import shop.chobitok.modnyi.entity.CompanyFinanceControl;
 import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.entity.Status;
 import shop.chobitok.modnyi.entity.response.EarningsResponse;
@@ -29,11 +30,10 @@ public class StringHelper {
     }
 
     public static StringResponse formCardStatsInfo(EarningsResponse earningsResponse) {
-        StringBuilder result = new StringBuilder();
-        result.append("Сума = ").append(earningsResponse.getSum()).append("\n")
-                .append("Сума передбачуваних = ").append(earningsResponse.getPredictedSum()).append("\n")
-                .append("80% = ").append(earningsResponse.getRealisticSum()).append("\n");
-        return new StringResponse(result.toString());
+        String result = "Сума = " + earningsResponse.getSum() + "\n" +
+                "Сума передбачуваних = " + earningsResponse.getPredictedSum() + "\n" +
+                "80% = " + earningsResponse.getRealisticSum() + "\n";
+        return new StringResponse(result);
     }
 
     public static StringResponse fromSoldShoeResponse(Map<Shoe, Integer> sortedByAmount) {
@@ -53,7 +53,7 @@ public class StringHelper {
 
     public static String removeSpaces(String s) {
         if (!isEmpty(s)) {
-            s.replaceAll("\\s+", "");
+            s = s.replaceAll("\\s+", "");
         }
         return s;
     }
@@ -73,7 +73,6 @@ public class StringHelper {
 
     public static ArrayList<String> splitPhonesStringBySemiColonAndValidate(String phones) {
         if (!isEmpty(phones)) {
-            ArrayList<String> phonesArrayList = new ArrayList<>();
             phones = org.apache.commons.lang3.StringUtils.remove(phones, "+");
             Set<String> phonesSet = new HashSet<>();
             if (phones.contains(";")) {
@@ -90,8 +89,7 @@ public class StringHelper {
                     throw new ConflictException("Однакові телефони");
                 }
             }
-            phonesArrayList.addAll(phonesSet);
-            return phonesArrayList;
+            return new ArrayList<>(phonesSet);
         }
         return null;
     }
@@ -117,12 +115,19 @@ public class StringHelper {
             return false;
         }
         try {
-            double d = Double.parseDouble(strNum);
+            Double.parseDouble(strNum);
         } catch (NumberFormatException nfe) {
             return false;
         }
         return true;
     }
 
-
+    public static StringResponse fromCompanyFinanceControl(CompanyFinanceControl companyFinanceControl) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(companyFinanceControl.getCompany().getName()).append("\n\n")
+                .append("Ситуація зараз : ").append(companyFinanceControl.getCurrentFinanceState()).append("\n")
+                .append("Операція : ").append(companyFinanceControl.getOperation()).append("\n")
+                .append("Опис : ").append("\n").append(companyFinanceControl.getDescription()).append("\n");
+        return new StringResponse(stringBuilder.toString());
+    }
 }

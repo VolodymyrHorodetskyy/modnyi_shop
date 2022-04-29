@@ -140,6 +140,16 @@ public class ProdTest {
         User user2 = userRepository.findById(2L).orElse(null);
         user2.setRoles(asList(Role.EMPLOYEE));
         userRepository.save(user2);
+    }
 
+    @Autowired
+    private VariantsRepository variantsRepository;
+
+    @Test
+    public void addVariantsForOrderSource(){
+        Variants variants = new Variants();
+        variants.setVariantType(VariantType.Source_of_order);
+        variants.setGetting("коммент в фб");
+        variantsRepository.save(variants);
     }
 }

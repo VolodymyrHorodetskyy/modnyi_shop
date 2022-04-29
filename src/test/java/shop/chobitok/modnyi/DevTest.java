@@ -11,6 +11,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.request.CreateCompanyRequest;
+import shop.chobitok.modnyi.entity.request.DoCompanyFinanceControlOperationRequest;
 import shop.chobitok.modnyi.entity.request.SaveAdsSpendsRequest;
 import shop.chobitok.modnyi.facebook.FacebookApi;
 import shop.chobitok.modnyi.facebook.FacebookApi2;
@@ -482,7 +483,7 @@ public class DevTest {
 
     @Test
     public void addVariantsForOrderSource(){
-/*        Variants variants = new Variants();
+        Variants variants = new Variants();
         variants.setVariantType(VariantType.Source_of_order);
         variants.setGetting("заявка з сайту (фб, інста)");
         variantsRepository.save(variants);
@@ -505,11 +506,29 @@ public class DevTest {
         Variants variants5 = new Variants();
         variants5.setVariantType(VariantType.Source_of_order);
         variants5.setGetting("переписка в інста (бот)");
-        variantsRepository.save(variants5);*/
+        variantsRepository.save(variants5);
 
         Variants variants6 = new Variants();
         variants6.setVariantType(VariantType.Source_of_order);
         variants6.setGetting("не визначено");
         variantsRepository.save(variants6);
+    }
+
+    @Autowired
+    private CompanyFinanceControlService companyFinanceControlService;
+
+    @Autowired
+    private CompanyFinanceControlRepository companyFinanceControlRepository;
+
+    @Test
+    public void addFirstRecords(){
+
+
+        CompanyFinanceControl companyFinanceControl = new CompanyFinanceControl();
+        companyFinanceControl.setCompany(companyService.getCompany(1175L));
+        companyFinanceControl.setDescription("first");
+        companyFinanceControl.setOperation(0D);
+        companyFinanceControl.setCurrentFinanceState(0D);
+        companyFinanceControlRepository.save(companyFinanceControl);
     }
 }
