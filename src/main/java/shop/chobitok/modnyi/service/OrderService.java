@@ -5,6 +5,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.*;
+import shop.chobitok.modnyi.entity.request.DoCompanyFinanceControlOperationRequest;
 import shop.chobitok.modnyi.entity.request.ImportOrdersFromStringRequest;
 import shop.chobitok.modnyi.entity.request.UpdateOrderRequest;
 import shop.chobitok.modnyi.entity.response.GetAllOrderedResponse;
@@ -56,8 +57,9 @@ public class OrderService {
     private final NotificationService notificationService;
     private final ShoePriceService shoePriceService;
     private final VariantsService variantsService;
+    private final CompanyFinanceControlService companyFinanceControlService;
 
-    public OrderService(OrderRepository orderRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, HistoryService historyService, ImportService importService, NpAccountService npAccountService, NotificationService notificationService, ShoePriceService shoePriceService, VariantsService variantsService) {
+    public OrderService(OrderRepository orderRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, HistoryService historyService, ImportService importService, NpAccountService npAccountService, NotificationService notificationService, ShoePriceService shoePriceService, VariantsService variantsService, CompanyFinanceControlService companyFinanceControlService) {
         this.orderRepository = orderRepository;
         this.clientService = clientService;
         this.novaPostaService = novaPostaService;
@@ -76,6 +78,7 @@ public class OrderService {
         this.notificationService = notificationService;
         this.shoePriceService = shoePriceService;
         this.variantsService = variantsService;
+        this.companyFinanceControlService = companyFinanceControlService;
     }
 
     public Ordered findByTTN(String ttn) {
@@ -438,39 +441,63 @@ public class OrderService {
         return new StringResponse(result.toString());
     }
 
-    public StringResponse makeAllPayed() {
+    public StringResponse makeAllPayed(Long companyId) {
+        Double sum = 0d;
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndPayedFalseAndStatusIn(singletonList(Status.ОТРИМАНО));
         StringBuilder stringBuilder = new StringBuilder();
         StringBuilder responseStringBuilder = new StringBuilder();
+        StringBuilder stringBuilderForCompanyFinance = new StringBuilder();
         for (Ordered ordered : orderedList) {
-            String couldBePayedResponse = checkIfCouldBePayed(ordered);
-            if (isEmpty(couldBePayedResponse)) {
-                ordered.setPayed(true);
-            } else {
+            String couldBePayedResponse = checkIfCouldBePayed(ordered, companyId, stringBuilderForCompanyFinance, sum);
+            if (!isEmpty(couldBePayedResponse)) {
                 responseStringBuilder.append(couldBePayedResponse).append("\n");
             }
         }
-        payedOrderedService.makeAllCounted();
+        sum -= payedOrderedService.getSumNotCounted(companyId);
+        stringBuilderForCompanyFinance.append(payedOrderedService.makeAllCounted(companyId));
         orderRepository.saveAll(orderedList);
         if (stringBuilder.length() > 0) {
             historyService.addHistoryRecord(HistoryType.PAYMENT_FOR_SHOES, stringBuilder.toString());
         }
+
+        companyFinanceControlService.doOperation(new DoCompanyFinanceControlOperationRequest(companyId,
+                sum, stringBuilderForCompanyFinance.toString()));
         responseStringBuilder.append("готово");
         return new StringResponse(responseStringBuilder.toString());
     }
 
-    private String checkIfCouldBePayed(Ordered ordered) {
+    private String checkIfCouldBePayed(Ordered ordered, Long companyId, StringBuilder stringBuilderForCompanyFinance, Double sum) {
         if (ordered.getOrderedShoeList().size() < 1) {
-            return "немає взуття в замовленні";
+            stringBuilderForCompanyFinance.append("немає взуття в замовленні").append("\n");
         } else {
             for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
-                ShoePrice shoePrice = shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered);
-                if (shoePrice == null) {
-                    return ordered.getTtn() + " у взуття немає ціни";
+                if (orderedShoe.getShoe().getCompany().getId().equals(companyId)) {
+                    ShoePrice shoePrice = shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered);
+                    if (shoePrice == null) {
+                        stringBuilderForCompanyFinance.append(ordered.getTtn()).append(" у взуття немає ціни").append("\n");
+                    } else {
+                        stringBuilderForCompanyFinance.append(ordered.getTtn()).append(" ").append(shoePrice.getShoe().getModel())
+                                .append(" ").append(shoePrice.getShoe().getColor()).append(" ").append(shoePrice.getCost()).append(" грн").append("\n");
+                        sum += shoePrice.getCost();
+                        orderedShoe.setPayed(true);
+                    }
                 }
             }
         }
-        return null;
+        checkIfOrderIsPayed(ordered);
+        return stringBuilderForCompanyFinance.toString();
+    }
+
+    private void checkIfOrderIsPayed(Ordered ordered) {
+        boolean payedAllOrderedShoe = true;
+        for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
+            if (!orderedShoe.isPayed()) {
+                payedAllOrderedShoe = false;
+            }
+        }
+        if (payedAllOrderedShoe) {
+            ordered.setPayed(true);
+        }
     }
 
     public void updateGoogleDocsDeliveryFile() {

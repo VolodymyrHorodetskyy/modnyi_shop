@@ -9,8 +9,5 @@ import java.util.List;
 @Repository
 public interface PayedOrderedRepository extends JpaRepository<PayedOrdered, Long> {
 
-    PayedOrdered findByTtn(String ttn);
-
     List<PayedOrdered> findByCountedFalse();
-
 }

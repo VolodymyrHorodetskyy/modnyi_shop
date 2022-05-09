@@ -4,12 +4,13 @@ import javax.persistence.Entity;
 import javax.persistence.OneToOne;
 
 @Entity
-public class OrderedShoe extends Audit{
+public class OrderedShoe extends Audit {
 
     private int size;
     @OneToOne
     private Shoe shoe;
     private String comment;
+    private boolean payed = false;
 
     public OrderedShoe() {
     }
@@ -47,5 +48,13 @@ public class OrderedShoe extends Audit{
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public boolean isPayed() {
+        return payed;
+    }
+
+    public void setPayed(boolean payed) {
+        this.payed = payed;
     }
 }

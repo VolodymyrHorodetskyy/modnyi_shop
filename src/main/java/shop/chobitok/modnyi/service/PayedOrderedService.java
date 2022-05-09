@@ -11,8 +11,8 @@ import java.util.List;
 @Service
 public class PayedOrderedService {
 
-    private PayedOrderedRepository payedOrderedRepository;
-    private ShoePriceService shoePriceService;
+    private final PayedOrderedRepository payedOrderedRepository;
+    private final ShoePriceService shoePriceService;
 
     public PayedOrderedService(PayedOrderedRepository payedOrderedRepository, ShoePriceService shoePriceService) {
         this.payedOrderedRepository = payedOrderedRepository;
@@ -20,34 +20,44 @@ public class PayedOrderedService {
     }
 
     public PayedOrdered createPayedOrdered(Ordered ordered) {
-        if (!ordered.isPayed() || payedOrderedRepository.findByTtn(ordered.getTtn()) != null) {
-            return null;
-        }
         PayedOrdered payedOrdered = new PayedOrdered();
-        payedOrdered.setTtn(ordered.getTtn());
-        Double sum = 0d;
+        payedOrdered.setOrdered(ordered);
         for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
-            sum += shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered).getCost();
+            if (orderedShoe.isPayed()) {
+                payedOrdered.setSum(
+                        shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered).getCost());
+                payedOrdered.setOrderedShoe(orderedShoe);
+            }
         }
-        payedOrdered.setSum(sum);
         return payedOrderedRepository.save(payedOrdered);
     }
 
-    public Double getSumNotCounted() {
+    public Double getSumNotCounted(Long companyId) {
         Double sum = 0d;
         List<PayedOrdered> payedOrderedList = payedOrderedRepository.findByCountedFalse();
         for (PayedOrdered payedOrdered : payedOrderedList) {
-            sum += payedOrdered.getSum();
+            if (payedOrdered.getOrderedShoe().getShoe().getCompany().getId().equals(companyId)) {
+                sum += payedOrdered.getSum();
+            }
         }
         return sum;
     }
 
-    public void makeAllCounted() {
+    public String makeAllCounted(Long companyId) {
+        StringBuilder stringBuilder = new StringBuilder();
         List<PayedOrdered> payedOrderedList = payedOrderedRepository.findByCountedFalse();
+        stringBuilder.append("Були оплачені");
         for (PayedOrdered payedOrdered : payedOrderedList) {
-            payedOrdered.setCounted(true);
+            if (payedOrdered.getOrderedShoe().getShoe().getCompany().getId().equals(companyId)) {
+                stringBuilder.append(payedOrdered.getOrdered().getTtn()).append(" ")
+                        .append(payedOrdered.getOrderedShoe().getShoe().getModel()).append(" ")
+                        .append(payedOrdered.getOrderedShoe().getShoe().getColor()).append(" ")
+                        .append(payedOrdered.getSum()).append("\n");
+                payedOrdered.setCounted(true);
+            }
         }
         payedOrderedRepository.saveAll(payedOrderedList);
+        return stringBuilder.toString();
     }
 
 }

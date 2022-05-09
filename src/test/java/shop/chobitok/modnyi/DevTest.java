@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -144,7 +147,7 @@ public class DevTest {
 
     @Test
     public void addCompany() {
-        companyService.createCompany(new CreateCompanyRequest("Fenci"));
+        companyService.createCompany(new CreateCompanyRequest("Чарівно"));
     }
 
     @Autowired
@@ -482,7 +485,7 @@ public class DevTest {
     }
 
     @Test
-    public void addVariantsForOrderSource(){
+    public void addVariantsForOrderSource() {
         Variants variants = new Variants();
         variants.setVariantType(VariantType.Source_of_order);
         variants.setGetting("заявка з сайту (фб, інста)");
@@ -521,14 +524,28 @@ public class DevTest {
     private CompanyFinanceControlRepository companyFinanceControlRepository;
 
     @Test
-    public void addFirstRecords(){
-
-
+    public void addFirstRecords() {
         CompanyFinanceControl companyFinanceControl = new CompanyFinanceControl();
-        companyFinanceControl.setCompany(companyService.getCompany(1175L));
+        companyFinanceControl.setCompany(companyService.getCompany(1177L));
         companyFinanceControl.setDescription("first");
         companyFinanceControl.setOperation(0D);
         companyFinanceControl.setCurrentFinanceState(0D);
         companyFinanceControlRepository.save(companyFinanceControl);
+    }
+
+    @Transactional
+    @Test
+    public void makeOrdersUnpaid() {
+        OrderedSpecification orderedSpecification = new OrderedSpecification();
+        orderedSpecification.setStatus(Status.ОТРИМАНО);
+        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification, PageRequest.of(0, 15,
+                Sort.by(Sort.Direction.DESC, "createdDate"))).getContent();
+        for (Ordered ordered : orderedList) {
+            ordered.setPayed(false);
+            for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
+                orderedShoe.setPayed(false);
+            }
+        }
+        orderRepository.saveAll(orderedList);
     }
 }

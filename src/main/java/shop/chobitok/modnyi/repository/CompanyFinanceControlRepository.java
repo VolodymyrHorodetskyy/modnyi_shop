@@ -5,5 +5,5 @@ import shop.chobitok.modnyi.entity.CompanyFinanceControl;
 
 public interface CompanyFinanceControlRepository extends JpaRepository<CompanyFinanceControl, Long> {
 
-    CompanyFinanceControl findOneByCompanyIdOrderByCreatedDateDesc(Long companyId);
+    CompanyFinanceControl findFirst10ByCompanyIdOrderByCreatedDateDesc(Long companyId);
 }

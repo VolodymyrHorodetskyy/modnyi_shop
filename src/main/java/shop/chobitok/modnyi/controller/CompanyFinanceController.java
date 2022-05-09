@@ -27,7 +27,7 @@ public class CompanyFinanceController {
     }
 
     @GetMapping
-    public StringResponse getLastOperationByCompanyId(@RequestParam Long companyId) {
-        return service.getLastCompanyFinanceControlByCompanyIdString(companyId);
+    public StringResponse getLast10OperationByCompanyId(@RequestParam Long companyId) {
+        return service.getLast10CompanyFinanceControlByCompanyIdString(companyId);
     }
 }

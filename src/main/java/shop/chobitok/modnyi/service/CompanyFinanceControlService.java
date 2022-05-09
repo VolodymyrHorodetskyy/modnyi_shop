@@ -32,11 +32,12 @@ public class CompanyFinanceControlService {
         }
     }
 
-    public StringResponse getLastCompanyFinanceControlByCompanyIdString(Long companyId) {
-        return StringHelper.fromCompanyFinanceControl(companyFinanceControlRepository.findOneByCompanyIdOrderByCreatedDateDesc(companyId));
+    public StringResponse getLast10CompanyFinanceControlByCompanyIdString(Long companyId) {
+        return StringHelper.fromCompanyFinanceControl(
+                companyFinanceControlRepository.findFirst10ByCompanyIdOrderByCreatedDateDesc(companyId));
     }
 
     public CompanyFinanceControl getLastCompanyFinanceControlByCompanyId(Long companyId) {
-        return companyFinanceControlRepository.findOneByCompanyIdOrderByCreatedDateDesc(companyId);
+        return companyFinanceControlRepository.findFirst10ByCompanyIdOrderByCreatedDateDesc(companyId);
     }
 }

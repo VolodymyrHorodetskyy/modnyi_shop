@@ -8,9 +8,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import shop.chobitok.modnyi.entity.*;
+import shop.chobitok.modnyi.entity.request.CreateCompanyRequest;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.repository.*;
 import shop.chobitok.modnyi.service.CheckerService;
+import shop.chobitok.modnyi.service.CompanyService;
 import shop.chobitok.modnyi.service.ParamsService;
 import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
@@ -151,5 +153,12 @@ public class ProdTest {
         variants.setVariantType(VariantType.Source_of_order);
         variants.setGetting("коммент в фб");
         variantsRepository.save(variants);
+    }
+    @Autowired
+    CompanyService companyService;
+
+    @Test
+    public void addCompany() {
+        companyService.createCompany(new CreateCompanyRequest("Чарівно"));
     }
 }

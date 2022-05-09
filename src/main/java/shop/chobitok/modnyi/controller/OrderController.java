@@ -90,8 +90,8 @@ public class OrderController {
     }
 
     @PatchMapping("/makeAllPayed")
-    public StringResponse makeAllPayed() {
-        return orderService.makeAllPayed();
+    public StringResponse makeAllPayed(@RequestParam(required = false) Long companyId) {
+        return orderService.makeAllPayed(companyId);
     }
 
     @PatchMapping("/updateCanceled")

@@ -1,20 +1,24 @@
 package shop.chobitok.modnyi.entity;
 
 import javax.persistence.Entity;
+import javax.persistence.OneToOne;
 
 @Entity
 public class PayedOrdered extends Audit {
 
-    private String ttn;
+    @OneToOne
+    private Ordered ordered;
+    @OneToOne
+    private OrderedShoe orderedShoe;
     private Double sum;
     private boolean counted = false;
 
-    public String getTtn() {
-        return ttn;
+    public OrderedShoe getOrderedShoe() {
+        return orderedShoe;
     }
 
-    public void setTtn(String ttn) {
-        this.ttn = ttn;
+    public void setOrderedShoe(OrderedShoe orderedShoe) {
+        this.orderedShoe = orderedShoe;
     }
 
     public Double getSum() {
@@ -31,5 +35,13 @@ public class PayedOrdered extends Audit {
 
     public void setCounted(boolean counted) {
         this.counted = counted;
+    }
+
+    public Ordered getOrdered() {
+        return ordered;
+    }
+
+    public void setOrdered(Ordered ordered) {
+        this.ordered = ordered;
     }
 }

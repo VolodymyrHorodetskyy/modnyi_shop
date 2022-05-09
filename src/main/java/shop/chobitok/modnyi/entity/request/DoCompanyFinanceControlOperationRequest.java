@@ -6,6 +6,15 @@ public class DoCompanyFinanceControlOperationRequest {
     private Double operation;
     private String description;
 
+    public DoCompanyFinanceControlOperationRequest() {
+    }
+
+    public DoCompanyFinanceControlOperationRequest(Long companyId, Double operation, String description) {
+        this.companyId = companyId;
+        this.operation = operation;
+        this.description = description;
+    }
+
     public Long getCompanyId() {
         return companyId;
     }

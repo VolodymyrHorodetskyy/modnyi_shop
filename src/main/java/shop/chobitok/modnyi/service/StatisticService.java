@@ -32,17 +32,17 @@ import static shop.chobitok.modnyi.util.DateHelper.formDateTimeToOrGetDefault;
 @Service
 public class StatisticService {
 
-    private NovaPostaRepository postaRepository;
-    private OrderRepository orderRepository;
-    private OrderService orderService;
-    private ShoePriceService shoePriceService;
-    private AppOrderRepository appOrderRepository;
-    private CanceledOrderReasonRepository canceledOrderReasonRepository;
-    private PayedOrderedService payedOrderedService;
-    private ParamsService paramsService;
-    private OurTtnService ourTtnService;
-    private HistoryService historyService;
-    private NPOrderMapper npOrderMapper;
+    private final NovaPostaRepository postaRepository;
+    private final OrderRepository orderRepository;
+    private final OrderService orderService;
+    private final ShoePriceService shoePriceService;
+    private final AppOrderRepository appOrderRepository;
+    private final CanceledOrderReasonRepository canceledOrderReasonRepository;
+    private final PayedOrderedService payedOrderedService;
+    private final ParamsService paramsService;
+    private final OurTtnService ourTtnService;
+    private final HistoryService historyService;
+    private final NPOrderMapper npOrderMapper;
 
 
     public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, OrderService orderService, ShoePriceService shoePriceService, AppOrderRepository appOrderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, PayedOrderedService payedOrderedService, ParamsService paramsService, OurTtnService ourTtnService, HistoryService historyService, NPOrderMapper npOrderMapper) {
@@ -82,8 +82,8 @@ public class StatisticService {
         return allTTNSet;
     }
 
-    public StringResponse needToPayed(boolean updateStatuses) {
-        Map<String, NeedToBePayed> companySumMap = new HashMap<>();
+    public StringResponse needToPayed(boolean updateStatuses, Long companyId) {
+        Double sum = 0d;
         StringBuilder result = new StringBuilder();
         if (updateStatuses) {
             orderService.updateOrdersByNovaPosta();
@@ -95,41 +95,24 @@ public class StatisticService {
                 result.append(ordered.getTtn()).append(" НЕ ВИЗНАЧЕНО\n");
             } else {
                 for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
-                    NeedToBePayed needToBePayed = companySumMap.get(orderedShoe.getShoe().getCompany().getName());
-                    ShoePrice shoePrice = shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered);
-                    if (shoePrice == null) {
-                        result.append(ordered.getTtn()).append(" ").append(orderedShoe.getShoe().getModel()).append(" ")
-                                .append(orderedShoe.getShoe().getColor()).append(" - немає ціни\n\n");
-                        break;
-                    } else {
-                        Double shoeCost = shoePrice.getCost();
-                        if (needToBePayed == null) {
-                            needToBePayed = new NeedToBePayed();
-                            needToBePayed.sum = shoeCost;
-                            needToBePayed.ttns = new ArrayList<>();
-                            needToBePayed.ttns.add(ordered.getTtn());
-                            companySumMap.put(orderedShoe.getShoe().getCompany().getName(), needToBePayed);
+                    if (!orderedShoe.isPayed() && orderedShoe.getShoe().getCompany().getId().equals(companyId)) {
+                        ShoePrice shoePrice = shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered);
+                        if (shoePrice == null) {
+                            result.append(ordered.getTtn()).append(" ").append(orderedShoe.getShoe().getModel()).append(" ")
+                                    .append(orderedShoe.getShoe().getColor()).append(" - немає ціни\n\n");
+                            break;
                         } else {
-                            needToBePayed.sum += shoeCost;
-                            needToBePayed.ttns.add(ordered.getTtn());
+                            sum += shoePrice.getCost();
+                            result.append(ordered.getTtn()).append(" ")
+                                    .append(orderedShoe.getShoe().getModelAndColor()).append(" ")
+                                    .append(shoePrice.getCost()).append("\n");
                         }
                     }
                 }
             }
         }
-        for (Map.Entry<String, NeedToBePayed> entry : companySumMap.entrySet()) {
-            result.append(entry.getKey()).append("\n\n");
-            for (String s : entry.getValue().ttns) {
-                result.append(s).append("\n");
-            }
-            result.append("Сума = ").append(entry.getValue().sum).append("\n");
-        }
-        Double sumNotCounted = payedOrderedService.getSumNotCounted();
-        Double sum = 0d;
-        if (companySumMap.entrySet().size() > 0) {
-            Map.Entry<String, NeedToBePayed> entry = companySumMap.entrySet().iterator().next();
-            sum = entry.getValue().sum;
-        }
+        Double sumNotCounted = payedOrderedService.getSumNotCounted(companyId);
+        result.append("\n").append("Загална сума = ").append(sum).append("\n");
         result.append("Сума відмінених оплачених = ").append(sumNotCounted).append("\n");
         result.append("Сума до оплати = ").append(sum - sumNotCounted);
         return new StringResponse(result.toString());
@@ -473,10 +456,10 @@ public class StatisticService {
             response.append(commasNoEqualShoesSizeStringBuilder).append("\n");
         }
         if (discountIsNull != null) {
-            response.append(discountIsNull.toString()).append("\n");
+            response.append(discountIsNull).append("\n");
         }
         if (priceIsNotCorrect != null) {
-            response.append(priceIsNotCorrect.toString()).append("\n");
+            response.append(priceIsNotCorrect).append("\n");
         }
         return new MistakesResponse(response.toString(), mistakesAmount);
     }

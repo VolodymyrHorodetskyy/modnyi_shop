@@ -156,4 +156,8 @@ public class Shoe extends Audit {
         result = 31 * result + color.hashCode();
         return result;
     }
+
+    public String getModelAndColor() {
+        return this.model + " " + this.color;
+    }
 }

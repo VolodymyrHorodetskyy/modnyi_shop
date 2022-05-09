@@ -56,8 +56,9 @@ public class StatisticController {
 
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
     @PostMapping("/needToPayedFromFile")
-    public StringResponse needToPayed(@RequestParam(required = false) boolean updateStatuses) {
-        return statisticService.needToPayed(updateStatuses);
+    public StringResponse needToPayed(@RequestParam(required = false) boolean updateStatuses,
+                                      @RequestParam Long companyId) {
+        return statisticService.needToPayed(updateStatuses, companyId);
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
