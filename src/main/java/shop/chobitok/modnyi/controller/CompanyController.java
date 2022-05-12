@@ -29,5 +29,4 @@ public class CompanyController {
     public List<Company> getCompanies(){
         return companyService.getCompanies();
     }
-
 }

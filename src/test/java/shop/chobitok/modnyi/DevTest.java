@@ -533,7 +533,6 @@ public class DevTest {
         companyFinanceControlRepository.save(companyFinanceControl);
     }
 
-    @Transactional
     @Test
     public void makeOrdersUnpaid() {
         OrderedSpecification orderedSpecification = new OrderedSpecification();
@@ -545,7 +544,7 @@ public class DevTest {
             for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
                 orderedShoe.setPayed(false);
             }
+            orderRepository.save(ordered);
         }
-        orderRepository.saveAll(orderedList);
     }
 }

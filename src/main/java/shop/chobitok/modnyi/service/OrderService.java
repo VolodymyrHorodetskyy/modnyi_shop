@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.service;
 
+import com.google.common.util.concurrent.AtomicDouble;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -442,8 +443,11 @@ public class OrderService {
     }
 
     public StringResponse makeAllPayed(Long companyId) {
-        Double sum = 0d;
+        AtomicDouble sum = new AtomicDouble(0d);
         List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndPayedFalseAndStatusIn(singletonList(Status.ОТРИМАНО));
+        if (checkIfAllCompanyShoesPayedInOrder(orderedList, companyId)) {
+            return new StringResponse("Все пораховано");
+        }
         StringBuilder stringBuilder = new StringBuilder();
         StringBuilder responseStringBuilder = new StringBuilder();
         StringBuilder stringBuilderForCompanyFinance = new StringBuilder();
@@ -453,7 +457,7 @@ public class OrderService {
                 responseStringBuilder.append(couldBePayedResponse).append("\n");
             }
         }
-        sum -= payedOrderedService.getSumNotCounted(companyId);
+        sum.addAndGet(payedOrderedService.getSumNotCounted(companyId));
         stringBuilderForCompanyFinance.append(payedOrderedService.makeAllCounted(companyId));
         orderRepository.saveAll(orderedList);
         if (stringBuilder.length() > 0) {
@@ -461,24 +465,24 @@ public class OrderService {
         }
 
         companyFinanceControlService.doOperation(new DoCompanyFinanceControlOperationRequest(companyId,
-                sum, stringBuilderForCompanyFinance.toString()));
+                sum.get(), stringBuilderForCompanyFinance.toString()));
         responseStringBuilder.append("готово");
         return new StringResponse(responseStringBuilder.toString());
     }
 
-    private String checkIfCouldBePayed(Ordered ordered, Long companyId, StringBuilder stringBuilderForCompanyFinance, Double sum) {
+    private String checkIfCouldBePayed(Ordered ordered, Long companyId, StringBuilder stringBuilderForCompanyFinance, AtomicDouble sum) {
         if (ordered.getOrderedShoeList().size() < 1) {
             stringBuilderForCompanyFinance.append("немає взуття в замовленні").append("\n");
         } else {
             for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
-                if (orderedShoe.getShoe().getCompany().getId().equals(companyId)) {
+                if (orderedShoe.getShoe().getCompany().getId().equals(companyId) && !orderedShoe.isPayed()) {
                     ShoePrice shoePrice = shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered);
                     if (shoePrice == null) {
                         stringBuilderForCompanyFinance.append(ordered.getTtn()).append(" у взуття немає ціни").append("\n");
                     } else {
                         stringBuilderForCompanyFinance.append(ordered.getTtn()).append(" ").append(shoePrice.getShoe().getModel())
                                 .append(" ").append(shoePrice.getShoe().getColor()).append(" ").append(shoePrice.getCost()).append(" грн").append("\n");
-                        sum += shoePrice.getCost();
+                        sum.addAndGet(shoePrice.getCost());
                         orderedShoe.setPayed(true);
                     }
                 }
@@ -498,6 +502,23 @@ public class OrderService {
         if (payedAllOrderedShoe) {
             ordered.setPayed(true);
         }
+    }
+
+
+    private boolean checkIfAllCompanyShoesPayedInOrder(List<Ordered> orderedList, Long companyId) {
+        boolean payed = true;
+        for (Ordered ordered : orderedList) {
+            if (!ordered.isPayed()) {
+                for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
+                    if (orderedShoe.getShoe().getCompany().getId().equals(companyId) &&
+                            !orderedShoe.isPayed()) {
+                        payed = false;
+                        break;
+                    }
+                }
+            }
+        }
+        return payed;
     }
 
     public void updateGoogleDocsDeliveryFile() {

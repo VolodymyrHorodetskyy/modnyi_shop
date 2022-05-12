@@ -5,8 +5,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.CompanyFinanceControl;
 import shop.chobitok.modnyi.entity.request.DoCompanyFinanceControlOperationRequest;
-import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.service.CompanyFinanceControlService;
+
+import java.util.List;
 
 @RequestMapping("/companyFinance")
 @RestController
@@ -27,7 +28,7 @@ public class CompanyFinanceController {
     }
 
     @GetMapping
-    public StringResponse getLast10OperationByCompanyId(@RequestParam Long companyId) {
-        return service.getLast10CompanyFinanceControlByCompanyIdString(companyId);
+    public List<CompanyFinanceControl> getLastOperationByCompanyId(@RequestParam Long companyId, @RequestParam int size) {
+        return service.getLastCompanyFinanceControlByCompanyId(companyId, size);
     }
 }
