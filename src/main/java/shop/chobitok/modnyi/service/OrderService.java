@@ -525,7 +525,7 @@ public class OrderService {
         //     googleDocsService.updateDeliveryFile(countNeedDeliveryFromDB(false).getResult());
     }
 
-    public StringResponse countNeedDeliveryFromDB(boolean updateStatuses) {
+    public StringResponse countNeedDeliveryFromDB(boolean updateStatuses, Long companyId) {
         StringBuilder stringBuilder = new StringBuilder();
         OrderedSpecification orderedSpecification = new OrderedSpecification(Status.СТВОРЕНО, false);
         orderedSpecification.setAvailable(true);
@@ -533,6 +533,7 @@ public class OrderService {
         if (updateStatuses) {
             updateOrdersByNovaPosta(orderedList);
         }
+        orderedSpecification.setCompanyId(companyId);
         orderedList = orderRepository.findAll(orderedSpecification, Sort.by("dateCreated"));
         stringBuilder.append(countNeedDelivery(orderedList));
         stringBuilder.append("Кількість : ").append(orderedList.size());

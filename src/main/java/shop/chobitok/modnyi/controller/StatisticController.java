@@ -44,8 +44,9 @@ public class StatisticController {
     }
 
     @GetMapping("/needDeliveryFromDB")
-    public StringResponse needDelivery(@RequestParam(required = false) boolean updateStatuses) {
-        return orderService.countNeedDeliveryFromDB(updateStatuses);
+    public StringResponse needDelivery(@RequestParam(required = false) boolean updateStatuses,
+                                       @RequestParam Long companyId) {
+        return orderService.countNeedDeliveryFromDB(updateStatuses, companyId);
     }
 
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
