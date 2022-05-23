@@ -201,10 +201,13 @@ public class ProdTest {
     public void companyOrders() {
         OrderedSpecification orderedSpecification = new OrderedSpecification();
         orderedSpecification.setCompanyId(1177l);
-        orderedSpecification.setStatuses(Arrays.asList(Status.СТВОРЕНО));
+        orderedSpecification.setStatuses(Arrays.asList(Status.ДОСТАВЛЕНО,
+                Status.ОТРИМАНО, Status.ВІДПРАВЛЕНО, Status.ВІДМОВА));
         List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
         for (Ordered ordered : orderedList) {
-            out.println(ordered.getTtn()+"\n"+ordered.getPostComment()+"\n");
+            out.println(ordered.getTtn() + "\n" + ordered.getPostComment() + "" +
+                    ordered.getStatus()
+                    + "\n");
         }
     }
 
@@ -223,5 +226,20 @@ public class ProdTest {
         companyFinanceControl.setOperation(0D);
         companyFinanceControl.setCurrentFinanceState(0D);
         companyFinanceControlRepository.save(companyFinanceControl);
+    }
+
+    @Autowired
+    private AppOrderToPixelService appOrderToPixelService;
+
+    @Test
+    public void sendAppOrderToPixel() {
+        appOrderToPixelService.sendAll(0, "2022-05-17 00:00");
+    }
+
+    @Test
+    public void chnageAccessKey() {
+        Pixel pixel = pixelRepository.findById(20l).orElse(null);
+        pixel.setPixelAccessToken("EAAG6Ad0MA64BAMPvC9qZCwwmZBUMhObQ2g6Q0CDCYT11OzurnVYmWmwExZB5j1151WcXZBmchjYybKFwhIwdZCi6foy92HHPsgSRJEIiUPAar00vmrLqRgJtfmkrns0J6sxMpCDWwrZBKwmZCJzMDh4FXnOjWEckynZA0Aj9FMVWsKX2U1XsmvuJ6a34Wy1q3j4ZD");
+        pixelRepository.save(pixel);
     }
 }

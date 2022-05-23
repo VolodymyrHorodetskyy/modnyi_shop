@@ -4,8 +4,11 @@ import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.OrderedShoe;
 import shop.chobitok.modnyi.entity.PayedOrdered;
+import shop.chobitok.modnyi.entity.ShoePrice;
+import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.repository.PayedOrderedRepository;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 @Service
@@ -19,17 +22,24 @@ public class PayedOrderedService {
         this.shoePriceService = shoePriceService;
     }
 
-    public PayedOrdered createPayedOrdered(Ordered ordered) {
-        PayedOrdered payedOrdered = new PayedOrdered();
-        payedOrdered.setOrdered(ordered);
+    @Transactional
+    public void createPayedOrdered(Ordered ordered) {
+        if (ordered.getOrderedShoeList().isEmpty()) {
+            throw new ConflictException("в замовленні взуття не вибрано");
+        }
         for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
             if (orderedShoe.isPayed()) {
-                payedOrdered.setSum(
-                        shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered).getCost());
+                PayedOrdered payedOrdered = new PayedOrdered();
+                payedOrdered.setOrdered(ordered);
+                ShoePrice shoePrice = shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered);
+                if (shoePrice == null) {
+                    throw new ConflictException("Немає ціни для взуття id = " + orderedShoe.getShoe().getId());
+                }
+                payedOrdered.setSum(shoePrice.getCost());
                 payedOrdered.setOrderedShoe(orderedShoe);
+                payedOrderedRepository.save(payedOrdered);
             }
         }
-        return payedOrderedRepository.save(payedOrdered);
     }
 
     public Double getSumNotCounted(Long companyId) {
