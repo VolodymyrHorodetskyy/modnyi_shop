@@ -1,7 +1,6 @@
 package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.ResourceAccessException;
 import shop.chobitok.modnyi.entity.AppOrder;
 import shop.chobitok.modnyi.entity.AppOrderToPixel;
 import shop.chobitok.modnyi.facebook.FacebookApi2;
@@ -74,5 +73,12 @@ public class AppOrderToPixelService {
             appOrderToPixelRepository.save(appOrderToPixel);
         }
         sendEventsHistoryService.sendEventsHistory(restResponseDTO, appOrderToPixel);
+    }
+
+    public void sendByAppOrderToPixelId(boolean sent, Long appOrderToPixelId) {
+        AppOrderToPixel appOrderToPixel = appOrderToPixelRepository.findById(appOrderToPixelId).orElse(null);
+        if (appOrderToPixel != null && appOrderToPixel.isSent() == sent) {
+            send(appOrderToPixel);
+        }
     }
 }

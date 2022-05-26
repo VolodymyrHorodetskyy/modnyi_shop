@@ -30,6 +30,7 @@ public class OrderedSpecification implements Specification<Ordered> {
     private Long npAccountId;
     private Boolean allCorrect;
     private Boolean available;
+    private Long companyId;
 
     public OrderedSpecification() {
     }
@@ -179,6 +180,13 @@ public class OrderedSpecification implements Specification<Ordered> {
                 availablePredicate = criteriaBuilder.isFalse(root.get("available"));
             }
             predicateList.add(availablePredicate);
+        }
+        if(companyId != null){
+            Join<Ordered, OrderedShoe> orderedShoeJoin = root.join("orderedShoeList");
+            Join<OrderedShoe, Shoe> orderedShoeShoeJoin = orderedShoeJoin.join("shoe");
+            Join<Shoe, Company> shoeCompanyJoin = orderedShoeShoeJoin.join("company");
+            Predicate companyPredicate = criteriaBuilder.equal(shoeCompanyJoin.get("id"),companyId);
+            predicateList.add(companyPredicate);
         }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }
@@ -333,5 +341,13 @@ public class OrderedSpecification implements Specification<Ordered> {
 
     public void setAvailable(Boolean available) {
         this.available = available;
+    }
+
+    public Long getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(Long companyId) {
+        this.companyId = companyId;
     }
 }

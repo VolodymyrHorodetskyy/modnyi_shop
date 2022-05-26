@@ -9,19 +9,21 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.request.CreateCompanyRequest;
+import shop.chobitok.modnyi.facebook.FacebookApi2;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.repository.*;
-import shop.chobitok.modnyi.service.CheckerService;
-import shop.chobitok.modnyi.service.CompanyService;
-import shop.chobitok.modnyi.service.ParamsService;
+import shop.chobitok.modnyi.service.*;
 import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.lang.System.out;
+import static java.time.LocalDateTime.now;
 import static java.util.Arrays.asList;
 
 @RunWith(SpringRunner.class)
@@ -117,8 +119,8 @@ public class ProdTest {
     private ClientRepository clientRepository;
 
     @Test
-    public void changeEmail(){
-        Client client= clientRepository.findFirstByMail("berezalesa8@gnail.co.com");
+    public void changeEmail() {
+        Client client = clientRepository.findFirstByMail("berezalesa8@gnail.co.com");
         client.setMail("berezalesa8@gmail.com");
         clientRepository.save(client);
     }
@@ -127,7 +129,7 @@ public class ProdTest {
     private ParamsService paramsService;
 
     @Test
-    public void changeMainNp(){
+    public void changeMainNp() {
         paramsService.saveOrChangeParam("mainNpAccount", "1");
     }
 
@@ -148,17 +150,96 @@ public class ProdTest {
     private VariantsRepository variantsRepository;
 
     @Test
-    public void addVariantsForOrderSource(){
+    public void addVariantsForOrderSource() {
         Variants variants = new Variants();
         variants.setVariantType(VariantType.Source_of_order);
         variants.setGetting("коммент в фб");
         variantsRepository.save(variants);
     }
+
     @Autowired
     CompanyService companyService;
 
     @Test
     public void addCompany() {
         companyService.createCompany(new CreateCompanyRequest("Чарівно"));
+    }
+
+    @Autowired
+    private PixelRepository pixelRepository;
+
+    @Test
+    public void addPixel() {
+        Pixel pixel = new Pixel();
+        pixel.setPixelId("709663950077249");
+        pixel.setPixelAccessToken("EAAG6Ad0MA64BAEONx1g87mjALpwhU9klS4xGxZCY3TbxhF85NAd36qKX3bj4p8jZCnwYByE7Ro6GIRPKNgiq9rOgrSqp0NpJYu270LtS6EGXDAWEGzQ4JRfxS9QO3UkNZCklyvoPZBFiAwbkI3yUC3RXVZC6EBJsfp3vKKjFpNloJQ97CS7H1XhzJJE3mURAZD");
+        pixel.setSendEvents(true);
+        pixel.setAccName("poli ad pxl 5");
+        pixelRepository.save(pixel);
+    }
+
+    @Autowired
+    private AppOrderRepository appOrderRepository;
+
+    @Autowired
+    private FacebookApi2 facebookApi2;
+
+    @Test
+    public void sendTestEvent() {
+        AppOrder appOrder = appOrderRepository.findById(24349L).orElse(null);
+        assert appOrder != null;
+        appOrder.setCreatedDate(now());
+        appOrder.setPixel(pixelRepository.findById(20L).orElse(null));
+        facebookApi2.send("TEST38291", appOrder);
+    }
+
+    @Autowired
+    private ShoePriceService shoePriceService;
+
+    @Test
+    @Transactional
+    public void companyOrders() {
+        OrderedSpecification orderedSpecification = new OrderedSpecification();
+        orderedSpecification.setCompanyId(1177l);
+        orderedSpecification.setStatuses(Arrays.asList(Status.ДОСТАВЛЕНО,
+                Status.ОТРИМАНО, Status.ВІДПРАВЛЕНО, Status.ВІДМОВА));
+        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
+        for (Ordered ordered : orderedList) {
+            out.println(ordered.getTtn() + "\n" + ordered.getPostComment() + "" +
+                    ordered.getStatus()
+                    + "\n");
+        }
+    }
+
+    @Autowired
+    private CompanyFinanceControlService companyFinanceControlService;
+
+    @Autowired
+    private CompanyFinanceControlRepository companyFinanceControlRepository;
+
+
+    @Test
+    public void addFirstRecords() {
+        CompanyFinanceControl companyFinanceControl = new CompanyFinanceControl();
+        companyFinanceControl.setCompany(companyService.getCompany(1175L));
+        companyFinanceControl.setDescription("first");
+        companyFinanceControl.setOperation(0D);
+        companyFinanceControl.setCurrentFinanceState(0D);
+        companyFinanceControlRepository.save(companyFinanceControl);
+    }
+
+    @Autowired
+    private AppOrderToPixelService appOrderToPixelService;
+
+    @Test
+    public void sendAppOrderToPixel() {
+        appOrderToPixelService.sendAll(0, "2022-05-17 00:00");
+    }
+
+    @Test
+    public void chnageAccessKey() {
+        Pixel pixel = pixelRepository.findById(20l).orElse(null);
+        pixel.setPixelAccessToken("EAAG6Ad0MA64BAMPvC9qZCwwmZBUMhObQ2g6Q0CDCYT11OzurnVYmWmwExZB5j1151WcXZBmchjYybKFwhIwdZCi6foy92HHPsgSRJEIiUPAar00vmrLqRgJtfmkrns0J6sxMpCDWwrZBKwmZCJzMDh4FXnOjWEckynZA0Aj9FMVWsKX2U1XsmvuJ6a34Wy1q3j4ZD");
+        pixelRepository.save(pixel);
     }
 }
