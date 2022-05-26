@@ -154,7 +154,7 @@ public class CanceledOrderReasonService {
                     }
                     updated.add(canceledOrderReason);
                 }
-            } else if (!isEmpty(canceledOrderReason.getReturnTtn()) && canceledOrderReason.getReturnTtn().length() > 6) {
+            } else if (!isEmpty(canceledOrderReason.getReturnTtn())) {
                 Data returned = postaRepository.getTracking(null, canceledOrderReason.getReturnTtn()).getData().get(0);
                 canceledOrderReason.setStatus(convertToStatus(returned.getStatusCode()));
                 canceledOrderReason.setDeliveryCost((double) returned.getDocumentCost());
