@@ -88,7 +88,11 @@ public class StatisticService {
         if (updateStatuses) {
             orderService.updateOrdersByNovaPosta();
         }
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndPayedFalseAndStatusIn(singletonList(Status.ОТРИМАНО));
+        OrderedSpecification orderedSpecification = new OrderedSpecification();
+        orderedSpecification.setPayed(false);
+        orderedSpecification.setCompanyId(companyId);
+        orderedSpecification.setStatuses(singletonList(Status.ОТРИМАНО));
+        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
 
         for (Ordered ordered : orderedList) {
             if (ordered.getOrderedShoeList().size() < 1) {

@@ -12,7 +12,7 @@ import java.util.List;
 @RequestMapping("/storage")
 public class StorageController {
 
-    private StorageService storageService;
+    private final StorageService storageService;
 
     public StorageController(StorageService storageService) {
         this.storageService = storageService;
@@ -23,14 +23,14 @@ public class StorageController {
         return storageService.createStorageRecord(createStorageRequest);
     }
 
-    @GetMapping
-    public List<StorageRecord> getAll(@RequestParam(required = false) String model) {
-        return storageService.getAll(model);
-    }
-
     @GetMapping("/isExists")
     public boolean isAvailable(@RequestParam(required = false) Long shoeId, @RequestParam(required = false) Integer size) {
         return storageService.checkIfInStorage(shoeId, size);
     }
 
+    @GetMapping
+    public List<StorageRecord> storageRecords(@RequestParam Long shoeId,
+                                              @RequestParam Integer size) {
+        return storageService.getStorageRecords(shoeId, size);
+    }
 }

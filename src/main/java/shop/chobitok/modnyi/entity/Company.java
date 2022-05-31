@@ -9,8 +9,8 @@ import javax.persistence.Entity;
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Company extends Audit {
 
-    @Column
     private String name;
+    private Boolean useStorage;
 
     public Company(String name) {
         this.name = name;
@@ -25,5 +25,13 @@ public class Company extends Audit {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Boolean getUseStorage() {
+        return useStorage;
+    }
+
+    public void setUseStorage(Boolean useStorage) {
+        this.useStorage = useStorage;
     }
 }

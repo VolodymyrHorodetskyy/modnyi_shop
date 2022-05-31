@@ -31,6 +31,7 @@ public class OrderedSpecification implements Specification<Ordered> {
     private Boolean allCorrect;
     private Boolean available;
     private Long companyId;
+    private Boolean payed;
 
     public OrderedSpecification() {
     }
@@ -181,12 +182,21 @@ public class OrderedSpecification implements Specification<Ordered> {
             }
             predicateList.add(availablePredicate);
         }
-        if(companyId != null){
+        if (companyId != null) {
             Join<Ordered, OrderedShoe> orderedShoeJoin = root.join("orderedShoeList");
             Join<OrderedShoe, Shoe> orderedShoeShoeJoin = orderedShoeJoin.join("shoe");
             Join<Shoe, Company> shoeCompanyJoin = orderedShoeShoeJoin.join("company");
-            Predicate companyPredicate = criteriaBuilder.equal(shoeCompanyJoin.get("id"),companyId);
+            Predicate companyPredicate = criteriaBuilder.equal(shoeCompanyJoin.get("id"), companyId);
             predicateList.add(companyPredicate);
+        }
+        if (payed != null) {
+            Predicate payedPredicate;
+            if (payed) {
+                payedPredicate = criteriaBuilder.isTrue(root.get("payed"));
+            } else {
+                payedPredicate = criteriaBuilder.isFalse(root.get("payed"));
+            }
+            predicateList.add(payedPredicate);
         }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }
@@ -349,5 +359,8 @@ public class OrderedSpecification implements Specification<Ordered> {
 
     public void setCompanyId(Long companyId) {
         this.companyId = companyId;
+    }
+    public void setPayed(Boolean payed) {
+        this.payed = payed;
     }
 }

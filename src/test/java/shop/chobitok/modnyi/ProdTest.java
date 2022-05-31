@@ -233,13 +233,13 @@ public class ProdTest {
 
     @Test
     public void sendAppOrderToPixel() {
-        appOrderToPixelService.sendAll(0, "2022-05-17 00:00");
+        appOrderToPixelService.sendAll(0, "2022-05-19 00:00");
     }
 
     @Test
     public void chnageAccessKey() {
-        Pixel pixel = pixelRepository.findById(20l).orElse(null);
-        pixel.setPixelAccessToken("EAAG6Ad0MA64BAMPvC9qZCwwmZBUMhObQ2g6Q0CDCYT11OzurnVYmWmwExZB5j1151WcXZBmchjYybKFwhIwdZCi6foy92HHPsgSRJEIiUPAar00vmrLqRgJtfmkrns0J6sxMpCDWwrZBKwmZCJzMDh4FXnOjWEckynZA0Aj9FMVWsKX2U1XsmvuJ6a34Wy1q3j4ZD");
+        Pixel pixel = pixelRepository.findById(17l).orElse(null);
+        pixel.setPixelAccessToken("EAAG6Ad0MA64BAM2VHy5Bvt3Jxm8TpY0tZCHPL92TogIMdAsw3AgXm2KIpbpg3XanTBBSVRD42xZAXz9PpmKIHDZCZCZBehEIfGlqkuZAN9fZCenFx2U6IL0y9oltVECpLDgm9DBrBPsOwMLYdJZCUHA1aQA6huxJwkauZB0OeZCdwBpnduMbIByEmLUiI2k38Y4E4ZD");
         pixelRepository.save(pixel);
     }
 }

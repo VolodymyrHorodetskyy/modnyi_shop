@@ -2,17 +2,8 @@ package shop.chobitok.modnyi.entity.request;
 
 public class CreateStorageRequest {
 
-    private Long shoe;
+    private Long shoeId;
     private Integer size;
-    private String ttn;
-
-    public Long getShoe() {
-        return shoe;
-    }
-
-    public void setShoe(Long shoe) {
-        this.shoe = shoe;
-    }
 
     public Integer getSize() {
         return size;
@@ -22,12 +13,11 @@ public class CreateStorageRequest {
         this.size = size;
     }
 
-    public String getTtn() {
-        return ttn;
+    public Long getShoeId() {
+        return shoeId;
     }
 
-    public void setTtn(String ttn) {
-        this.ttn = ttn;
+    public void setShoeId(Long shoeId) {
+        this.shoeId = shoeId;
     }
-
 }

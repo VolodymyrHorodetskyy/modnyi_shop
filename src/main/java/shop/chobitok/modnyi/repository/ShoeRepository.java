@@ -11,5 +11,4 @@ import shop.chobitok.modnyi.entity.Shoe;
 public interface ShoeRepository extends JpaRepository<Shoe, Long> {
 
     Page<Shoe> findAll(Specification specification, Pageable pageable);
-
 }

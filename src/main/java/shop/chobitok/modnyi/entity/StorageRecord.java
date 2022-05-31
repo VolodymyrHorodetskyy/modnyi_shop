@@ -3,20 +3,17 @@ package shop.chobitok.modnyi.entity;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 
-@Entity(name = "storagerecord")
+@Entity
 public class StorageRecord extends Audit {
 
     @ManyToOne
     private Shoe shoe;
-
-    @Column
     private Integer size;
-
-    @Column
-    private String ttn;
-
-    @Column
+    @OneToOne
+    private CanceledOrderReason canceledOrderReason;
+    private String comment;
     private boolean available = true;
 
     public Shoe getShoe() {
@@ -35,12 +32,12 @@ public class StorageRecord extends Audit {
         this.size = size;
     }
 
-    public String getTtn() {
-        return ttn;
+    public CanceledOrderReason getCanceledOrderReason() {
+        return canceledOrderReason;
     }
 
-    public void setTtn(String ttn) {
-        this.ttn = ttn;
+    public void setCanceledOrderReason(CanceledOrderReason canceledOrderReason) {
+        this.canceledOrderReason = canceledOrderReason;
     }
 
     public boolean isAvailable() {
@@ -49,5 +46,13 @@ public class StorageRecord extends Audit {
 
     public void setAvailable(boolean available) {
         this.available = available;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 }
