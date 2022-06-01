@@ -155,12 +155,15 @@ public class CanceledOrderReasonService {
                     updated.add(canceledOrderReason);
                 }
             } else if (!isEmpty(canceledOrderReason.getReturnTtn()) && canceledOrderReason.getReturnTtn().length() > 6) {
-                Data returned = postaRepository.getTracking(null, canceledOrderReason.getReturnTtn()).getData().get(0);
-                canceledOrderReason.setStatus(convertToStatus(returned.getStatusCode()));
-                canceledOrderReason.setDeliveryCost((double) returned.getDocumentCost());
-                canceledOrderReason.setStoragePrice(!isEmpty(returned.getStoragePrice()) ? Double.valueOf(returned.getStoragePrice()) : null);
-                if (returned.getDatePayedKeeping() != null && canceledOrderReason.getDatePayedKeeping() == null) {
-                    canceledOrderReason.setDatePayedKeeping(ShoeUtil.toLocalDateTime(returned.getDatePayedKeeping()));
+                TrackingEntity trackingReturned = postaRepository.getTracking(null, canceledOrderReason.getReturnTtn());
+                if (trackingReturned.getData().size() > 0) {
+                    Data returned = trackingReturned.getData().get(0);
+                    canceledOrderReason.setStatus(convertToStatus(returned.getStatusCode()));
+                    canceledOrderReason.setDeliveryCost((double) returned.getDocumentCost());
+                    canceledOrderReason.setStoragePrice(!isEmpty(returned.getStoragePrice()) ? Double.valueOf(returned.getStoragePrice()) : null);
+                    if (returned.getDatePayedKeeping() != null && canceledOrderReason.getDatePayedKeeping() == null) {
+                        canceledOrderReason.setDatePayedKeeping(ShoeUtil.toLocalDateTime(returned.getDatePayedKeeping()));
+                    }
                 }
                 updated.add(canceledOrderReason);
             }
