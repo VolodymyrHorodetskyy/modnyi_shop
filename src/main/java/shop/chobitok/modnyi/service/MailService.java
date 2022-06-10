@@ -33,7 +33,7 @@ public class MailService {
             mimeMessageHelper.setSubject(subject);
             for (String to : toList) {
                 mimeMessageHelper.setTo(to);
-                javaMailSender.send(mimeMessage);
+      //          javaMailSender.send(mimeMessage);
             }
         } catch (MessagingException e) {
             e.printStackTrace();
@@ -45,6 +45,4 @@ public class MailService {
         htmlTemplate = htmlTemplate.replaceAll("%s", status.toString());
         sendEmail("Статус вашого замовлення 'Модний чобіток'", htmlTemplate, to);
     }
-
-
 }
