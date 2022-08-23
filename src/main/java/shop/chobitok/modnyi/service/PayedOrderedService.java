@@ -42,7 +42,7 @@ public class PayedOrderedService {
         }
     }
 
-    public Double getSumNotCounted(Long companyId) {
+    public NotPayedRecordsInternalResponse getSumNotCounted(Long companyId) {
         Double sum = 0d;
         List<PayedOrdered> payedOrderedList = payedOrderedRepository.findByCountedFalse();
         for (PayedOrdered payedOrdered : payedOrderedList) {
@@ -50,24 +50,24 @@ public class PayedOrderedService {
                 sum += payedOrdered.getSum();
             }
         }
-        return sum;
+        return new NotPayedRecordsInternalResponse(sum, payedOrderedList);
     }
 
-    public String makeAllCounted(Long companyId) {
-        StringBuilder stringBuilder = new StringBuilder();
-        List<PayedOrdered> payedOrderedList = payedOrderedRepository.findByCountedFalse();
-        stringBuilder.append("Були оплачені");
-        for (PayedOrdered payedOrdered : payedOrderedList) {
-            if (payedOrdered.getOrderedShoe().getShoe().getCompany().getId().equals(companyId)) {
-                stringBuilder.append(payedOrdered.getOrdered().getTtn()).append(" ")
-                        .append(payedOrdered.getOrderedShoe().getShoe().getModel()).append(" ")
-                        .append(payedOrdered.getOrderedShoe().getShoe().getColor()).append(" ")
-                        .append(payedOrdered.getSum()).append("\n");
-                payedOrdered.setCounted(true);
-            }
+    static class NotPayedRecordsInternalResponse {
+        Double sum;
+        List<PayedOrdered> payedOrderedList;
+
+        public NotPayedRecordsInternalResponse(Double sum, List<PayedOrdered> payedOrderedList) {
+            this.sum = sum;
+            this.payedOrderedList = payedOrderedList;
         }
-        payedOrderedRepository.saveAll(payedOrderedList);
-        return stringBuilder.toString();
     }
 
+    public PayedOrdered getById(Long id) {
+        return payedOrderedRepository.findById(id).orElse(null);
+    }
+
+    public PayedOrdered save(PayedOrdered payedOrdered) {
+        return payedOrderedRepository.save(payedOrdered);
+    }
 }

@@ -547,4 +547,26 @@ public class DevTest {
             orderRepository.save(ordered);
         }
     }
+
+    @Autowired
+    private OrderedShoeRepository orderedShoeRepository;
+
+    @Test
+    public void makeAllOrderedShoesPaid() {
+        List<OrderedShoe> orderedShoeList = orderedShoeRepository.findAllByPayedFalse();
+        orderedShoeList.forEach(orderedShoe -> orderedShoe.setPayed(true));
+        orderedShoeRepository.saveAll(orderedShoeList);
+    }
+/*
+    @Transactional
+    @Test
+    public void makeAllOrderedShoeOrdered() {
+        List<Ordered> orderedList = orderRepository.findAllByCreatedDateGreaterThanEqual(LocalDateTime.now().minusMonths(4));
+        out.println(orderedList.size());
+        orderedList.forEach(ordered -> {
+            ordered.getOrderedShoeList().forEach(
+                    orderedShoe -> orderedShoe.setOrdered(ordered));
+        });
+        orderRepository.saveAll(orderedList);
+    }*/
 }

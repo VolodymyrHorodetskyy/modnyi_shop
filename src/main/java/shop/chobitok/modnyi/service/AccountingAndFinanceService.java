@@ -18,6 +18,4 @@ public class AccountingAndFinanceService {
         AccountingRecord lastAccountingRecord = arr.findFirstByOrderByCreatedDateDesc();
         return arr.save(new AccountingRecord(request, lastAccountingRecord.getCurrentValue() + request.getOperationValue()));
     }
-
-
 }

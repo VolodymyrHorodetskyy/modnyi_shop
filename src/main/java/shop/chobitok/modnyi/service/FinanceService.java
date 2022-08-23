@@ -2,12 +2,19 @@ package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.*;
+import shop.chobitok.modnyi.entity.dto.NotPayedRecord;
+import shop.chobitok.modnyi.entity.request.DoCompanyFinanceControlOperationRequest;
 import shop.chobitok.modnyi.entity.response.EarningsResponse;
+import shop.chobitok.modnyi.entity.response.StringResponse;
+import shop.chobitok.modnyi.mapper.NotPayedRecordMapper;
 import shop.chobitok.modnyi.repository.OrderRepository;
+import shop.chobitok.modnyi.repository.OrderedShoeRepository;
+import shop.chobitok.modnyi.service.entity.NeedToBePayedResponse;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,14 +24,24 @@ import static shop.chobitok.modnyi.util.OrderHelper.breakdownByStatuses;
 @Service
 public class FinanceService {
 
-    private OrderRepository orderRepository;
-    private ShoePriceService shoePriceService;
-    private ParamsService paramsService;
+    private final OrderService orderService;
+    private final OrderRepository orderRepository;
+    private final ShoePriceService shoePriceService;
+    private final ParamsService paramsService;
+    private final PayedOrderedService payedOrderedService;
+    private final OrderedShoeRepository orderedShoeRepository;
+    private final NotPayedRecordMapper notPayedRecordMapper;
+    private final CompanyFinanceControlService companyFinanceControlService;
 
-    public FinanceService(OrderRepository orderRepository, ShoePriceService shoePriceService, ParamsService paramsService) {
+    public FinanceService(OrderService orderService, OrderRepository orderRepository, ShoePriceService shoePriceService, ParamsService paramsService, PayedOrderedService payedOrderedService, OrderedShoeRepository orderedShoeRepository, NotPayedRecordMapper notPayedRecordMapper, CompanyFinanceControlService companyFinanceControlService) {
+        this.orderService = orderService;
         this.orderRepository = orderRepository;
         this.shoePriceService = shoePriceService;
         this.paramsService = paramsService;
+        this.payedOrderedService = payedOrderedService;
+        this.orderedShoeRepository = orderedShoeRepository;
+        this.notPayedRecordMapper = notPayedRecordMapper;
+        this.companyFinanceControlService = companyFinanceControlService;
     }
 
     public EarningsResponse getEarnings(List<Ordered> orderedList, LocalDateTime fromDate, LocalDateTime toDate) {
@@ -89,6 +106,79 @@ public class FinanceService {
         return margin;
     }
 
+    public NeedToBePayedResponse needToPayed(boolean updateStatuses, Long companyId) {
+        Double sum = 0d;
+        StringBuilder result = new StringBuilder();
+        if (updateStatuses) {
+            orderService.updateOrdersByNovaPosta();
+        }
+        List<OrderedShoe> orderedShoeList = orderedShoeRepository.findAllByPayedFalseAndShoeCompanyId(companyId);
+        List<NotPayedRecord> notPayedRecords = new ArrayList<>();
+        for (OrderedShoe orderedShoe : orderedShoeList) {
+            Ordered ordered = orderRepository.findByOrderedShoeId(orderedShoe.getId());
+            if (ordered == null) {
+                orderedShoe.setPayed(true);
+                orderedShoeRepository.save(orderedShoe);
+            } else {
+                if (!orderedShoe.isPayed() && orderedShoe.getShoe().getCompany().getId().equals(companyId)) {
+                    ShoePrice shoePrice = shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered);
+                    if (shoePrice == null) {
+                        result.append(ordered.getTtn()).append(" ").append(orderedShoe.getShoe().getModel()).append(" ")
+                                .append(orderedShoe.getShoe().getColor()).append(" - немає ціни\n\n");
+                        break;
+                    } else {
+                        sum += shoePrice.getCost();
+                        result.append(ordered.getTtn()).append(" ")
+                                .append(orderedShoe.getShoe().getModelAndColor()).append(" ")
+                                .append(shoePrice.getCost()).append("\n");
+                        notPayedRecords.add(notPayedRecordMapper.mapTo(ordered.getTtn(), shoePrice.getCost(), orderedShoe));
+                    }
+                }
+            }
+        }
+        PayedOrderedService.NotPayedRecordsInternalResponse notPayedRecordsResponse = payedOrderedService.getSumNotCounted(companyId);
+        notPayedRecords.addAll(notPayedRecordMapper.mapTo(notPayedRecordsResponse.payedOrderedList));
+        result.append("\n").append("Загальна сума = ").append(sum).append("\n");
+        result.append("Сума відмінених оплачених = ").append(notPayedRecordsResponse.sum).append("\n");
+        result.append("Сума до оплати = ").append(sum - notPayedRecordsResponse.sum);
+        return new NeedToBePayedResponse(result.toString(), notPayedRecords, sum - notPayedRecordsResponse.sum);
+    }
 
+    static class NeedToBePayed {
+        Double sum;
+        List<String> ttns;
+    }
+
+    public StringResponse makePayed(Long companyId, List<NotPayedRecord> notPayedRecords) {
+        StringBuilder result = new StringBuilder();
+        Double sum = 0d;
+        for (NotPayedRecord notPayedRecord : notPayedRecords) {
+            if (notPayedRecord.getOrderedShoeId() != null) {
+                OrderedShoe orderedShoe = orderedShoeRepository.findById(notPayedRecord.getOrderedShoeId()).orElse(null);
+                if (orderedShoe != null && orderedShoe.getShoe() != null) {
+                    orderedShoe.setPayed(true);
+                    orderedShoeRepository.save(orderedShoe);
+                    ShoePrice shoePrice = shoePriceService.getActualShoePrice(orderedShoe.getShoe());
+                    result.append(orderedShoe.getShoe().getModelAndColor()).append(" ")
+                            .append(" оплачено ").append(shoePrice.getCost()).append("\n");
+                    sum += shoePrice.getCost();
+                }
+            } else if (notPayedRecord.getPayedRecordId() != null) {
+                PayedOrdered payedOrdered = payedOrderedService.getById(notPayedRecord.getPayedRecordId());
+                if (payedOrdered != null) {
+                    payedOrdered.setCounted(true);
+                    payedOrderedService.save(payedOrdered);
+                    result.append(payedOrdered.getOrdered().getTtn()).append(" враховано ")
+                            .append(payedOrdered.getSum()).append("\n");
+                    sum -= payedOrdered.getSum();
+                }
+            }
+        }
+        if (sum != 0d) {
+            companyFinanceControlService.doOperation(new DoCompanyFinanceControlOperationRequest(companyId,
+                    sum, result.toString()));
+        }
+        return new StringResponse(result.toString());
+    }
 }
 

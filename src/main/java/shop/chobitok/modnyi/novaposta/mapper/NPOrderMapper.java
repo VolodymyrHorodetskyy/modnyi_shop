@@ -167,7 +167,7 @@ public class NPOrderMapper {
         List<OrderedShoe> orderedShoeList = new ArrayList<>();
         Shoe shoe = parseShoe(string);
         if (shoe != null && size != null) {
-            orderedShoeList.add(new OrderedShoe(size, shoe));
+            orderedShoeList.add(new OrderedShoe(size, shoe, ordered));
         }
         ordered.setOrderedShoeList(orderedShoeList);
     }

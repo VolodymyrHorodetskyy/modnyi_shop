@@ -34,25 +34,18 @@ public class StatisticService {
 
     private final NovaPostaRepository postaRepository;
     private final OrderRepository orderRepository;
-    private final OrderService orderService;
-    private final ShoePriceService shoePriceService;
     private final AppOrderRepository appOrderRepository;
     private final CanceledOrderReasonRepository canceledOrderReasonRepository;
-    private final PayedOrderedService payedOrderedService;
     private final ParamsService paramsService;
     private final OurTtnService ourTtnService;
     private final HistoryService historyService;
     private final NPOrderMapper npOrderMapper;
 
-
-    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, OrderService orderService, ShoePriceService shoePriceService, AppOrderRepository appOrderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, PayedOrderedService payedOrderedService, ParamsService paramsService, OurTtnService ourTtnService, HistoryService historyService, NPOrderMapper npOrderMapper) {
+    public StatisticService(NovaPostaRepository postaRepository, OrderRepository orderRepository, AppOrderRepository appOrderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, ParamsService paramsService, OurTtnService ourTtnService, HistoryService historyService, NPOrderMapper npOrderMapper) {
         this.postaRepository = postaRepository;
         this.orderRepository = orderRepository;
-        this.orderService = orderService;
-        this.shoePriceService = shoePriceService;
         this.appOrderRepository = appOrderRepository;
         this.canceledOrderReasonRepository = canceledOrderReasonRepository;
-        this.payedOrderedService = payedOrderedService;
         this.paramsService = paramsService;
         this.ourTtnService = ourTtnService;
         this.historyService = historyService;
@@ -72,59 +65,6 @@ public class StatisticService {
             result.append("Помилок немає");
         }
         return new StringResponse(result.toString());
-    }
-
-    private Set<String> toTTNSet(List<String> orderedList) {
-        Set<String> allTTNSet = new LinkedHashSet<>();
-        for (String s : orderedList) {
-            allTTNSet.add(s.replaceAll("\\s+", ""));
-        }
-        return allTTNSet;
-    }
-
-    public StringResponse needToPayed(boolean updateStatuses, Long companyId) {
-        Double sum = 0d;
-        StringBuilder result = new StringBuilder();
-        if (updateStatuses) {
-            orderService.updateOrdersByNovaPosta();
-        }
-        OrderedSpecification orderedSpecification = new OrderedSpecification();
-        orderedSpecification.setPayed(false);
-        orderedSpecification.setCompanyId(companyId);
-        orderedSpecification.setStatuses(singletonList(Status.ОТРИМАНО));
-        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
-
-        for (Ordered ordered : orderedList) {
-            if (ordered.getOrderedShoeList().size() < 1) {
-                result.append(ordered.getTtn()).append(" НЕ ВИЗНАЧЕНО\n");
-            } else {
-                for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
-                    if (!orderedShoe.isPayed() && orderedShoe.getShoe().getCompany().getId().equals(companyId)) {
-                        ShoePrice shoePrice = shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered);
-                        if (shoePrice == null) {
-                            result.append(ordered.getTtn()).append(" ").append(orderedShoe.getShoe().getModel()).append(" ")
-                                    .append(orderedShoe.getShoe().getColor()).append(" - немає ціни\n\n");
-                            break;
-                        } else {
-                            sum += shoePrice.getCost();
-                            result.append(ordered.getTtn()).append(" ")
-                                    .append(orderedShoe.getShoe().getModelAndColor()).append(" ")
-                                    .append(shoePrice.getCost()).append("\n");
-                        }
-                    }
-                }
-            }
-        }
-        Double sumNotCounted = payedOrderedService.getSumNotCounted(companyId);
-        result.append("\n").append("Загална сума = ").append(sum).append("\n");
-        result.append("Сума відмінених оплачених = ").append(sumNotCounted).append("\n");
-        result.append("Сума до оплати = ").append(sum - sumNotCounted);
-        return new StringResponse(result.toString());
-    }
-
-    static class NeedToBePayed {
-        Double sum;
-        List<String> ttns;
     }
 
     public String countAllReceivedAndDenied(String pathAllTTNFile) {
@@ -162,11 +102,11 @@ public class StatisticService {
             TrackingEntity trackingEntity = postaRepository.getTracking(null, s);
             Data data = trackingEntity.getData().get(0);
             if (data.getStatusCode().equals(103)) {
-                stringBuilderWithDesc.append(data.getNumber() + " " + data.getCargoDescriptionString() + "\n");
-                stringBuilderWithoutDesc.append(data.getNumber() + "\n");
+                stringBuilderWithDesc.append(data.getNumber()).append(" ").append(data.getCargoDescriptionString()).append("\n");
+                stringBuilderWithoutDesc.append(data.getNumber()).append("\n");
             }
         }
-        stringBuilderWithDesc.append(stringBuilderWithoutDesc.toString());
+        stringBuilderWithDesc.append(stringBuilderWithoutDesc);
         return stringBuilderWithDesc.toString();
     }
 
@@ -175,13 +115,12 @@ public class StatisticService {
         LocalDateTime toDate = formDateTimeToOrGetDefault(dateTo);
         List<Ordered> orderedList = orderRepository.findAll(new OrderedSpecification(fromDate, toDate, status, true));
         final Map<Shoe, Integer> shoeIntegerMap = countShoesAmount(orderedList);
-        final Map<Shoe, Integer> sortedByAmount = shoeIntegerMap.entrySet()
+        return shoeIntegerMap.entrySet()
                 .stream()
                 .sorted((Map.Entry.<Shoe, Integer>comparingByValue().reversed()))
                 .collect(
-                        toMap(e -> e.getKey(), e -> e.getValue(), (e1, e2) -> e2,
+                        toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2,
                                 LinkedHashMap::new));
-        return sortedByAmount;
     }
 
     public GoogleChartObject getShoeOrderChart(String dateFrom, String dateTo, Status status) {
@@ -468,7 +407,7 @@ public class StatisticService {
         return new MistakesResponse(response.toString(), mistakesAmount);
     }
 
-    private class MistakesResponse {
+    private static class MistakesResponse {
         public MistakesResponse(String response, int amount) {
             this.response = response;
             this.amount = amount;
@@ -479,18 +418,10 @@ public class StatisticService {
     }
 
     private boolean checkDiscountIsNull(Ordered ordered) {
-        boolean result = false;
-        if (ordered.getDiscount() == null) {
-            result = true;
-        }
-        return result;
+        return ordered.getDiscount() == null;
     }
 
     private boolean checkPriceIsNotCorrect(Ordered ordered) {
-        boolean result = false;
-        if (Math.abs(npOrderMapper.countDiscount(ordered.getOrderedShoeList(), ordered.getDiscount()) - ordered.getPrice()) > 199) {
-            result = true;
-        }
-        return result;
+        return Math.abs(npOrderMapper.countDiscount(ordered.getOrderedShoeList(), ordered.getDiscount()) - ordered.getPrice()) > 199;
     }
 }

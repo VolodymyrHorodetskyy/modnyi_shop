@@ -3,7 +3,6 @@ package shop.chobitok.modnyi.service;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Discount;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.OrderedShoe;
@@ -24,11 +23,11 @@ import java.util.List;
 @Service
 public class ShoeService {
 
-    private ShoeRepository shoeRepository;
-    private ShoeMapper shoeMapper;
-    private NPOrderMapper npOrderMapper;
-    private DiscountService discountService;
-    private OrderRepository orderRepository;
+    private final ShoeRepository shoeRepository;
+    private final ShoeMapper shoeMapper;
+    private final NPOrderMapper npOrderMapper;
+    private final DiscountService discountService;
+    private final OrderRepository orderRepository;
 
 
     public ShoeService(ShoeRepository shoeRepository, ShoeMapper shoeMapper, NPOrderMapper npOrderMapper, DiscountService discountService, OrderRepository orderRepository) {
@@ -48,8 +47,7 @@ public class ShoeService {
     }
 
     public Shoe createShoe(CreateShoeRequest createShoeRequest) {
-        Shoe shoe = shoeRepository.save(shoeMapper.convertFromCreateShoeRequest(createShoeRequest));
-        return shoe;
+        return shoeRepository.save(shoeMapper.convertFromCreateShoeRequest(createShoeRequest));
     }
 
     public Shoe updateShoe(UpdateShoeRequest updateShoeRequest) {
@@ -58,11 +56,6 @@ public class ShoeService {
             throw new ConflictException("Shoe not found");
         }
         return shoeRepository.save(shoeMapper.convertFromCreateShoeRequest(updateShoeRequest, shoe));
-    }
-
-    public boolean removeShoe(Long id) {
-        shoeRepository.deleteById(id);
-        return true;
     }
 
     public Shoe addPattern(AddOrRemovePatternRequest request) {
@@ -84,15 +77,6 @@ public class ShoeService {
         return true;
     }
 
-    private List<String> checkListOnEmptyStrings(List<String> strings) {
-        for (int i = 0; i < strings.size(); ++i) {
-            if (StringUtils.isEmpty(strings.get(i))) {
-                strings.remove(i);
-            }
-        }
-        return strings;
-    }
-
     public Double getShoePrice(Long[] shoeIds, Long discountId) {
         if (shoeIds != null && shoeIds.length > 0) {
             Discount discount = null;
@@ -101,7 +85,7 @@ public class ShoeService {
             }
             List<OrderedShoe> orderedShoeList = new ArrayList<>();
             for (Long shoeId : shoeIds) {
-                orderedShoeList.add(new OrderedShoe(36, shoeRepository.getOne(shoeId)));
+                orderedShoeList.add(new OrderedShoe(36, shoeRepository.getOne(shoeId), null));
             }
             return npOrderMapper.countDiscount(orderedShoeList, discount);
         }
@@ -118,7 +102,7 @@ public class ShoeService {
         if (shoe == null) {
             throw new ConflictException("Взуття не знайдено");
         }
-        OrderedShoe orderedShoe = new OrderedShoe(request.getSize(), shoe, request.getComment());
+        OrderedShoe orderedShoe = new OrderedShoe(request.getSize(), shoe, request.getComment(), ordered);
         if (ordered.getOrderedShoeList() == null) {
             ordered.setOrderedShoeList(new ArrayList<>());
         }

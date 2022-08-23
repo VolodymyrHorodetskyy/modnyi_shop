@@ -46,4 +46,12 @@ public interface OrderRepository extends JpaRepository<Ordered, Long> {
 
     @Query(value = "Select max(o.id) from ordered o", nativeQuery = true)
     Integer findMaximum();
+
+    Ordered findFirstByOrderedShoeListIdIn(Long orderedShoeId);
+    List<Ordered>findAllByCreatedDateGreaterThanEqual(LocalDateTime date);
+
+    @Query(value =
+            "select * from ordered a join ordered_ordered_shoe_list b on a.id = b.ordered_id join ordered_shoe c on b.ordered_shoe_list_id = c.id where c.id = ?1",
+            nativeQuery = true)
+    Ordered findByOrderedShoeId(Long orderedShoeId);
 }

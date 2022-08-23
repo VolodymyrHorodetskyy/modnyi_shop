@@ -89,11 +89,6 @@ public class OrderController {
         return orderService.returnAllCanceled(updateStatuses);
     }
 
-    @PatchMapping("/makeAllPayed")
-    public StringResponse makeAllPayed(@RequestParam(required = false) Long companyId) {
-        return orderService.makeAllPayed(companyId);
-    }
-
     @PatchMapping("/updateCanceled")
     public void updateCanceled(@RequestParam int inDays) {
         orderService.updateCanceled(inDays);

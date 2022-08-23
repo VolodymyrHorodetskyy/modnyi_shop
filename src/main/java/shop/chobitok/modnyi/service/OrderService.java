@@ -1,18 +1,15 @@
 package shop.chobitok.modnyi.service;
 
-import com.google.common.util.concurrent.AtomicDouble;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.*;
-import shop.chobitok.modnyi.entity.request.DoCompanyFinanceControlOperationRequest;
 import shop.chobitok.modnyi.entity.request.ImportOrdersFromStringRequest;
 import shop.chobitok.modnyi.entity.request.UpdateOrderRequest;
 import shop.chobitok.modnyi.entity.response.GetAllOrderedResponse;
 import shop.chobitok.modnyi.entity.response.PaginationInfo;
 import shop.chobitok.modnyi.entity.response.StringResponse;
-import shop.chobitok.modnyi.google.docs.service.GoogleDocsService;
 import shop.chobitok.modnyi.novaposta.entity.Data;
 import shop.chobitok.modnyi.novaposta.entity.DataForList;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
@@ -48,19 +45,15 @@ public class OrderService {
     private final UserRepository userRepository;
     private final StatusChangeService statusChangeService;
     private final NovaPostaRepository postaRepository;
-    private final GoogleDocsService googleDocsService;
     private final DiscountService discountService;
-    private final PayedOrderedService payedOrderedService;
     private final CardService cardService;
     private final HistoryService historyService;
     private final ImportService importService;
     private final NpAccountService npAccountService;
     private final NotificationService notificationService;
-    private final ShoePriceService shoePriceService;
     private final VariantsService variantsService;
-    private final CompanyFinanceControlService companyFinanceControlService;
 
-    public OrderService(OrderRepository orderRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, GoogleDocsService googleDocsService, DiscountService discountService, PayedOrderedService payedOrderedService, CardService cardService, HistoryService historyService, ImportService importService, NpAccountService npAccountService, NotificationService notificationService, ShoePriceService shoePriceService, VariantsService variantsService, CompanyFinanceControlService companyFinanceControlService) {
+    public OrderService(OrderRepository orderRepository, ClientService clientService, NovaPostaService novaPostaService, MailService mailService, CanceledOrderReasonService canceledOrderReasonService, UserRepository userRepository, StatusChangeService statusChangeService, NovaPostaRepository postaRepository, DiscountService discountService, CardService cardService, HistoryService historyService, ImportService importService, NpAccountService npAccountService, NotificationService notificationService, VariantsService variantsService) {
         this.orderRepository = orderRepository;
         this.clientService = clientService;
         this.novaPostaService = novaPostaService;
@@ -69,17 +62,13 @@ public class OrderService {
         this.userRepository = userRepository;
         this.statusChangeService = statusChangeService;
         this.postaRepository = postaRepository;
-        this.googleDocsService = googleDocsService;
         this.discountService = discountService;
-        this.payedOrderedService = payedOrderedService;
         this.cardService = cardService;
         this.historyService = historyService;
         this.importService = importService;
         this.npAccountService = npAccountService;
         this.notificationService = notificationService;
-        this.shoePriceService = shoePriceService;
         this.variantsService = variantsService;
-        this.companyFinanceControlService = companyFinanceControlService;
     }
 
     public Ordered findByTTN(String ttn) {
@@ -442,85 +431,6 @@ public class OrderService {
         return new StringResponse(result.toString());
     }
 
-    public StringResponse makeAllPayed(Long companyId) {
-        AtomicDouble sum = new AtomicDouble(0d);
-        List<Ordered> orderedList = orderRepository.findAllByAvailableTrueAndPayedFalseAndStatusIn(singletonList(Status.ОТРИМАНО));
-        if (checkIfAllCompanyShoesPayedInOrder(orderedList, companyId)) {
-            return new StringResponse("Все пораховано");
-        }
-        StringBuilder stringBuilder = new StringBuilder();
-        StringBuilder responseStringBuilder = new StringBuilder();
-        StringBuilder stringBuilderForCompanyFinance = new StringBuilder();
-        for (Ordered ordered : orderedList) {
-            String couldBePayedResponse = checkIfCouldBePayed(ordered, companyId, stringBuilderForCompanyFinance, sum);
-            if (!isEmpty(couldBePayedResponse)) {
-                responseStringBuilder.append(couldBePayedResponse).append("\n");
-            }
-        }
-        sum.addAndGet(payedOrderedService.getSumNotCounted(companyId));
-        stringBuilderForCompanyFinance.append(payedOrderedService.makeAllCounted(companyId));
-        orderRepository.saveAll(orderedList);
-        if (stringBuilder.length() > 0) {
-            historyService.addHistoryRecord(HistoryType.PAYMENT_FOR_SHOES, stringBuilder.toString());
-        }
-
-        companyFinanceControlService.doOperation(new DoCompanyFinanceControlOperationRequest(companyId,
-                sum.get(), stringBuilderForCompanyFinance.toString()));
-        responseStringBuilder.append("готово");
-        return new StringResponse(responseStringBuilder.toString());
-    }
-
-    private String checkIfCouldBePayed(Ordered ordered, Long companyId, StringBuilder stringBuilderForCompanyFinance, AtomicDouble sum) {
-        if (ordered.getOrderedShoeList().size() < 1) {
-            stringBuilderForCompanyFinance.append("немає взуття в замовленні").append("\n");
-        } else {
-            for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
-                if (orderedShoe.getShoe().getCompany().getId().equals(companyId) && !orderedShoe.isPayed()) {
-                    ShoePrice shoePrice = shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered);
-                    if (shoePrice == null) {
-                        stringBuilderForCompanyFinance.append(ordered.getTtn()).append(" у взуття немає ціни").append("\n");
-                    } else {
-                        stringBuilderForCompanyFinance.append(ordered.getTtn()).append(" ").append(shoePrice.getShoe().getModel())
-                                .append(" ").append(shoePrice.getShoe().getColor()).append(" ").append(shoePrice.getCost()).append(" грн").append("\n");
-                        sum.addAndGet(shoePrice.getCost());
-                        orderedShoe.setPayed(true);
-                    }
-                }
-            }
-        }
-        checkIfOrderIsPayed(ordered);
-        return stringBuilderForCompanyFinance.toString();
-    }
-
-    private void checkIfOrderIsPayed(Ordered ordered) {
-        boolean payedAllOrderedShoe = true;
-        for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
-            if (!orderedShoe.isPayed()) {
-                payedAllOrderedShoe = false;
-            }
-        }
-        if (payedAllOrderedShoe) {
-            ordered.setPayed(true);
-        }
-    }
-
-
-    private boolean checkIfAllCompanyShoesPayedInOrder(List<Ordered> orderedList, Long companyId) {
-        boolean payed = true;
-        for (Ordered ordered : orderedList) {
-            if (!ordered.isPayed()) {
-                for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
-                    if (orderedShoe.getShoe().getCompany().getId().equals(companyId) &&
-                            !orderedShoe.isPayed()) {
-                        payed = false;
-                        break;
-                    }
-                }
-            }
-        }
-        return payed;
-    }
-
     public void updateGoogleDocsDeliveryFile() {
         //     googleDocsService.updateDeliveryFile(countNeedDeliveryFromDB(false).getResult());
     }
@@ -592,7 +502,6 @@ public class OrderService {
         return result.toString();
     }
 
-
     private boolean addOrderToMap(Map<LocalDate, List<Ordered>> localDateListMap, Ordered ordered) {
         LocalDate date = ordered.getCreatedDate().toLocalDate();
         List<Ordered> orderedList = localDateListMap.get(date);
@@ -605,5 +514,4 @@ public class OrderService {
         }
         return true;
     }
-
 }
