@@ -4,6 +4,7 @@ public class CreateStorageRequest {
 
     private Long shoeId;
     private Integer size;
+    private String comment;
 
     public Integer getSize() {
         return size;
@@ -19,5 +20,13 @@ public class CreateStorageRequest {
 
     public void setShoeId(Long shoeId) {
         this.shoeId = shoeId;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 }

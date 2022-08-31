@@ -127,11 +127,18 @@ public class FinanceService {
                                 .append(orderedShoe.getShoe().getColor()).append(" - немає ціни\n\n");
                         break;
                     } else {
-                        sum += shoePrice.getCost();
-                        result.append(ordered.getTtn()).append(" ")
-                                .append(orderedShoe.getShoe().getModelAndColor()).append(" ")
-                                .append(shoePrice.getCost()).append("\n");
-                        notPayedRecords.add(notPayedRecordMapper.mapTo(ordered.getTtn(), shoePrice.getCost(), orderedShoe));
+                        if (orderedShoe.getShouldNotBePayed() == null || !orderedShoe.getShouldNotBePayed()) {
+                            sum += shoePrice.getCost();
+                            result.append(ordered.getTtn()).append(" ")
+                                    .append(orderedShoe.getShoe().getModelAndColor()).append(" ")
+                                    .append(shoePrice.getCost()).append("\n");
+                            notPayedRecords.add(notPayedRecordMapper.mapTo(ordered.getTtn(), shoePrice.getCost(), orderedShoe));
+                        } else {
+                            result.append(ordered.getTtn()).append(" ")
+                                    .append(orderedShoe.getShoe().getModelAndColor()).append(" ")
+                                    .append(" не оплачувати").append("\n");
+                            notPayedRecords.add(notPayedRecordMapper.mapTo(ordered.getTtn(), 0D, orderedShoe));
+                        }
                     }
                 }
             }
@@ -142,11 +149,6 @@ public class FinanceService {
         result.append("Сума відмінених оплачених = ").append(notPayedRecordsResponse.sum).append("\n");
         result.append("Сума до оплати = ").append(sum - notPayedRecordsResponse.sum);
         return new NeedToBePayedResponse(result.toString(), notPayedRecords, sum - notPayedRecordsResponse.sum);
-    }
-
-    static class NeedToBePayed {
-        Double sum;
-        List<String> ttns;
     }
 
     public StringResponse makePayed(Long companyId, List<NotPayedRecord> notPayedRecords) {

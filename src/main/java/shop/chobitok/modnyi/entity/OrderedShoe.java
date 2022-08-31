@@ -1,8 +1,6 @@
 package shop.chobitok.modnyi.entity;
 
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 
 @Entity
@@ -13,6 +11,7 @@ public class OrderedShoe extends Audit {
     private Shoe shoe;
     private String comment;
     private boolean payed = false;
+    private Boolean shouldNotBePayed = false;
 
     public OrderedShoe() {
     }
@@ -58,5 +57,13 @@ public class OrderedShoe extends Audit {
 
     public void setPayed(boolean payed) {
         this.payed = payed;
+    }
+
+    public Boolean getShouldNotBePayed() {
+        return shouldNotBePayed;
+    }
+
+    public void setShouldNotBePayed(Boolean shouldNotBePayed) {
+        this.shouldNotBePayed = shouldNotBePayed;
     }
 }

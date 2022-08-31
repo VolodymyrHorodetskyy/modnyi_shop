@@ -29,6 +29,7 @@ public class StorageService {
         }
         storageRecord.setShoe(shoe);
         storageRecord.setSize(createStorageRequest.getSize());
+        storageRecord.setComment(createStorageRequest.getComment());
         return storageRepository.save(storageRecord);
     }
 

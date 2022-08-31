@@ -34,11 +34,11 @@ import static shop.chobitok.modnyi.util.StringHelper.splitTTNString;
 @Service
 public class OurTtnService {
 
-    private OurTtnMapper ourTtnMapper;
-    private NovaPostaRepository postaRepository;
-    private OrderRepository orderRepository;
-    private CanceledOrderReasonRepository canceledOrderReasonRepository;
-    private OurTtnRepository ourTtnRepository;
+    private final OurTtnMapper ourTtnMapper;
+    private final NovaPostaRepository postaRepository;
+    private final OrderRepository orderRepository;
+    private final CanceledOrderReasonRepository canceledOrderReasonRepository;
+    private final OurTtnRepository ourTtnRepository;
 
     public OurTtnService(OurTtnMapper ourTtnMapper, NovaPostaRepository postaRepository, OrderRepository orderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, OurTtnRepository ourTtnRepository) {
         this.ourTtnMapper = ourTtnMapper;
