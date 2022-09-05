@@ -19,7 +19,9 @@ import shop.chobitok.modnyi.specification.OrderedSpecification;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.lang.System.out;
@@ -157,6 +159,25 @@ public class ProdTest {
         variantsRepository.save(variants);
     }
 
+    @Test
+    public void getVariants() {
+        OrderedSpecification orderedSpecification = new OrderedSpecification();
+        orderedSpecification.setFrom(LocalDateTime.now().minusDays(8));
+        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
+        Map<Variants, Integer> map = new HashMap<>();
+        for (Ordered ordered : orderedList) {
+            Integer i = map.get(ordered.getSourceOfOrder());
+            if (i != null) {
+                map.put(ordered.getSourceOfOrder(), ++i);
+            } else {
+                map.put(ordered.getSourceOfOrder(), 1);
+            }
+        }
+        for (Map.Entry<Variants, Integer> entry : map.entrySet()) {
+            out.println(entry.getKey().getGetting() + " " + entry.getValue());
+        }
+    }
+
     @Autowired
     CompanyService companyService;
 
@@ -189,8 +210,8 @@ public class ProdTest {
         AppOrder appOrder = appOrderRepository.findById(24349L).orElse(null);
         assert appOrder != null;
         appOrder.setCreatedDate(now());
-        appOrder.setPixel(pixelRepository.findById(20L).orElse(null));
-        facebookApi2.send("TEST38291", appOrder);
+        appOrder.setPixel(pixelRepository.findById(19L).orElse(null));
+        facebookApi2.send("TEST42583", appOrder);
     }
 
     @Autowired
@@ -238,8 +259,8 @@ public class ProdTest {
 
     @Test
     public void chnageAccessKey() {
-        Pixel pixel = pixelRepository.findById(17l).orElse(null);
-        pixel.setPixelAccessToken("EAAG6Ad0MA64BAM2VHy5Bvt3Jxm8TpY0tZCHPL92TogIMdAsw3AgXm2KIpbpg3XanTBBSVRD42xZAXz9PpmKIHDZCZCZBehEIfGlqkuZAN9fZCenFx2U6IL0y9oltVECpLDgm9DBrBPsOwMLYdJZCUHA1aQA6huxJwkauZB0OeZCdwBpnduMbIByEmLUiI2k38Y4E4ZD");
+        Pixel pixel = pixelRepository.findById(19l).orElse(null);
+        pixel.setPixelAccessToken("EAAG6Ad0MA64BANWpZAZAVM32zEt2FTpO1YijCgv5Ijn1coaFBdOD2UW1RdDi7dmH0cbPCRgqASSlZAg0KIuqWBxJwFmi4oZAlGTJ54IhW7wnokB7Ba29ZAXZBtZCdGwC1nEM24SUQJYv8vZAbTOZC32gZB6B4BpmQUmkbwWZA4PZB41eA0XCPVToQQDDEqsgRjMsy4kZD");
         pixelRepository.save(pixel);
     }
 }

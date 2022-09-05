@@ -27,6 +27,7 @@ public class UpdateOrderRequest {
     private Long discountId;
     private boolean allCorrect;
     private Long sourceOfOrderId;
+    private Boolean shouldNotBePayed;
 
     public String getName() {
         return name;
@@ -178,5 +179,13 @@ public class UpdateOrderRequest {
 
     public void setSourceOfOrderId(Long sourceOfOrderId) {
         this.sourceOfOrderId = sourceOfOrderId;
+    }
+
+    public Boolean getShouldNotBePayed() {
+        return shouldNotBePayed;
+    }
+
+    public void setShouldNotBePayed(Boolean shouldNotBePayed) {
+        this.shouldNotBePayed = shouldNotBePayed;
     }
 }

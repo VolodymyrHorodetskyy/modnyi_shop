@@ -125,7 +125,6 @@ public class FinanceService {
                     if (shoePrice == null) {
                         result.append(ordered.getTtn()).append(" ").append(orderedShoe.getShoe().getModel()).append(" ")
                                 .append(orderedShoe.getShoe().getColor()).append(" - немає ціни\n\n");
-                        break;
                     } else {
                         if (orderedShoe.getShouldNotBePayed() == null || !orderedShoe.getShouldNotBePayed()) {
                             sum += shoePrice.getCost();

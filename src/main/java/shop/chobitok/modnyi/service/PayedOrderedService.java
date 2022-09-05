@@ -11,6 +11,8 @@ import shop.chobitok.modnyi.repository.PayedOrderedRepository;
 import javax.transaction.Transactional;
 import java.util.List;
 
+import static java.util.stream.Collectors.toList;
+
 @Service
 public class PayedOrderedService {
 
@@ -45,6 +47,9 @@ public class PayedOrderedService {
     public NotPayedRecordsInternalResponse getSumNotCounted(Long companyId) {
         Double sum = 0d;
         List<PayedOrdered> payedOrderedList = payedOrderedRepository.findByCountedFalse();
+        payedOrderedList = payedOrderedList.stream()
+                .filter(p -> p.getOrderedShoe().getShoe().getCompany().getId().equals(companyId))
+                .collect(toList());
         for (PayedOrdered payedOrdered : payedOrderedList) {
             if (payedOrdered.getOrderedShoe().getShoe().getCompany().getId().equals(companyId)) {
                 sum += payedOrdered.getSum();
