@@ -2,7 +2,6 @@ package shop.chobitok.modnyi.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 
 @Entity
@@ -11,6 +10,7 @@ public class Company extends Audit {
 
     private String name;
     private Boolean useStorage;
+    private Boolean allShouldBePayed;
 
     public Company(String name) {
         this.name = name;
@@ -33,5 +33,13 @@ public class Company extends Audit {
 
     public void setUseStorage(Boolean useStorage) {
         this.useStorage = useStorage;
+    }
+
+    public Boolean getAllShouldBePayed() {
+        return allShouldBePayed;
+    }
+
+    public void setAllShouldBePayed(Boolean allShouldBePayed) {
+        this.allShouldBePayed = allShouldBePayed;
     }
 }

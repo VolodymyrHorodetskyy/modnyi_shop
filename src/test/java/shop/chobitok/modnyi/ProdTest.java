@@ -18,6 +18,7 @@ import shop.chobitok.modnyi.specification.OrderedSpecification;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -262,5 +263,17 @@ public class ProdTest {
         Pixel pixel = pixelRepository.findById(19l).orElse(null);
         pixel.setPixelAccessToken("EAAG6Ad0MA64BANWpZAZAVM32zEt2FTpO1YijCgv5Ijn1coaFBdOD2UW1RdDi7dmH0cbPCRgqASSlZAg0KIuqWBxJwFmi4oZAlGTJ54IhW7wnokB7Ba29ZAXZBtZCdGwC1nEM24SUQJYv8vZAbTOZC32gZB6B4BpmQUmkbwWZA4PZB41eA0XCPVToQQDDEqsgRjMsy4kZD");
         pixelRepository.save(pixel);
+    }
+
+    @Autowired
+    private OrderedShoeRepository orderedShoeRepository;
+    @Test
+    public void makePayed() {
+        String str = "2022-08-01 00:00";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        LocalDateTime dateTime = LocalDateTime.parse(str, formatter);
+        List<OrderedShoe> orderedShoeList = orderedShoeRepository.findAllByPayedFalseAndCreatedDateLessThanEqual(dateTime);
+        orderedShoeList.forEach(orderedShoe -> orderedShoe.setPayed(true));
+        orderedShoeRepository.saveAll(orderedShoeList);
     }
 }

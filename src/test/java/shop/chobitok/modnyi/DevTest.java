@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,7 +13,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.request.CreateCompanyRequest;
-import shop.chobitok.modnyi.entity.request.DoCompanyFinanceControlOperationRequest;
 import shop.chobitok.modnyi.entity.request.SaveAdsSpendsRequest;
 import shop.chobitok.modnyi.facebook.FacebookApi;
 import shop.chobitok.modnyi.facebook.FacebookApi2;
@@ -35,6 +33,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -569,4 +568,14 @@ public class DevTest {
         });
         orderRepository.saveAll(orderedList);
     }*/
+
+    @Test
+    public void makePayed() {
+        String str = "2022-08-01 00:00";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        LocalDateTime dateTime = LocalDateTime.parse(str, formatter);
+        List<OrderedShoe> orderedShoeList = orderedShoeRepository.findAllByPayedFalseAndCreatedDateLessThanEqual(dateTime);
+        orderedShoeList.forEach(orderedShoe -> orderedShoe.setPayed(true));
+        orderedShoeRepository.saveAll(orderedShoeList);
+    }
 }
