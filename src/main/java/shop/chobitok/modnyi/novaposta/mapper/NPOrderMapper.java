@@ -9,36 +9,35 @@ import shop.chobitok.modnyi.novaposta.entity.DataForList;
 import shop.chobitok.modnyi.novaposta.entity.TrackingEntity;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.ShoeRepository;
-import shop.chobitok.modnyi.service.CardService;
-import shop.chobitok.modnyi.service.ClientService;
-import shop.chobitok.modnyi.service.NpAccountService;
-import shop.chobitok.modnyi.service.ShoePriceService;
+import shop.chobitok.modnyi.service.*;
 import shop.chobitok.modnyi.specification.ShoeSpecification;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
+import static java.lang.Double.parseDouble;
+import static java.util.Arrays.asList;
 import static org.springframework.util.StringUtils.isEmpty;
 
 
 @Service
 public class NPOrderMapper {
 
-    private ShoeRepository shoeRepository;
-    private ClientService clientService;
-    private ShoePriceService shoePriceService;
-    private CardService cardService;
+    private final ShoeRepository shoeRepository;
+    private final ClientService clientService;
+    private final ShoePriceService shoePriceService;
+    private final CardService cardService;
+    private final ParamsService paramsService;
+    private List<Integer> sizes = asList(36, 37, 38, 39, 40, 41);
+    private final NpAccountService npAccountService;
 
-    private List<Integer> sizes = Arrays.asList(36, 37, 38, 39, 40, 41);
-
-    private NpAccountService npAccountService;
-
-    public NPOrderMapper(ShoeRepository shoeRepository, ClientService clientService, ShoePriceService shoePriceService, CardService cardService, NpAccountService npAccountService) {
+    public NPOrderMapper(ShoeRepository shoeRepository, ClientService clientService, ShoePriceService shoePriceService, CardService cardService, ParamsService paramsService, List<Integer> sizes, NpAccountService npAccountService) {
         this.shoeRepository = shoeRepository;
         this.clientService = clientService;
         this.shoePriceService = shoePriceService;
         this.cardService = cardService;
+        this.paramsService = paramsService;
+        this.sizes = sizes;
         this.npAccountService = npAccountService;
     }
 
@@ -69,7 +68,7 @@ public class NPOrderMapper {
                 ordered.setLastCreatedOnTheBasisDocumentTypeNP(data.getLastCreatedOnTheBasisDocumentType());
                 ordered.setDatePayedKeepingNP(ShoeUtil.toLocalDateTime(data.getDatePayedKeeping()));
                 ordered.setDateCreated(ShoeUtil.toLocalDateTime(data.getDateCreated()));
-                ordered.setDeliveryCost(Double.valueOf(data.getDocumentCost()));
+                ordered.setDeliveryCost((double) data.getDocumentCost());
                 ordered.setStoragePrice(!data.getStoragePrice().isEmpty() ? Double.valueOf(data.getStoragePrice()) : null);
                 ordered.setSourceOfOrder(sourceOfOrder);
                 if (ordered.getOrderedShoeList() == null || ordered.getOrderedShoeList().size() == 0) {
@@ -102,7 +101,7 @@ public class NPOrderMapper {
             ordered.setStatus(Status.СТВОРЕНО);
             ordered.setStatusNP(1);
             ordered.setPostComment(dataForList.getDescription());
-            ordered.setReturnSumNP(Double.valueOf(dataForList.getBackwardDeliveryMoney()));
+            ordered.setReturnSumNP((double) dataForList.getBackwardDeliveryMoney());
             ordered.setNameAndSurnameNP(dataForList.getRecipientContactPerson());
             ordered.setDateCreated(ShoeUtil.toLocalDateTime(dataForList.getDateTime()));
             ordered.setCard(cardService.getOrSaveAndGetCardByName(dataForList.getRedeliveryPaymentCard()));
@@ -186,7 +185,7 @@ public class NPOrderMapper {
             ordered.setFullPayment(true);
             ordered.setPrePayment(price);
         } else {
-            ordered.setPrePayment(100d);
+            ordered.setPrePayment(parseDouble(paramsService.getParam("prePaymentSum").getGetting()));
         }
     }
 
@@ -221,7 +220,7 @@ public class NPOrderMapper {
                 }
                 generalAmount = roundDouble(generalAmount);
             } else if (discount.getShoeNumber() == 0) {
-                generalAmount = Double.valueOf(orderedShoeList.size()) * Double.valueOf(discount.getDiscountPercentage());
+                generalAmount = (double) orderedShoeList.size() * Double.valueOf(discount.getDiscountPercentage());
 
             }
         } else {

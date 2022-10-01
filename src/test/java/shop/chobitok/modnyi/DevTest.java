@@ -43,6 +43,7 @@ import java.util.stream.Collectors;
 import static java.lang.System.out;
 import static java.time.LocalDateTime.now;
 import static java.util.Arrays.asList;
+import static shop.chobitok.modnyi.entity.VariantType.Domain;
 import static shop.chobitok.modnyi.util.DateHelper.makeDateBeginningOfDay;
 import static shop.chobitok.modnyi.util.DateHelper.makeDateEndOfDay;
 
@@ -295,11 +296,11 @@ public class DevTest {
     @Test
     public void addPixel() {
         Pixel pixel = new Pixel();
-        pixel.setPixelId("347812123487901");
-        pixel.setPixelAccessToken("EABFBSoi1TTkBAHb7HnOrrOQQMjlnZAjyIOItUZBQzvVYjQF7900budwsxTAZATm5mwAsUv83KZCLZBmWpUwz8ePlG9AZClKZC10lQmKFdMgd8bNnxCJtRORXrNnpZCvAP7FoDpCjPOeebhkwFGFFuMcWfWxmvGPhxfftHuCo0xCiJmLyRgvi1Xez");
+        pixel.setPixelId("1429787380834920");
+        pixel.setPixelAccessToken("EAASibZBHPIksBAA4JQB9O0Vhe6qVd7OoZAZAEmmx0w2VFJMbiACp7hfZBD8tsZBV448UDwZBYxqYJc7ySyKhZCTNsTwk2ipzCijhGanzepytfupzmaVrkeJDb8PqZCLkoKZA2P7TBbQM0mVqKje0zpKakvPXu6jZBbK1exPBHFbRGDZBPEYUtIZB6VnypJlbsulhdBwZD");
         pixel.setSendEvents(true);
-        pixel.setAccName("w2_a_1");
-        pixelRepository.save(pixel);
+        pixel.setAccName("alfia_1");
+        pixel = pixelRepository.save(pixel);
     }
 
     @Autowired
@@ -307,7 +308,9 @@ public class DevTest {
 
     @Test
     public void addDomains() {
-        variantsRepository.save(new Variants("mchobitok.store", VariantType.Domain, 2));
+        variantsRepository.save(new Variants("mchobitok.com", Domain, 2));
+        variantsRepository.save(new Variants("mchobitok.org", Domain, 2));
+        variantsRepository.save(new Variants("mchobitok.club", Domain, 2));
     }
 
     @Autowired
@@ -569,4 +572,9 @@ public class DevTest {
         });
         orderRepository.saveAll(orderedList);
     }*/
+
+    @Test
+    public void changeParam() {
+        paramsService.saveOrChangeParam("prePaymentSum", "150");
+    }
 }

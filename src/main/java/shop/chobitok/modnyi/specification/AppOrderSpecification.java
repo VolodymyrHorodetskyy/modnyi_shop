@@ -1,7 +1,6 @@
 package shop.chobitok.modnyi.specification;
 
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.AppOrder;
 import shop.chobitok.modnyi.entity.AppOrderStatus;
 import shop.chobitok.modnyi.entity.User;
@@ -10,6 +9,8 @@ import javax.persistence.criteria.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.springframework.util.StringUtils.isEmpty;
 
 public class AppOrderSpecification implements Specification<AppOrder> {
 
@@ -24,6 +25,8 @@ public class AppOrderSpecification implements Specification<AppOrder> {
     private Long isNotEqualId;
     private String userId;
     private boolean previousStatusNull;
+    private String infoLike;
+    private Boolean dataValid;
 
     public AppOrderSpecification() {
     }
@@ -56,7 +59,7 @@ public class AppOrderSpecification implements Specification<AppOrder> {
             Predicate idPredicate = criteriaBuilder.equal(root.get("id"), id);
             predicateList.add(idPredicate);
         }
-        if (!StringUtils.isEmpty(phoneAndName)) {
+        if (!isEmpty(phoneAndName)) {
             Predicate phonePredicate = criteriaBuilder.like(root.get("phone"), "%" + phoneAndName + "%");
             Predicate namePredicate = criteriaBuilder.like(root.get("name"), "%" + phoneAndName + "%");
             predicateList.add(criteriaBuilder.or(phonePredicate, namePredicate));
@@ -68,11 +71,11 @@ public class AppOrderSpecification implements Specification<AppOrder> {
         if (statuses != null && statuses.size() > 0) {
             predicateList.add(root.get("status").in(statuses));
         }
-        if (!StringUtils.isEmpty(comment)) {
+        if (!isEmpty(comment)) {
             Predicate commentPredicate = criteriaBuilder.like(root.get("comment"), "%" + comment + "%");
             predicateList.add(commentPredicate);
         }
-        if (!StringUtils.isEmpty(phone)) {
+        if (!isEmpty(phone)) {
             Predicate phonePredicate = criteriaBuilder.like(root.get("phone"), "%" + phone + "%");
             predicateList.add(phonePredicate);
         }
@@ -80,7 +83,7 @@ public class AppOrderSpecification implements Specification<AppOrder> {
             Predicate isNotEqualsId = criteriaBuilder.notEqual(root.get("id"), isNotEqualId);
             predicateList.add(isNotEqualsId);
         }
-        if (!StringUtils.isEmpty(userId)) {
+        if (!isEmpty(userId)) {
             Join<AppOrder, User> appOrderUserJoin = root.join("user");
             Predicate userPredicate = criteriaBuilder.equal(appOrderUserJoin.get("id"), userId);
             predicateList.add(userPredicate);
@@ -96,6 +99,19 @@ public class AppOrderSpecification implements Specification<AppOrder> {
         if (toCreatedDate != null) {
             Predicate toCreatedDatePredicate = criteriaBuilder.lessThanOrEqualTo(root.get("createdDate"), toCreatedDate);
             predicateList.add(toCreatedDatePredicate);
+        }
+        if (!isEmpty(infoLike)) {
+            Predicate infoLikePredicate = criteriaBuilder.like(root.get("info"), "%" + infoLike + "%");
+            predicateList.add(infoLikePredicate);
+        }
+        if (dataValid != null) {
+            Predicate dataValidPredicate;
+            if (dataValid) {
+                dataValidPredicate = criteriaBuilder.isTrue(root.get("dataValid"));
+            } else {
+                dataValidPredicate = criteriaBuilder.isFalse(root.get("dataValid"));
+            }
+            predicateList.add(dataValidPredicate);
         }
         return criteriaBuilder.and(predicateList.toArray(Predicate[]::new));
     }
@@ -142,5 +158,21 @@ public class AppOrderSpecification implements Specification<AppOrder> {
 
     public void setToCreatedDate(LocalDateTime toCreatedDate) {
         this.toCreatedDate = toCreatedDate;
+    }
+
+    public String getInfoLike() {
+        return infoLike;
+    }
+
+    public void setInfoLike(String infoLike) {
+        this.infoLike = infoLike;
+    }
+
+    public Boolean getDataValid() {
+        return dataValid;
+    }
+
+    public void setDataValid(Boolean dataValid) {
+        this.dataValid = dataValid;
     }
 }

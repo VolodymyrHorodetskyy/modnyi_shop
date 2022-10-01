@@ -10,14 +10,17 @@ import org.springframework.test.context.junit4.SpringRunner;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.request.CreateCompanyRequest;
 import shop.chobitok.modnyi.facebook.FacebookApi2;
+import shop.chobitok.modnyi.facebook.RestResponseDTO;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.repository.*;
 import shop.chobitok.modnyi.service.*;
+import shop.chobitok.modnyi.specification.AppOrderSpecification;
 import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +30,7 @@ import java.util.stream.Collectors;
 import static java.lang.System.out;
 import static java.time.LocalDateTime.now;
 import static java.util.Arrays.asList;
+import static shop.chobitok.modnyi.entity.VariantType.Domain;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -131,8 +135,8 @@ public class ProdTest {
     private ParamsService paramsService;
 
     @Test
-    public void changeMainNp() {
-        paramsService.saveOrChangeParam("mainNpAccount", "1");
+    public void changeParam() {
+        paramsService.saveOrChangeParam("prePaymentSum", "150");
     }
 
     @Autowired
@@ -191,12 +195,14 @@ public class ProdTest {
 
     @Test
     public void addPixel() {
-        Pixel pixel = new Pixel();
-        pixel.setPixelId("709663950077249");
-        pixel.setPixelAccessToken("EAAG6Ad0MA64BAEONx1g87mjALpwhU9klS4xGxZCY3TbxhF85NAd36qKX3bj4p8jZCnwYByE7Ro6GIRPKNgiq9rOgrSqp0NpJYu270LtS6EGXDAWEGzQ4JRfxS9QO3UkNZCklyvoPZBFiAwbkI3yUC3RXVZC6EBJsfp3vKKjFpNloJQ97CS7H1XhzJJE3mURAZD");
+   /*     Pixel pixel = new Pixel();
+        pixel.setPixelId("634494904733632");
+        pixel.setPixelAccessToken("EAAQDgRokLEYBAESWxU62EXncPHplbjfsdr8cwVHTdRzcYRlzkTVYk1Llfz7OE4MN1UosLBnoE5KqwjrckYWrKNWXBn6MDcUkKDKwHNPA49aElkZBAXotfLv85SVtZAGw5Qlaf9qZBgD98T8uuT3JdqY1JojHBDclTqd0RRLZCV8KQiMM3VaW6CJe78oenZAMZD");
         pixel.setSendEvents(true);
-        pixel.setAccName("poli ad pxl 5");
-        pixelRepository.save(pixel);
+        pixel.setAccName("soc ulyana pazhoba");
+        pixel = pixelRepository.save(pixel);*/
+        Pixel pixel = pixelRepository.findById(27l).orElse(null);
+        sendTestEvent(pixel, "TEST91057", "https://mchobitok.org/");
     }
 
     @Autowired
@@ -205,13 +211,24 @@ public class ProdTest {
     @Autowired
     private FacebookApi2 facebookApi2;
 
+    public void sendTestEvent(Pixel pixel, String testCode, String eventSourceUrl) {
+        AppOrder appOrder = appOrderRepository.findById(24349L).orElse(null);
+        appOrder.setEventSourceUrl(eventSourceUrl);
+        assert appOrder != null;
+        appOrder.setCreatedDate(now());
+        appOrder.setPixel(pixel);
+        RestResponseDTO restResponseDTO = facebookApi2.send(testCode, appOrder);
+        out.println(restResponseDTO.getHttpStatus() + " " + restResponseDTO.getMessage());
+    }
+
     @Test
-    public void sendTestEvent() {
+    public void sendTestEvent2() {
         AppOrder appOrder = appOrderRepository.findById(24349L).orElse(null);
         assert appOrder != null;
         appOrder.setCreatedDate(now());
-        appOrder.setPixel(pixelRepository.findById(19L).orElse(null));
-        facebookApi2.send("TEST42583", appOrder);
+        appOrder.setPixel(pixelRepository.findById(24l).orElse(null));
+        RestResponseDTO restResponseDTO = facebookApi2.send("TEST35898", appOrder);
+        out.println(restResponseDTO.getHttpStatus() + " " + restResponseDTO.getMessage());
     }
 
     @Autowired
@@ -222,7 +239,7 @@ public class ProdTest {
     public void companyOrders() {
         OrderedSpecification orderedSpecification = new OrderedSpecification();
         orderedSpecification.setCompanyId(1177l);
-        orderedSpecification.setStatuses(Arrays.asList(Status.ДОСТАВЛЕНО,
+        orderedSpecification.setStatuses(asList(Status.ДОСТАВЛЕНО,
                 Status.ОТРИМАНО, Status.ВІДПРАВЛЕНО, Status.ВІДМОВА));
         List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
         for (Ordered ordered : orderedList) {
@@ -259,8 +276,77 @@ public class ProdTest {
 
     @Test
     public void chnageAccessKey() {
-        Pixel pixel = pixelRepository.findById(19l).orElse(null);
-        pixel.setPixelAccessToken("EAAG6Ad0MA64BANWpZAZAVM32zEt2FTpO1YijCgv5Ijn1coaFBdOD2UW1RdDi7dmH0cbPCRgqASSlZAg0KIuqWBxJwFmi4oZAlGTJ54IhW7wnokB7Ba29ZAXZBtZCdGwC1nEM24SUQJYv8vZAbTOZC32gZB6B4BpmQUmkbwWZA4PZB41eA0XCPVToQQDDEqsgRjMsy4kZD");
+        Pixel pixel = pixelRepository.findById(24l).orElse(null);
+        pixel.setPixelAccessToken("EAAQDgRokLEYBAKIfgPHbssJmYLS7mkWn5Jod3porPtJ0QGzhejxTNtibH6ZAqskNcBI8UDXsKmQZAB6Ag5AA8LRd54w51U4arb5QYhZA2HGh9nerYGKtoATxZCTYu5J0ZCg7mLnChF4kbA3W8bZCvu5bZBrmLR1ZCdo2T4NfXn956mwWNRbFX9yoi7exWWPhNZCUZD");
         pixelRepository.save(pixel);
+    }
+
+    @Autowired
+    private ShoePriceRepository shoePriceRepository;
+
+    @Test
+    public void shoePriceChange() {
+        String str = "2022-08-01 00:00";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        LocalDateTime dateTime = LocalDateTime.parse(str, formatter);
+        List<ShoePrice> shoePrices = shoePriceRepository.findByCreatedDateGreaterThanEqual(LocalDateTime.now().minusDays(1));
+        shoePrices.forEach(shoePrice -> shoePrice.setFromDate(dateTime));
+        shoePriceRepository.saveAll(shoePrices);
+    }
+
+    @Test
+    public void addDomains() {
+        variantsRepository.save(new Variants("mchobitok.com", Domain, 2));
+        variantsRepository.save(new Variants("mchobitok.org", Domain, 2));
+        variantsRepository.save(new Variants("mchobitok.club", Domain, 2));
+    }
+
+    @Test
+    public void changePixel() {
+        Pixel pixel = pixelRepository.findById(23l).orElse(null);
+        AppOrderSpecification appOrderSpecification = new AppOrderSpecification();
+        appOrderSpecification.setInfoLike("mchobitok.com");
+        appOrderSpecification.setDataValid(true);
+        List<AppOrder> appOrders = appOrderRepository.findAll(appOrderSpecification);
+        facebookApi2.send("TEST13566", appOrders.get(0));
+        /*      appOrders.forEach(appOrder -> {
+            appOrder.setPixel(pixel);
+            appOrder = appOrderRepository.save(appOrder);
+            out.println(facebookApi2.send(appOrder).getHttpStatus());
+        });*/
+    }
+
+    @Test
+    @Transactional
+    public void getCanceled() {
+        String str = "2022-08-01 00:00";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        LocalDateTime dateTime = LocalDateTime.parse(str, formatter);
+        OrderedSpecification orderedSpecification = new OrderedSpecification();
+        orderedSpecification.setFrom(dateTime);
+        orderedSpecification.setStatus(Status.ВІДМОВА);
+        orderedSpecification.setCompanyId(1177l);
+        orderRepository.findAll(orderedSpecification)
+                .forEach(ordered -> {
+                    out.println(ordered.getTtn());
+                    ordered.getOrderedShoeList()
+                            .forEach(orderedShoe -> out.println(orderedShoe.getShoe().getModelAndColor()));
+                    out.println("");
+                });
+    }
+
+    @Test
+    public void addAppOrder(){
+        AppOrder appOrder = new AppOrder();
+        appOrder.setName("Груник Світлана");
+        appOrder.setStatus(AppOrderStatus.Новий);
+        appOrder.setPhone("380676081399");
+        appOrder.setAmount(1999d);
+        appOrder.setDelivery("Брюховичі нова ПОЧТА 1");
+        appOrder.setProducts(asList("192ч марсала високі-4\n" +
+                "Размер: 36\n" +
+                "Внутри: Байка"));
+        appOrderRepository.save(appOrder);
+
     }
 }
