@@ -6,7 +6,6 @@ import shop.chobitok.modnyi.entity.PayedOrdered;
 import shop.chobitok.modnyi.entity.dto.NotPayedRecord;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -31,7 +30,7 @@ public class NotPayedRecordMapper {
         if (payedOrdered != null) {
             notPayedRecord = new NotPayedRecord();
             notPayedRecord.setPayedRecordId(payedOrdered.getId());
-            notPayedRecord.setSum(payedOrdered.getSum());
+            notPayedRecord.setSum(-payedOrdered.getSum());
             notPayedRecord.setTtn(payedOrdered.getOrdered().getTtn());
             notPayedRecord.setModelAndColor(payedOrdered.getOrderedShoe().getShoe().getModelAndColor());
         }

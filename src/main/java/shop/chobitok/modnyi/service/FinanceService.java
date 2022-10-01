@@ -32,8 +32,9 @@ public class FinanceService {
     private final OrderedShoeRepository orderedShoeRepository;
     private final NotPayedRecordMapper notPayedRecordMapper;
     private final CompanyFinanceControlService companyFinanceControlService;
+    private final CompanyService companyService;
 
-    public FinanceService(OrderService orderService, OrderRepository orderRepository, ShoePriceService shoePriceService, ParamsService paramsService, PayedOrderedService payedOrderedService, OrderedShoeRepository orderedShoeRepository, NotPayedRecordMapper notPayedRecordMapper, CompanyFinanceControlService companyFinanceControlService) {
+    public FinanceService(OrderService orderService, OrderRepository orderRepository, ShoePriceService shoePriceService, ParamsService paramsService, PayedOrderedService payedOrderedService, OrderedShoeRepository orderedShoeRepository, NotPayedRecordMapper notPayedRecordMapper, CompanyFinanceControlService companyFinanceControlService, CompanyService companyService) {
         this.orderService = orderService;
         this.orderRepository = orderRepository;
         this.shoePriceService = shoePriceService;
@@ -42,6 +43,7 @@ public class FinanceService {
         this.orderedShoeRepository = orderedShoeRepository;
         this.notPayedRecordMapper = notPayedRecordMapper;
         this.companyFinanceControlService = companyFinanceControlService;
+        this.companyService = companyService;
     }
 
     public EarningsResponse getEarnings(List<Ordered> orderedList, LocalDateTime fromDate, LocalDateTime toDate) {
@@ -112,7 +114,13 @@ public class FinanceService {
         if (updateStatuses) {
             orderService.updateOrdersByNovaPosta();
         }
-        List<OrderedShoe> orderedShoeList = orderedShoeRepository.findAllByPayedFalseAndShoeCompanyId(companyId);
+        Company company = companyService.getCompany(companyId);
+        List<OrderedShoe> orderedShoeList;
+        if (company.getAllShouldBePayed() != null && company.getAllShouldBePayed()) {
+            orderedShoeList = orderedShoeRepository.findAllByPayedFalseAndShoeCompanyId(companyId);
+        }else {
+            orderedShoeList = orderedShoeRepository.findAllByStatusReceivedAndPayedFalseAndCompanyId(companyId);
+        }
         List<NotPayedRecord> notPayedRecords = new ArrayList<>();
         for (OrderedShoe orderedShoe : orderedShoeList) {
             Ordered ordered = orderRepository.findByOrderedShoeId(orderedShoe.getId());
