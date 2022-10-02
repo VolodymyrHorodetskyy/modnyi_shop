@@ -57,6 +57,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 // dont authenticate this particular request
                 .authorizeRequests().antMatchers("/user/authenticate", "/register",
                         "/AppOrder/catchOrder",
+                        "/AppOrder/catchOrder2",
                         "/markings",
                         "/statistic/needDeliveryFromDB",
                         "/statistic/returned",
