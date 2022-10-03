@@ -4,7 +4,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.service.*;
 
-import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 
 @Service
@@ -61,10 +60,5 @@ public class CronJob {
     @Scheduled(cron = "0 0 0 * * TUE,SAT")
     public void everyTueAndSat() {
         checkerService.updateMonthlyReceivingPercentage();
-    }
-
-    @Scheduled(cron = "*/10 * * * * *")
-    public void every1Minute() throws UnsupportedEncodingException {
-        appOrderService.parseDataForAllAppOrders();
     }
 }

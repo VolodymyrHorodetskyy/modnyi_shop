@@ -20,6 +20,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -83,7 +84,16 @@ public class AppOrderService {
         AppOrder appOrder = new AppOrder();
         appOrder.setStatus(AppOrderStatus.Новий);
         appOrder.setNotDecodedInfo(s);
-        return appOrderRepository.save(appOrder);
+        appOrder = appOrderRepository.save(appOrder);
+        final AppOrder appOrderForParsing = appOrder;
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                return parseData(appOrderForParsing);
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        return appOrder;
     }
 
     private AppOrder parseData(AppOrder appOrder) throws UnsupportedEncodingException {
@@ -116,13 +126,6 @@ public class AppOrderService {
         appOrder.setDataParsed(true);
         return appOrderRepository.save(appOrder);
         // assignAppOrderToUserAndSetShouldBeProcessedTime(appOrder);
-    }
-
-    public void parseDataForAllAppOrders() throws UnsupportedEncodingException {
-        List<AppOrder> appOrders = appOrderRepository.findByDataParsedFalse();
-        for (AppOrder appOrder : appOrders) {
-            parseData(appOrder);
-        }
     }
 
     private String getValue(List<String> values) {
