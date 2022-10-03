@@ -37,6 +37,21 @@ public class AppOrderController {
         return appOrderService.catchOrder(s);
     }
 
+    @PostMapping("/catchOrder3")
+    public AppOrder webhook3(@RequestBody String s) {
+        return appOrderService.catchOrder(s);
+    }
+
+    @PostMapping("/catchOrder4")
+    public AppOrder webhook4(@RequestBody String s) {
+        return appOrderService.catchOrder(s);
+    }
+
+    @PostMapping("/catchOrder5")
+    public AppOrder webhook5(@RequestBody String s) {
+        return appOrderService.catchOrder(s);
+    }
+
     @GetMapping
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
     public Map<AppOrderStatus, Set<AppOrder>> getAll(Long id, String phoneAndName, String comment, String fromForNotReady, String fromForReady, String userId) {
