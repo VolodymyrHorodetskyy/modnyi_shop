@@ -128,7 +128,7 @@ public class AppOrderService {
         // assignAppOrderToUserAndSetShouldBeProcessedTime(appOrder);
     }
 
-    private String getValue(List<String> values) {
+    public String getValue(List<String> values) {
         if (values != null && values.size() > 0) {
             return values.get(0);
         }
@@ -192,7 +192,7 @@ public class AppOrderService {
         appOrder.setClientUserAgent(userAgent);
     }
 
-    private boolean setDomain(AppOrder appOrder, String[] splittedCookies) {
+    public boolean setDomain(AppOrder appOrder, String[] splittedCookies) {
         boolean result = false;
         if (splittedCookies != null && splittedCookies.length > 0) {
             List<Variants> variantsList = variantsService.getByType(Domain);

@@ -177,9 +177,12 @@ public class CanceledOrderReasonService {
         if (trackingEntity != null && trackingEntity.getData().size() > 0) {
             Data data = trackingEntity.getData().get(0);
             if (!isEmpty(data.getLastCreatedOnTheBasisNumber())) {
-                returned = postaRepository.getTracking(null, data.getLastCreatedOnTheBasisNumber()).getData().get(0);
-                if (convertToStatus(returned.getStatusCode()) == Status.ЗМІНА_АДРЕСУ) {
-                    returned = postaRepository.getTracking(null, returned.getLastCreatedOnTheBasisNumber()).getData().get(0);
+                List<Data> dataReturned = postaRepository.getTracking(null, data.getLastCreatedOnTheBasisNumber()).getData();
+                if (dataReturned.size() > 0) {
+                    returned = dataReturned.get(0);
+                    if (convertToStatus(returned.getStatusCode()) == Status.ЗМІНА_АДРЕСУ) {
+                        returned = postaRepository.getTracking(null, returned.getLastCreatedOnTheBasisNumber()).getData().get(0);
+                    }
                 }
             }
         }

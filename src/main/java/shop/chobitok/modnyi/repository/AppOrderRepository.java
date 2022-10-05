@@ -45,4 +45,6 @@ public interface AppOrderRepository extends JpaRepository<AppOrder, Long> {
     List<AppOrder> findByRemindOnIsLessThanEqual(LocalDateTime localDateTime);
 
     List<AppOrder> findByDataParsedFalse();
+
+    List<AppOrder> findByCreatedDateGreaterThanEqualAndDomainIsNull(LocalDateTime dateTime);
 }

@@ -78,8 +78,8 @@ public class ProdTest {
     @Test
     public void setUnAvailableForOrders() {
         OrderedSpecification orderedSpecification = new OrderedSpecification();
-        orderedSpecification.setFrom(LocalDateTime.now().minusMonths(2));
-        orderedSpecification.setTo(LocalDateTime.now().minusMonths(1));
+        orderedSpecification.setFrom(now().minusMonths(2));
+        orderedSpecification.setTo(now().minusMonths(1));
         List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
         for (Ordered ordered : orderedList) {
             ordered.setAvailable(false);
@@ -100,7 +100,7 @@ public class ProdTest {
 
     @Test
     public void removeNotifications() {
-        List<Notification> notifications = notificationRepository.findByCreatedDateIsGreaterThan(LocalDateTime.now().minusDays(1));
+        List<Notification> notifications = notificationRepository.findByCreatedDateIsGreaterThan(now().minusDays(1));
         notificationRepository.deleteAll(notifications);
     }
 
@@ -112,7 +112,7 @@ public class ProdTest {
     @Test
     public void showAllDm() {
         OrderedSpecification orderedSpecification = new OrderedSpecification();
-        orderedSpecification.setFrom(LocalDateTime.now().minusDays(20));
+        orderedSpecification.setFrom(now().minusDays(20));
         List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
         orderedList = orderedList.stream().filter(ordered -> (ordered.getPostComment().contains("дм") || ordered.getPostComment().contains("Дм")
                 || ordered.getPostComment().contains("ДМ")) && ordered.getPostComment().contains("40")).collect(Collectors.toList());
@@ -166,7 +166,7 @@ public class ProdTest {
     @Test
     public void getVariants() {
         OrderedSpecification orderedSpecification = new OrderedSpecification();
-        orderedSpecification.setFrom(LocalDateTime.now().minusDays(8));
+        orderedSpecification.setFrom(now().minusDays(8));
         List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
         Map<Variants, Integer> map = new HashMap<>();
         for (Ordered ordered : orderedList) {
@@ -276,8 +276,8 @@ public class ProdTest {
 
     @Test
     public void chnageAccessKey() {
-        Pixel pixel = pixelRepository.findById(24l).orElse(null);
-        pixel.setPixelAccessToken("EAAQDgRokLEYBAKIfgPHbssJmYLS7mkWn5Jod3porPtJ0QGzhejxTNtibH6ZAqskNcBI8UDXsKmQZAB6Ag5AA8LRd54w51U4arb5QYhZA2HGh9nerYGKtoATxZCTYu5J0ZCg7mLnChF4kbA3W8bZCvu5bZBrmLR1ZCdo2T4NfXn956mwWNRbFX9yoi7exWWPhNZCUZD");
+        Pixel pixel = pixelRepository.findById(27l).orElse(null);
+        pixel.setPixelAccessToken("EAAQDgRokLEYBAPHXr08KwHw1EUHlnLZAZBZCBo5UYStN9IEPa1BlqlTTzH6fnE72ceYToFnle6xe8cXuxoqiY2nfvv6rihorpGEaoA8SSv4q8mvddUGzZBBY9ZCHEqwsBH0AGHu55H4qO2T1UwDF0uCJ7BAp5UXjCzLbLO7ZAwUZApzM4lObc9LZC87Fgkcxl9kZD");
         pixelRepository.save(pixel);
     }
 
@@ -289,16 +289,14 @@ public class ProdTest {
         String str = "2022-08-01 00:00";
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         LocalDateTime dateTime = LocalDateTime.parse(str, formatter);
-        List<ShoePrice> shoePrices = shoePriceRepository.findByCreatedDateGreaterThanEqual(LocalDateTime.now().minusDays(1));
+        List<ShoePrice> shoePrices = shoePriceRepository.findByCreatedDateGreaterThanEqual(now().minusDays(1));
         shoePrices.forEach(shoePrice -> shoePrice.setFromDate(dateTime));
         shoePriceRepository.saveAll(shoePrices);
     }
 
     @Test
     public void addDomains() {
-        variantsRepository.save(new Variants("mchobitok.com", Domain, 2));
-        variantsRepository.save(new Variants("mchobitok.org", Domain, 2));
-        variantsRepository.save(new Variants("mchobitok.club", Domain, 2));
+        variantsRepository.save(new Variants("mchobit.com", Domain, 2));
     }
 
     @Test
@@ -330,23 +328,39 @@ public class ProdTest {
                 .forEach(ordered -> {
                     out.println(ordered.getTtn());
                     ordered.getOrderedShoeList()
-                            .forEach(orderedShoe -> out.println(orderedShoe.getShoe().getModelAndColor()));
-                    out.println("");
+                            .forEach(orderedShoe -> out.println(orderedShoe.getShoe().getModelAndColor()
+                            + " " + orderedShoe.getSize()));
+                    out.println(" ");
                 });
     }
 
     @Test
     public void addAppOrder(){
         AppOrder appOrder = new AppOrder();
-        appOrder.setName("Груник Світлана");
+        appOrder.setDataParsed(true);
+        appOrder.setName("Елена Стародубцева");
         appOrder.setStatus(AppOrderStatus.Новий);
-        appOrder.setPhone("380676081399");
-        appOrder.setAmount(1999d);
-        appOrder.setDelivery("Брюховичі нова ПОЧТА 1");
-        appOrder.setProducts(asList("192ч марсала високі-4\n" +
-                "Размер: 36\n" +
-                "Внутри: Байка"));
+        appOrder.setPhone("380955790177");
+        appOrder.setAmount(1699d);
+        appOrder.setDelivery("Одесса,нп75");
+        appOrder.setProducts(asList("Туфлі Dixie лак ≡ 1699\n" +
+                "162 лак\n" +
+                "Размер: 38"));
+       appOrder.setMail("estarodubtseva1@gmail.com");
         appOrderRepository.save(appOrder);
+    }
 
+    @Autowired
+    private AppOrderService appOrderService;
+
+    @Test
+    public void setDomainToAppOrders(){
+        List<AppOrder> appOrders = appOrderRepository
+                .findByCreatedDateGreaterThanEqualAndDomainIsNull(now().minusDays(7));
+        appOrders.forEach(appOrder -> {
+            appOrderService.setDomain(appOrder,
+                    appOrderService.getValue(appOrderService.splitQuery(appOrder.getNotDecodedInfo()).get("COOKIES")).split(";"));
+        });
+        appOrderRepository.saveAll(appOrders);
     }
 }
