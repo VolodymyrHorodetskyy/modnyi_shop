@@ -28,16 +28,15 @@ public class NPOrderMapper {
     private final ShoePriceService shoePriceService;
     private final CardService cardService;
     private final ParamsService paramsService;
-    private List<Integer> sizes = asList(36, 37, 38, 39, 40, 41);
+    private final List<Integer> sizes = asList(36, 37, 38, 39, 40, 41);
     private final NpAccountService npAccountService;
 
-    public NPOrderMapper(ShoeRepository shoeRepository, ClientService clientService, ShoePriceService shoePriceService, CardService cardService, ParamsService paramsService, List<Integer> sizes, NpAccountService npAccountService) {
+    public NPOrderMapper(ShoeRepository shoeRepository, ClientService clientService, ShoePriceService shoePriceService, CardService cardService, ParamsService paramsService, NpAccountService npAccountService) {
         this.shoeRepository = shoeRepository;
         this.clientService = clientService;
         this.shoePriceService = shoePriceService;
         this.cardService = cardService;
         this.paramsService = paramsService;
-        this.sizes = sizes;
         this.npAccountService = npAccountService;
     }
 
@@ -125,14 +124,11 @@ public class NPOrderMapper {
 
 
     public Shoe parseShoe(String string) {
-        List<Shoe> shoes = shoeRepository.findAll(new ShoeSpecification(""), PageRequest.of(0, 300, Sort.by(Sort.Direction.DESC, "createdDate"))).getContent();
+        List<Shoe> shoes = shoeRepository.findAll(new ShoeSpecification(""), PageRequest.of(0, 1000, Sort.by(Sort.Direction.DESC, "createdDate"))).getContent();
         List<Shoe> matched = new ArrayList<>();
         for (Shoe shoe : shoes) {
             if (isEmpty(shoe.getPatterns())) {
                 continue;
-            }
-            if (matched.size() > 1) {
-                return null;
             }
 
             for (String pattern : shoe.getPatterns()) {
@@ -154,7 +150,7 @@ public class NPOrderMapper {
         }
     }
 
-    private void setShoeAndSizeFromDescriptionNP(Ordered ordered, String string) {
+    public void setShoeAndSizeFromDescriptionNP(Ordered ordered, String string) {
         Integer size = null;
         if (string != null) {
             for (Integer size1 : sizes) {

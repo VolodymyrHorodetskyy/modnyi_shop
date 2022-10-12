@@ -326,16 +326,22 @@ public class ProdTest {
         orderedSpecification.setCompanyId(1177l);
         orderRepository.findAll(orderedSpecification)
                 .forEach(ordered -> {
-                    out.println(ordered.getTtn());
-                    ordered.getOrderedShoeList()
-                            .forEach(orderedShoe -> out.println(orderedShoe.getShoe().getModelAndColor()
-                            + " " + orderedShoe.getSize()));
-                    out.println(" ");
+                    CanceledOrderReason canceledOrderReason = canceledOrderReasonRepository.findFirstByOrderedId(ordered.getId());
+                    if (canceledOrderReason == null) {
+                        out.println(ordered.getTtn() + " " + "не знайдено");
+                    } else {
+
+                        out.println(ordered.getOrderedShoeList()
+                                .stream().map(orderedShoe -> orderedShoe.getShoe().getModelAndColor()
+                                        + " " + orderedShoe.getSize())
+                                .collect(Collectors.joining(", ")) + " ," +
+                                canceledOrderReason.getReturnTtn() + " " + canceledOrderReason.getStatus());
+                    }
                 });
     }
 
     @Test
-    public void addAppOrder(){
+    public void addAppOrder() {
         AppOrder appOrder = new AppOrder();
         appOrder.setDataParsed(true);
         appOrder.setName("Елена Стародубцева");
@@ -346,7 +352,7 @@ public class ProdTest {
         appOrder.setProducts(asList("Туфлі Dixie лак ≡ 1699\n" +
                 "162 лак\n" +
                 "Размер: 38"));
-       appOrder.setMail("estarodubtseva1@gmail.com");
+        appOrder.setMail("estarodubtseva1@gmail.com");
         appOrderRepository.save(appOrder);
     }
 
@@ -354,7 +360,7 @@ public class ProdTest {
     private AppOrderService appOrderService;
 
     @Test
-    public void setDomainToAppOrders(){
+    public void setDomainToAppOrders() {
         List<AppOrder> appOrders = appOrderRepository
                 .findByCreatedDateGreaterThanEqualAndDomainIsNull(now().minusDays(7));
         appOrders.forEach(appOrder -> {
@@ -362,5 +368,17 @@ public class ProdTest {
                     appOrderService.getValue(appOrderService.splitQuery(appOrder.getNotDecodedInfo()).get("COOKIES")).split(";"));
         });
         appOrderRepository.saveAll(appOrders);
+    }
+
+    @Test
+    public void changeFinanceCompanyRecord() {
+        CompanyFinanceControl companyFinanceControl =
+                companyFinanceControlRepository.findById(36l).orElse(null);
+        companyFinanceControl.setDescription("Надя\n" +
+                " 174 мех37,38,39,40 \n" +
+                "205 мех 37,38,39,40 \n" +
+                "208 мех 38,39,40 \n" +
+                "130 мех36,37,38");
+        companyFinanceControlRepository.save(companyFinanceControl);
     }
 }

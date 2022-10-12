@@ -577,4 +577,10 @@ public class DevTest {
     public void changeParam() {
         paramsService.saveOrChangeParam("prePaymentSum", "150");
     }
+
+    @Test
+    public void testSetShoeAndSize(){
+        npOrderMapper.setShoeAndSizeFromDescriptionNP(new Ordered(),
+                "031 лак, Размер: 36");
+    }
 }
