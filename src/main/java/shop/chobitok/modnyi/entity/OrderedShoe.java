@@ -16,12 +16,12 @@ public class OrderedShoe extends Audit {
     public OrderedShoe() {
     }
 
-    public OrderedShoe(int size, Shoe shoe, Ordered ordered) {
+    public OrderedShoe(int size, Shoe shoe) {
         this.size = size;
         this.shoe = shoe;
     }
 
-    public OrderedShoe(int size, Shoe shoe, String comment, Ordered ordered) {
+    public OrderedShoe(int size, Shoe shoe, String comment) {
         this.size = size;
         this.shoe = shoe;
         this.comment = comment;

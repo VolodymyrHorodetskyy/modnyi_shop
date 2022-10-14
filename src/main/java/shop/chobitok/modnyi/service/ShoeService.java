@@ -85,7 +85,7 @@ public class ShoeService {
             }
             List<OrderedShoe> orderedShoeList = new ArrayList<>();
             for (Long shoeId : shoeIds) {
-                orderedShoeList.add(new OrderedShoe(36, shoeRepository.getOne(shoeId), null));
+                orderedShoeList.add(new OrderedShoe(36, shoeRepository.getOne(shoeId)));
             }
             return npOrderMapper.countDiscount(orderedShoeList, discount);
         }
@@ -102,7 +102,7 @@ public class ShoeService {
         if (shoe == null) {
             throw new ConflictException("Взуття не знайдено");
         }
-        OrderedShoe orderedShoe = new OrderedShoe(request.getSize(), shoe, request.getComment(), ordered);
+        OrderedShoe orderedShoe = new OrderedShoe(request.getSize(), shoe, request.getComment());
         if (ordered.getOrderedShoeList() == null) {
             ordered.setOrderedShoeList(new ArrayList<>());
         }

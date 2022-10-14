@@ -117,8 +117,8 @@ public class FinanceService {
         Company company = companyService.getCompany(companyId);
         List<OrderedShoe> orderedShoeList;
         if (company.getAllShouldBePayed() != null && company.getAllShouldBePayed()) {
-            orderedShoeList = orderedShoeRepository.findAllByPayedFalseAndShoeCompanyId(companyId);
-        }else {
+            orderedShoeList = orderedShoeRepository.findAllByStatusNotCreatedAndPayedFalseAndCompanyId(companyId);
+        } else {
             orderedShoeList = orderedShoeRepository.findAllByStatusReceivedAndPayedFalseAndCompanyId(companyId);
         }
         List<NotPayedRecord> notPayedRecords = new ArrayList<>();
@@ -167,10 +167,9 @@ public class FinanceService {
                 if (orderedShoe != null && orderedShoe.getShoe() != null) {
                     orderedShoe.setPayed(true);
                     orderedShoeRepository.save(orderedShoe);
-                    ShoePrice shoePrice = shoePriceService.getActualShoePrice(orderedShoe.getShoe());
-                    result.append(orderedShoe.getShoe().getModelAndColor()).append(" ")
-                            .append(" оплачено ").append(shoePrice.getCost()).append("\n");
-                    sum += shoePrice.getCost();
+                    result.append(notPayedRecord.getTtn()).append(" ").append(notPayedRecord.getModelAndColor()).append(" ")
+                            .append(" оплачено ").append(notPayedRecord.getSum()).append("\n");
+                    sum += notPayedRecord.getSum();
                 }
             } else if (notPayedRecord.getPayedRecordId() != null) {
                 PayedOrdered payedOrdered = payedOrderedService.getById(notPayedRecord.getPayedRecordId());
