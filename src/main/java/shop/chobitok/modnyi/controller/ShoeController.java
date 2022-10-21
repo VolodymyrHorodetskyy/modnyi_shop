@@ -61,5 +61,4 @@ public class ShoeController {
     public Ordered removeShoeFromOrder(@RequestBody RemoveShoeFromOrderRequest request) {
         return shoeService.removeShoeFromOrder(request);
     }
-
 }

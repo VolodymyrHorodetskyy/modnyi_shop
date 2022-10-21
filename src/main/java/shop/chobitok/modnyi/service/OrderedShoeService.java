@@ -21,4 +21,8 @@ public class OrderedShoeService {
         orderedShoe.setShouldNotBePayed(request.getShouldNotBePayed());
         return orderedShoeRepository.save(orderedShoe);
     }
+
+    public OrderedShoe saveOrUpdateOrderedShoe(OrderedShoe orderedShoe) {
+        return orderedShoeRepository.save(orderedShoe);
+    }
 }

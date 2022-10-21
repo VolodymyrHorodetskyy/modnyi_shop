@@ -16,8 +16,7 @@ public interface StorageRepository extends JpaRepository<StorageRecord, Long> {
 
     List<StorageRecord> findAll(Specification specification);
 
-    List<StorageRecord> findBySizeAndShoeId(Integer size, Long id);
+    StorageRecord findFirstByShoeIdAndSizeAndAvailableTrue(Long shoeId, Integer size);
 
     List<StorageRecord> findBySizeAndShoeIdAndAvailableTrue(Integer size, Long id);
-
 }

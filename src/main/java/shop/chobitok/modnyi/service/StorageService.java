@@ -1,6 +1,5 @@
 package shop.chobitok.modnyi.service;
 
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.Shoe;
@@ -25,6 +24,14 @@ public class StorageService {
     public StorageService(StorageRepository storageRepository, ShoeRepository shoeRepository) {
         this.storageRepository = storageRepository;
         this.shoeRepository = shoeRepository;
+    }
+
+    public StorageRecord saveOrUpdateStorageRecord(StorageRecord storageRecord) {
+        return storageRepository.save(storageRecord);
+    }
+
+    public StorageRecord findFirstStorageRecord(Long shoeId, Integer size) {
+        return storageRepository.findFirstByShoeIdAndSizeAndAvailableTrue(shoeId, size);
     }
 
     public StorageRecord createStorageRecord(CreateStorageRequest createStorageRequest) {

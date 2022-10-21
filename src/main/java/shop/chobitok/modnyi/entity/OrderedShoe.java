@@ -12,6 +12,7 @@ public class OrderedShoe extends Audit {
     private String comment;
     private boolean payed = false;
     private Boolean shouldNotBePayed = false;
+    private boolean usedInCoincidence;
 
     public OrderedShoe() {
     }
@@ -65,5 +66,13 @@ public class OrderedShoe extends Audit {
 
     public void setShouldNotBePayed(Boolean shouldNotBePayed) {
         this.shouldNotBePayed = shouldNotBePayed;
+    }
+
+    public boolean isUsedInCoincidence() {
+        return usedInCoincidence;
+    }
+
+    public void setUsedInCoincidence(boolean usedInCoincidence) {
+        this.usedInCoincidence = usedInCoincidence;
     }
 }
