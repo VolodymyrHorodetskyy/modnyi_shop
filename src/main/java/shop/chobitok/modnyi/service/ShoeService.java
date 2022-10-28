@@ -18,7 +18,10 @@ import shop.chobitok.modnyi.specification.ShoeSpecification;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+
+import static java.util.Comparator.reverseOrder;
 
 @Service
 public class ShoeService {
@@ -28,14 +31,15 @@ public class ShoeService {
     private final NPOrderMapper npOrderMapper;
     private final DiscountService discountService;
     private final OrderRepository orderRepository;
+    private final StorageCoincidenceService storageCoincidenceService;
 
-
-    public ShoeService(ShoeRepository shoeRepository, ShoeMapper shoeMapper, NPOrderMapper npOrderMapper, DiscountService discountService, OrderRepository orderRepository) {
+    public ShoeService(ShoeRepository shoeRepository, ShoeMapper shoeMapper, NPOrderMapper npOrderMapper, DiscountService discountService, OrderRepository orderRepository, StorageCoincidenceService storageCoincidenceService) {
         this.shoeRepository = shoeRepository;
         this.shoeMapper = shoeMapper;
         this.npOrderMapper = npOrderMapper;
         this.discountService = discountService;
         this.orderRepository = orderRepository;
+        this.storageCoincidenceService = storageCoincidenceService;
     }
 
     public List<ShoeWithPrice> getAllShoeWithPrice(int page, int size, String modelAndColor) {
@@ -107,7 +111,11 @@ public class ShoeService {
             ordered.setOrderedShoeList(new ArrayList<>());
         }
         ordered.getOrderedShoeList().add(orderedShoe);
-        return orderRepository.save(ordered);
+        ordered = orderRepository.save(ordered);
+        storageCoincidenceService.approveOrDisapprove(request.getStorageRecordId(),
+                ordered.getOrderedShoeList().stream().max(Comparator.comparing(OrderedShoe::getId)).orElse(null)
+                , true);
+        return ordered;
     }
 
     @Transactional

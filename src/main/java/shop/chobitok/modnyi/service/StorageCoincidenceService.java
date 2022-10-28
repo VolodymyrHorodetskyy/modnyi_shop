@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 import shop.chobitok.modnyi.entity.OrderedShoe;
 import shop.chobitok.modnyi.entity.StorageCoincidence;
 import shop.chobitok.modnyi.entity.StorageRecord;
+import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.repository.StorageCoincidenceRepository;
 
 @Service
@@ -25,14 +26,25 @@ public class StorageCoincidenceService {
         StorageRecord storageRecord = storageService.findFirstStorageRecord(orderedShoe.getShoe().getId(), orderedShoe.getSize());
         StorageCoincidence storageCoincidence = null;
         if (storageRecord != null) {
-            storageRecord.setAvailable(false);
             storageCoincidence = new StorageCoincidence(orderedShoe, storageRecord);
+            storageCoincidenceRepository.save(storageCoincidence);
+        }
+        return storageCoincidence;
+    }
+
+    public StorageCoincidence approveOrDisapprove(Long storageRecordId, OrderedShoe orderedShoe, boolean action) {
+        StorageCoincidence storageCoincidence = storageCoincidenceRepository.findById(storageRecordId)
+                .orElseThrow(() -> new ConflictException("Storage record not found"));
+        if (action) {
+            storageCoincidence.setOrderedShoe(orderedShoe);
+            StorageRecord storageRecord = storageCoincidence.getStorageRecord();
+            storageRecord.setAvailable(false);
             orderedShoe.setUsedInCoincidence(true);
             orderedShoe.setShouldNotBePayed(true);
             storageService.saveOrUpdateStorageRecord(storageRecord);
-            storageCoincidenceRepository.save(storageCoincidence);
             orderedShoeService.saveOrUpdateOrderedShoe(orderedShoe);
         }
-        return storageCoincidence;
+        storageCoincidence.setApproved(action);
+        return storageCoincidenceRepository.save(storageCoincidence);
     }
 }

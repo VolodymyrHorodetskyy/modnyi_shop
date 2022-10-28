@@ -10,7 +10,7 @@ public class StorageCoincidence extends Audit {
     private OrderedShoe orderedShoe;
     @OneToOne
     private StorageRecord storageRecord;
-    private boolean resolved;
+    private Boolean approved;
 
     public StorageCoincidence(OrderedShoe orderedShoe, StorageRecord storageRecord) {
         this.orderedShoe = orderedShoe;
@@ -33,11 +33,11 @@ public class StorageCoincidence extends Audit {
         this.storageRecord = storageRecord;
     }
 
-    public boolean isResolved() {
-        return resolved;
+    public Boolean getApproved() {
+        return approved;
     }
 
-    public void setResolved(boolean resolved) {
-        this.resolved = resolved;
+    public void setApproved(Boolean approved) {
+        this.approved = approved;
     }
 }

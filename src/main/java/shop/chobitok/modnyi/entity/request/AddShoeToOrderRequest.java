@@ -6,6 +6,7 @@ public class AddShoeToOrderRequest {
     private Long orderId;
     private int size;
     private String comment;
+    private Long storageRecordId;
 
     public AddShoeToOrderRequest() {
     }
@@ -47,5 +48,13 @@ public class AddShoeToOrderRequest {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public Long getStorageRecordId() {
+        return storageRecordId;
+    }
+
+    public void setStorageRecordId(Long storageRecordId) {
+        this.storageRecordId = storageRecordId;
     }
 }

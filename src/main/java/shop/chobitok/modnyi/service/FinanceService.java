@@ -33,8 +33,9 @@ public class FinanceService {
     private final NotPayedRecordMapper notPayedRecordMapper;
     private final CompanyFinanceControlService companyFinanceControlService;
     private final CompanyService companyService;
+    private final CriticalExceptionRecordService criticalExceptionRecordService;
 
-    public FinanceService(OrderService orderService, OrderRepository orderRepository, ShoePriceService shoePriceService, ParamsService paramsService, PayedOrderedService payedOrderedService, OrderedShoeRepository orderedShoeRepository, NotPayedRecordMapper notPayedRecordMapper, CompanyFinanceControlService companyFinanceControlService, CompanyService companyService) {
+    public FinanceService(OrderService orderService, OrderRepository orderRepository, ShoePriceService shoePriceService, ParamsService paramsService, PayedOrderedService payedOrderedService, OrderedShoeRepository orderedShoeRepository, NotPayedRecordMapper notPayedRecordMapper, CompanyFinanceControlService companyFinanceControlService, CompanyService companyService, CriticalExceptionRecordService criticalExceptionRecordService) {
         this.orderService = orderService;
         this.orderRepository = orderRepository;
         this.shoePriceService = shoePriceService;
@@ -44,6 +45,7 @@ public class FinanceService {
         this.notPayedRecordMapper = notPayedRecordMapper;
         this.companyFinanceControlService = companyFinanceControlService;
         this.companyService = companyService;
+        this.criticalExceptionRecordService = criticalExceptionRecordService;
     }
 
     public EarningsResponse getEarnings(List<Ordered> orderedList, LocalDateTime fromDate, LocalDateTime toDate) {
@@ -125,8 +127,8 @@ public class FinanceService {
         for (OrderedShoe orderedShoe : orderedShoeList) {
             Ordered ordered = orderRepository.findByOrderedShoeId(orderedShoe.getId());
             if (ordered == null) {
-                orderedShoe.setPayed(true);
-                orderedShoeRepository.save(orderedShoe);
+                criticalExceptionRecordService.save("Order not found by orderedShoe id = "
+                        + orderedShoe.getId());
             } else {
                 if (!orderedShoe.isPayed() && orderedShoe.getShoe().getCompany().getId().equals(companyId)) {
                     ShoePrice shoePrice = shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered);

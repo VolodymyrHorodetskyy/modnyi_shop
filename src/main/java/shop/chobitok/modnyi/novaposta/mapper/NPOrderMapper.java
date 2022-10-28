@@ -30,14 +30,16 @@ public class NPOrderMapper {
     private final ParamsService paramsService;
     private final List<Integer> sizes = asList(36, 37, 38, 39, 40, 41);
     private final NpAccountService npAccountService;
+    private final StorageCoincidenceService storageCoincidenceService;
 
-    public NPOrderMapper(ShoeRepository shoeRepository, ClientService clientService, ShoePriceService shoePriceService, CardService cardService, ParamsService paramsService, NpAccountService npAccountService) {
+    public NPOrderMapper(ShoeRepository shoeRepository, ClientService clientService, ShoePriceService shoePriceService, CardService cardService, ParamsService paramsService, NpAccountService npAccountService, StorageCoincidenceService storageCoincidenceService) {
         this.shoeRepository = shoeRepository;
         this.clientService = clientService;
         this.shoePriceService = shoePriceService;
         this.cardService = cardService;
         this.paramsService = paramsService;
         this.npAccountService = npAccountService;
+        this.storageCoincidenceService = storageCoincidenceService;
     }
 
     public Ordered toOrdered(Ordered ordered, TrackingEntity trackingEntity, Discount discount,
@@ -162,7 +164,9 @@ public class NPOrderMapper {
         List<OrderedShoe> orderedShoeList = new ArrayList<>();
         Shoe shoe = parseShoe(string);
         if (shoe != null && size != null) {
-            orderedShoeList.add(new OrderedShoe(size, shoe));
+            OrderedShoe orderedShoe = new OrderedShoe(size, shoe);
+            orderedShoeList.add(orderedShoe);
+            storageCoincidenceService.tryToFind(orderedShoe);
         }
         ordered.setOrderedShoeList(orderedShoeList);
     }
