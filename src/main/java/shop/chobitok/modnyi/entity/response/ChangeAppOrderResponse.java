@@ -6,10 +6,12 @@ public class ChangeAppOrderResponse {
 
     private String message;
     private AppOrder appOrder;
+    private boolean coincidenceFound;
 
-    public ChangeAppOrderResponse(String message, AppOrder appOrder) {
+    public ChangeAppOrderResponse(String message, AppOrder appOrder, boolean coincidenceFound) {
         this.message = message;
         this.appOrder = appOrder;
+        this.coincidenceFound = coincidenceFound;
     }
 
     public String getMessage() {

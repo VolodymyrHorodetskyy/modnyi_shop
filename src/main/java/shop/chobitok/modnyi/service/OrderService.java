@@ -18,6 +18,7 @@ import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.OrderRepository;
 import shop.chobitok.modnyi.repository.UserRepository;
+import shop.chobitok.modnyi.service.entity.ImportResp;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
 
@@ -32,7 +33,6 @@ import static java.util.Collections.singletonList;
 import static org.springframework.util.StringUtils.isEmpty;
 import static shop.chobitok.modnyi.novaposta.util.ShoeUtil.convertToStatus;
 import static shop.chobitok.modnyi.util.StringHelper.removeSpaces;
-import static shop.chobitok.modnyi.util.StringHelper.splitTTNString;
 
 @Service
 public class OrderService {
@@ -155,14 +155,9 @@ public class OrderService {
         ordered.setUser(user);
     }
 
-    public StringResponse importOrdersByTTNString(ImportOrdersFromStringRequest request) {
-        List<String> splitted = splitTTNString(request.getTtns());
-        StringBuilder result = new StringBuilder();
-        for (String ttn : splitted) {
-            result.append(importService.importOrderFromTTNString(ttn, request.getUserId(), discountService.getById(request.getDiscountId()),
-                    variantsService.getById(request.getSourceOfOrderId())));
-        }
-        return new StringResponse(result.toString());
+    public ImportResp importOrdersByTTNString(ImportOrdersFromStringRequest request) {
+        return importService.importOrderFromTTNString(request.getTtns(), request.getUserId(), discountService.getById(request.getDiscountId()),
+                variantsService.getById(request.getSourceOfOrderId()));
     }
 
 
@@ -326,9 +321,9 @@ public class OrderService {
     }
 
     @Transactional
-    private Ordered updateOrderFields(Ordered ordered, Integer statusCode, String recipientAddress
+    public Ordered updateOrderFields(Ordered ordered, Integer statusCode, String recipientAddress
             , Double redeliverySum, Card card, LocalDateTime datePayedKeeping, Double deliveryCost,
-                                      Double storagePrice) {
+                                     Double storagePrice) {
         Status oldStatus = ordered.getStatus();
         Status newStatus = convertToStatus(statusCode);
         if (newStatus == Status.НЕ_ЗНАЙДЕНО) {
@@ -467,7 +462,14 @@ public class OrderService {
         if (urgent.size() > 0) {
             result.append("Терміново").append("\n\n");
             for (Ordered ordered : urgent) {
-                result.append(ordered.getTtn()).append("\n").append(ordered.getPostComment()).append("\n\n");
+                result.append(ordered.getTtn()).append("\n").append(ordered.getPostComment()).append("\n");
+                for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
+                    if (orderedShoe.isUsedInCoincidence()) {
+                        result.append(orderedShoe.getShoe().getModelAndColor()).append(" ")
+                                .append(orderedShoe.getSize()).append(" - є на складі");
+                    }
+                }
+                result.append("\n\n");
             }
         }
         for (Map.Entry<LocalDate, List<Ordered>> entry : localDateOrderedMap.entrySet()) {
@@ -485,17 +487,24 @@ public class OrderService {
                     toSave.add(ordered);
                 }
                 if (!isEmpty(ordered.getTtn()) && ordered.getTtn().length() > 10) {
-                    result.append(ordered.getSequenceNumber()).append(". ").append(ordered.getTtn()).append("\n").append(ordered.getPostComment()).append("\n\n");
+                    result.append(ordered.getSequenceNumber()).append(". ").append(ordered.getTtn())
+                            .append("\n").append(ordered.getPostComment()).append("\n");
                 } else if (!isEmpty(ordered.getPostComment())) {
                     result.append(ordered.getSequenceNumber()).append(". ").append("без накладної\n");
-                    result.append(ordered.getPostComment()).append("\n\n");
+                    result.append(ordered.getPostComment()).append("\n");
                 } else if (ordered.getOrderedShoeList() != null && ordered.getOrderedShoeList().size() > 0) {
                     result.append(ordered.getSequenceNumber()).append(". ").append("без накладної\n");
                     for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
                         result.append(orderedShoe.getShoe().getModel()).append(" ").append(orderedShoe.getShoe().getColor())
-                                .append(", розмір: ").append(orderedShoe.getSize()).append("\n\n");
+                                .append(", розмір: ").append(orderedShoe.getSize()).append("\n");
                     }
                 }
+                for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
+                    if (orderedShoe.isUsedInCoincidence()) {
+                        result.append(orderedShoe.getShoe().getModelAndColor()).append(" - є на складі");
+                    }
+                }
+                result.append("\n\n");
             }
         }
         orderRepository.saveAll(toSave);

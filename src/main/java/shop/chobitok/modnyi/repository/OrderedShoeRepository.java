@@ -19,4 +19,6 @@ public interface OrderedShoeRepository extends JpaRepository<OrderedShoe, Long> 
     List<OrderedShoe> findAllByPayedFalse();
 
     List<OrderedShoe> findAllByPayedFalseAndCreatedDateLessThanEqual(LocalDateTime from);
+
+    List<OrderedShoe> findAllByCreatedDateGreaterThanEqualAndShoeCompanyId(LocalDateTime from, Long companyId);
 }

@@ -111,8 +111,6 @@ public class FinanceService {
     }
 
     public NeedToBePayedResponse needToPayed(boolean updateStatuses, Long companyId) {
-        Double sum = 0d;
-        StringBuilder result = new StringBuilder();
         if (updateStatuses) {
             orderService.updateOrdersByNovaPosta();
         }
@@ -123,6 +121,12 @@ public class FinanceService {
         } else {
             orderedShoeList = orderedShoeRepository.findAllByStatusReceivedAndPayedFalseAndCompanyId(companyId);
         }
+        return generateNeedToBePayedResponse(orderedShoeList, companyId);
+    }
+
+    public NeedToBePayedResponse generateNeedToBePayedResponse(List<OrderedShoe> orderedShoeList, Long companyId) {
+        Double sum = 0d;
+        StringBuilder result = new StringBuilder();
         List<NotPayedRecord> notPayedRecords = new ArrayList<>();
         for (OrderedShoe orderedShoe : orderedShoeList) {
             Ordered ordered = orderRepository.findByOrderedShoeId(orderedShoe.getId());
@@ -143,9 +147,15 @@ public class FinanceService {
                                     .append(shoePrice.getCost()).append("\n");
                             notPayedRecords.add(notPayedRecordMapper.mapTo(ordered.getTtn(), shoePrice.getCost(), orderedShoe));
                         } else {
+                            String reason;
+                            if (orderedShoe.isUsedInCoincidence() && orderedShoe.getShouldNotBePayed()) {
+                                reason = " зі складу";
+                            } else {
+                                reason = " не оплачувати";
+                            }
                             result.append(ordered.getTtn()).append(" ")
                                     .append(orderedShoe.getShoe().getModelAndColor()).append(" ")
-                                    .append(" не оплачувати").append("\n");
+                                    .append(reason).append("\n");
                             notPayedRecords.add(notPayedRecordMapper.mapTo(ordered.getTtn(), 0D, orderedShoe));
                         }
                     }

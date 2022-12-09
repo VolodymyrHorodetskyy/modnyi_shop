@@ -4,11 +4,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.AppOrderCancellationReason;
 import shop.chobitok.modnyi.entity.CanceledOrderReason;
-import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.request.CancelOrderWithIdRequest;
 import shop.chobitok.modnyi.entity.request.CancelOrderWithOrderRequest;
 import shop.chobitok.modnyi.entity.response.GetCanceledResponse;
 import shop.chobitok.modnyi.service.CanceledOrderReasonService;
+import shop.chobitok.modnyi.service.entity.ImportResp;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,7 +28,7 @@ public class CanceledOrderController {
     }
 
     @PatchMapping("/cancelOrder")
-    public Ordered cancelOrdered(@RequestBody CancelOrderWithOrderRequest request) {
+    public ImportResp cancelOrdered(@RequestBody CancelOrderWithOrderRequest request) {
         return canceledOrderReasonService.cancelOrder(request);
     }
 

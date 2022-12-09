@@ -12,6 +12,15 @@ public class StorageCoincidence extends Audit {
     private StorageRecord storageRecord;
     private Boolean approved;
 
+    public StorageCoincidence() {
+    }
+
+    public StorageCoincidence(OrderedShoe orderedShoe, StorageRecord storageRecord, Boolean approved) {
+        this.orderedShoe = orderedShoe;
+        this.storageRecord = storageRecord;
+        this.approved = approved;
+    }
+
     public StorageCoincidence(OrderedShoe orderedShoe, StorageRecord storageRecord) {
         this.orderedShoe = orderedShoe;
         this.storageRecord = storageRecord;

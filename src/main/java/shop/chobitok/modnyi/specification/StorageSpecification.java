@@ -1,7 +1,6 @@
 package shop.chobitok.modnyi.specification;
 
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.util.StringUtils;
 import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.entity.StorageRecord;
 
@@ -15,14 +14,13 @@ public class StorageSpecification implements Specification<StorageRecord> {
 
     private Long modelId;
     private Integer size;
+    private Boolean available;
 
     @Override
     public Predicate toPredicate(Root<StorageRecord> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicates = new ArrayList<>();
-        Predicate availablePredicate = criteriaBuilder.isTrue(root.get("available"));
-        predicates.add(availablePredicate);
-        Join<StorageRecord, Shoe> storageRecordShoeJoin = root.join("shoe");
         if (!isEmpty(modelId)) {
+            Join<StorageRecord, Shoe> storageRecordShoeJoin = root.join("shoe");
             Predicate modelIdPredicate = criteriaBuilder.equal(
                     storageRecordShoeJoin.get("id"), modelId);
             predicates.add(modelIdPredicate);
@@ -31,6 +29,15 @@ public class StorageSpecification implements Specification<StorageRecord> {
             Predicate sizePredicate = criteriaBuilder.equal(
                     root.get("size"), size);
             predicates.add(sizePredicate);
+        }
+        if (available != null) {
+            Predicate availablePredicate;
+            if (available) {
+                availablePredicate = criteriaBuilder.isTrue(root.get("available"));
+            } else {
+                availablePredicate = criteriaBuilder.isFalse(root.get("available"));
+            }
+            predicates.add(availablePredicate);
         }
         return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
     }
@@ -41,5 +48,9 @@ public class StorageSpecification implements Specification<StorageRecord> {
 
     public void setSize(Integer size) {
         this.size = size;
+    }
+
+    public void setAvailable(Boolean available) {
+        this.available = available;
     }
 }

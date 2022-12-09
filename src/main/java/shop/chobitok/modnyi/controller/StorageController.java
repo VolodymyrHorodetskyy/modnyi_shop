@@ -31,6 +31,11 @@ public class StorageController {
     @GetMapping
     public List<StorageRecord> storageRecords(@RequestParam(required = false) Long shoeId,
                                               @RequestParam(required = false) Integer size) {
-        return storageService.getStorageRecords(shoeId, size);
+        return storageService.getStorageRecords(shoeId, size, null);
+    }
+
+    @GetMapping("/byOrderedShoeId")
+    public List<StorageRecord> getStorageRecordsByOrderedShoeId(@RequestParam Long orderedShoeId) {
+        return storageService.getStorageRecords(orderedShoeId);
     }
 }

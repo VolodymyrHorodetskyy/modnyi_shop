@@ -11,6 +11,7 @@ import shop.chobitok.modnyi.entity.request.ChangeAppOrderRequest;
 import shop.chobitok.modnyi.entity.response.ChangeAppOrderResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.repository.*;
+import shop.chobitok.modnyi.service.entity.ImportResp;
 import shop.chobitok.modnyi.specification.AppOrderSpecification;
 import shop.chobitok.modnyi.util.DateHelper;
 
@@ -398,6 +399,7 @@ public class AppOrderService {
         appOrder.setUser(user);
         String ttn = request.getTtn();
         String message = null;
+        boolean storageCoincidenceFound = false;
         if (!isEmpty(ttn)) {
             ttn = ttn.replaceAll("\\s+", "");
             AppOrder appOrder1 = appOrderRepository.findByTtn(ttn);
@@ -406,14 +408,16 @@ public class AppOrderService {
             } else {
                 appOrder.setTtn(ttn);
             }
-            processAppOrderTtn(ttn, appOrder, request, user);
+            ImportResp importResp = processAppOrderTtn(ttn, appOrder, request, user);
+            message = importResp.getStringResult();
+            storageCoincidenceFound = importResp.isCoincidenceFound();
         } else {
             appOrder.setTtn(null);
         }
         changeStatus(appOrder, user, request.getStatus(), request.isRemindTomorrow());
         appOrder.setComment(request.getComment());
         setDataForFb(appOrder, request);
-        return new ChangeAppOrderResponse(message, appOrderRepository.save(appOrder));
+        return new ChangeAppOrderResponse(message, appOrderRepository.save(appOrder), storageCoincidenceFound);
     }
 
     private void setDataForFb(AppOrder appOrder, ChangeAppOrderRequest request) {
@@ -462,10 +466,9 @@ public class AppOrderService {
         }
     }
 
-    public String processAppOrderTtn(String ttn, AppOrder appOrder, ChangeAppOrderRequest request,
-                                     User user) {
-        String message;
-        message = importService.importOrderFromTTNString(ttn, request.getUserId(), discountService.getById(request.getDiscountId()),
+    public ImportResp processAppOrderTtn(String ttn, AppOrder appOrder, ChangeAppOrderRequest request,
+                                         User user) {
+        ImportResp importResp = importService.importOrderFromTTNString(ttn, request.getUserId(), discountService.getById(request.getDiscountId()),
                 variantsService.getById(Long.parseLong(defaultVariantIdForOrder)));
         appOrder.setTtn(ttn);
         String mail = appOrder.getMail();
@@ -489,7 +492,7 @@ public class AppOrderService {
         ordered.setUser(user);
         setDataForFB(appOrder, ordered);
         orderRepository.save(ordered);
-        return message;
+        return importResp;
     }
 
     private void setDataForFB(AppOrder appOrder, Ordered ordered) {

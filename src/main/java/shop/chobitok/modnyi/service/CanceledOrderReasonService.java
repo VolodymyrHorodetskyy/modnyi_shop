@@ -17,6 +17,7 @@ import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.util.ShoeUtil;
 import shop.chobitok.modnyi.repository.CanceledOrderReasonRepository;
 import shop.chobitok.modnyi.repository.OrderRepository;
+import shop.chobitok.modnyi.service.entity.ImportResp;
 import shop.chobitok.modnyi.service.entity.OurTtnResp;
 import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
@@ -64,13 +65,13 @@ public class CanceledOrderReasonService {
         return canceledOrderReasonRepository.findFirstByOrderedId(id);
     }
 
-    public Ordered cancelOrder(CancelOrderWithOrderRequest cancelOrderRequest) {
+    public ImportResp cancelOrder(CancelOrderWithOrderRequest cancelOrderRequest) {
         Ordered ordered = orderRepository.findById(cancelOrderRequest.getOrderId()).orElse(null);
         if (ordered == null) {
             throw new ConflictException("Немає такого замовлення");
         }
         String newTTN = cancelOrderRequest.getNewTTN();
-        importNewTtnFromCanceled(newTTN, ordered.getUser().getId(), ordered.getSourceOfOrder());
+        ImportResp importResp = importNewTtnFromCanceled(newTTN, ordered.getUser().getId(), ordered.getSourceOfOrder());
         statusChangeService.createRecord(ordered, ordered.getStatus(), Status.ВІДМОВА);
         payedOrderedService.createPayedOrdered(ordered);
         ordered.setStatus(Status.ВІДМОВА);
@@ -87,11 +88,11 @@ public class CanceledOrderReasonService {
         canceledOrderReason.setManual(true);
         orderRepository.save(ordered);
         canceledOrderReasonRepository.save(canceledOrderReason);
-        return ordered;
+        return importResp;
     }
 
-    private String importNewTtnFromCanceled(String newTtn, Long userId, Variants sourceOfOrder) {
-        String result = null;
+    private ImportResp importNewTtnFromCanceled(String newTtn, Long userId, Variants sourceOfOrder) {
+        ImportResp result = null;
         if (newTtn != null && !newTtn.isBlank()) {
             if (orderRepository.findOneByAvailableTrueAndTtn(newTtn) == null) {
                 result = importService.importOrderFromTTNString(newTtn, userId, null, sourceOfOrder);

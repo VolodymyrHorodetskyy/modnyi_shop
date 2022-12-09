@@ -14,6 +14,7 @@ import shop.chobitok.modnyi.facebook.RestResponseDTO;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.repository.*;
 import shop.chobitok.modnyi.service.*;
+import shop.chobitok.modnyi.service.entity.NeedToBePayedResponse;
 import shop.chobitok.modnyi.specification.AppOrderSpecification;
 import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
@@ -21,7 +22,6 @@ import shop.chobitok.modnyi.specification.OrderedSpecification;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -292,6 +292,21 @@ public class ProdTest {
         List<ShoePrice> shoePrices = shoePriceRepository.findByCreatedDateGreaterThanEqual(now().minusDays(1));
         shoePrices.forEach(shoePrice -> shoePrice.setFromDate(dateTime));
         shoePriceRepository.saveAll(shoePrices);
+    }
+
+    @Autowired
+    private FinanceService financeService;
+    @Autowired
+    private OrderedShoeRepository orderedShoeRepository;
+
+    @Test
+    public void getFinance() {
+        String str = "2022-08-01 00:00";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        LocalDateTime dateTime = LocalDateTime.parse(str, formatter);
+        List<OrderedShoe> orderedShoeList = orderedShoeRepository.findAllByCreatedDateGreaterThanEqualAndShoeCompanyId(dateTime, 1177l);
+        NeedToBePayedResponse needToBePayedResponse = financeService.generateNeedToBePayedResponse(orderedShoeList, 1177l);
+        out.println(needToBePayedResponse);
     }
 
     @Test

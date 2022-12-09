@@ -11,6 +11,7 @@ import shop.chobitok.modnyi.entity.response.GetAllOrderedResponse;
 import shop.chobitok.modnyi.entity.response.StringResponse;
 import shop.chobitok.modnyi.service.OrderService;
 import shop.chobitok.modnyi.service.UtilService;
+import shop.chobitok.modnyi.service.entity.ImportResp;
 
 import javax.validation.Valid;
 import java.util.Arrays;
@@ -65,7 +66,7 @@ public class OrderController {
     }
 
     @PostMapping("/importOrdersByTTNsString")
-    public StringResponse importOrdersFromTTNList(@RequestBody ImportOrdersFromStringRequest request) {
+    public ImportResp importOrdersFromTTNList(@RequestBody ImportOrdersFromStringRequest request) {
         return orderService.importOrdersByTTNString(request);
     }
 

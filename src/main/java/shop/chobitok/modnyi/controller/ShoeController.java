@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.entity.request.*;
+import shop.chobitok.modnyi.entity.response.AddShoeToOrderResponse;
 import shop.chobitok.modnyi.entity.response.ShoeWithPrice;
 import shop.chobitok.modnyi.service.ShoeService;
 
@@ -53,7 +54,7 @@ public class ShoeController {
     }
 
     @PatchMapping("/addShoeToOrder")
-    public Ordered addShoeToOrder(@RequestBody AddShoeToOrderRequest request) {
+    public AddShoeToOrderResponse addShoeToOrder(@RequestBody AddShoeToOrderRequest request) {
         return shoeService.addShoeToOrder(request);
     }
 

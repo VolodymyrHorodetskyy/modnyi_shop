@@ -2,10 +2,12 @@ package shop.chobitok.modnyi.service;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import shop.chobitok.modnyi.entity.OrderedShoe;
 import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.entity.StorageRecord;
 import shop.chobitok.modnyi.entity.request.CreateStorageRequest;
 import shop.chobitok.modnyi.exception.ConflictException;
+import shop.chobitok.modnyi.repository.OrderedShoeRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.repository.StorageRepository;
 import shop.chobitok.modnyi.specification.StorageSpecification;
@@ -20,17 +22,23 @@ public class StorageService {
 
     private final StorageRepository storageRepository;
     private final ShoeRepository shoeRepository;
+    private final OrderedShoeRepository orderedShoeRepository;
 
-    public StorageService(StorageRepository storageRepository, ShoeRepository shoeRepository) {
+    public StorageService(StorageRepository storageRepository, ShoeRepository shoeRepository, OrderedShoeRepository orderedShoeRepository) {
         this.storageRepository = storageRepository;
         this.shoeRepository = shoeRepository;
+        this.orderedShoeRepository = orderedShoeRepository;
+    }
+
+    public StorageRecord getById(Long storageRecordId) {
+        return storageRepository.findById(storageRecordId).orElse(null);
     }
 
     public StorageRecord saveOrUpdateStorageRecord(StorageRecord storageRecord) {
         return storageRepository.save(storageRecord);
     }
 
-    public StorageRecord findFirstStorageRecord(Long shoeId, Integer size) {
+    public StorageRecord findFirstAvailableStorageRecord(Long shoeId, Integer size) {
         return storageRepository.findFirstByShoeIdAndSizeAndAvailableTrue(shoeId, size);
     }
 
@@ -53,11 +61,17 @@ public class StorageService {
         return false;
     }
 
-    public List<StorageRecord> getStorageRecords(Long shoeId, Integer size) {
+    public List<StorageRecord> getStorageRecords(Long shoeId, Integer size, Boolean available) {
         StorageSpecification storageSpecification = new StorageSpecification();
         storageSpecification.setModelId(shoeId);
         storageSpecification.setSize(size);
         return storageRepository.findAll(storageSpecification,
                 of(0, 20, Sort.by(DESC, "createdDate"))).getContent();
+    }
+
+    public List<StorageRecord> getStorageRecords(Long orderedShoeId) {
+        OrderedShoe orderedShoe = orderedShoeRepository.findById(orderedShoeId).orElseThrow(
+                () -> new ConflictException("Ordered shoe not found"));
+        return getStorageRecords(orderedShoe.getShoe().getId(), orderedShoe.getSize(), true);
     }
 }

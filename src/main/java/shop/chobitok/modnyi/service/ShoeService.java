@@ -3,11 +3,9 @@ package shop.chobitok.modnyi.service;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import shop.chobitok.modnyi.entity.Discount;
-import shop.chobitok.modnyi.entity.Ordered;
-import shop.chobitok.modnyi.entity.OrderedShoe;
-import shop.chobitok.modnyi.entity.Shoe;
+import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.request.*;
+import shop.chobitok.modnyi.entity.response.AddShoeToOrderResponse;
 import shop.chobitok.modnyi.entity.response.ShoeWithPrice;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.mapper.ShoeMapper;
@@ -18,10 +16,9 @@ import shop.chobitok.modnyi.specification.ShoeSpecification;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
-import static java.util.Comparator.reverseOrder;
+import static java.util.Comparator.*;
 
 @Service
 public class ShoeService {
@@ -97,7 +94,7 @@ public class ShoeService {
     }
 
     @Transactional
-    public Ordered addShoeToOrder(AddShoeToOrderRequest request) {
+    public AddShoeToOrderResponse addShoeToOrder(AddShoeToOrderRequest request) {
         Ordered ordered = orderRepository.findById(request.getOrderId()).orElse(null);
         Shoe shoe = shoeRepository.findById(request.getShoeId()).orElse(null);
         if (ordered == null) {
@@ -112,10 +109,10 @@ public class ShoeService {
         }
         ordered.getOrderedShoeList().add(orderedShoe);
         ordered = orderRepository.save(ordered);
-        storageCoincidenceService.approveOrDisapprove(request.getStorageRecordId(),
-                ordered.getOrderedShoeList().stream().max(Comparator.comparing(OrderedShoe::getId)).orElse(null)
-                , true);
-        return ordered;
+        StorageCoincidence storageCoincidence = storageCoincidenceService.tryToFind(
+                ordered.getOrderedShoeList().stream().sorted(comparingLong(OrderedShoe::getId).reversed()).findFirst().orElse(null)
+        );
+        return new AddShoeToOrderResponse(ordered, storageCoincidence != null);
     }
 
     @Transactional
