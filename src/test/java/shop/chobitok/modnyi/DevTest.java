@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,7 +13,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.request.CreateCompanyRequest;
-import shop.chobitok.modnyi.entity.request.DoCompanyFinanceControlOperationRequest;
 import shop.chobitok.modnyi.entity.request.SaveAdsSpendsRequest;
 import shop.chobitok.modnyi.facebook.FacebookApi;
 import shop.chobitok.modnyi.facebook.FacebookApi2;
@@ -35,6 +33,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -579,8 +578,31 @@ public class DevTest {
     }
 
     @Test
-    public void testSetShoeAndSize(){
+    public void testSetShoeAndSize() {
         npOrderMapper.setShoeAndSizeFromDescriptionNP(new Ordered(),
                 "031 лак, Размер: 36");
     }
+
+    @Test
+    public void changeShoePrice() {
+        String str = "2022-11-30 00:00";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        LocalDateTime dateTime = LocalDateTime.parse(str, formatter);
+
+        List<Shoe> shoeList = shoeRepository.findByModelContaining("240");
+        shoeList.addAll(shoeRepository.findByModelContaining("220"));
+        shoeList.addAll(shoeRepository.findByModelContaining("210"));
+        shoeList.addAll(shoeRepository.findByModelContaining("230"));
+        shoeList.addAll(shoeRepository.findByModelContaining("260"));
+        shoeList.forEach(shoe -> {
+            ShoePrice shoePrice = shoePriceService.setNewPrice(shoe, dateTime, 2099d, 1250d);
+            if (shoePrice != null) {
+                out.println(shoePrice.getShoe().getModelAndColor() + " " + shoePrice.getCost() + " " + shoePrice.getPrice());
+            } else{
+                out.println(shoe.getModelAndColor() + " не змінено");
+            }
+        });
+    }
+
+
 }

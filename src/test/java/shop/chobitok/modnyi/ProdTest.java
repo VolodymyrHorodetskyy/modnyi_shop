@@ -22,6 +22,7 @@ import shop.chobitok.modnyi.specification.OrderedSpecification;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -395,5 +396,53 @@ public class ProdTest {
                 "208 мех 38,39,40 \n" +
                 "130 мех36,37,38");
         companyFinanceControlRepository.save(companyFinanceControl);
+    }
+
+    @Test
+    public void changeShoePrice() {
+        String str = "2022-11-30 00:00";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        LocalDateTime dateTime = LocalDateTime.parse(str, formatter);
+
+        List<Shoe> shoeList = shoeRepository.findByModelContaining("240");
+        shoeList.addAll(shoeRepository.findByModelContaining("220"));
+        shoeList.addAll(shoeRepository.findByModelContaining("210"));
+        shoeList.addAll(shoeRepository.findByModelContaining("230"));
+        shoeList.addAll(shoeRepository.findByModelContaining("260"));
+        shoeList.forEach(shoe -> {
+            ShoePrice shoePrice = shoePriceService.setNewPrice(shoe, dateTime, 2099d, 1250d);
+            if (shoePrice != null) {
+                out.println(shoePrice.getShoe().getModelAndColor() + " " + shoePrice.getCost() + " " + shoePrice.getPrice());
+            } else {
+                out.println(shoe.getModelAndColor() + " не змінено");
+            }
+        });
+    }
+
+    @Test
+    public void findAllByStatusIsNotFoundAndRemoved() {
+        List<OrderedShoe> orderedShoeList = orderedShoeRepository.findAllByShoeCompanyId(1177l);
+        orderedShoeList.forEach(orderedShoe -> {
+            Ordered ordered = orderRepository.findByOrderedShoeId(orderedShoe.getId());
+            if (ordered == null) {
+                //     out.println(orderedShoe.getId());
+            } else {
+                if (ordered.getStatus().equals(Status.НЕ_ЗНАЙДЕНО) || ordered.getStatus().equals(Status.ВИДАЛЕНО)) {
+                    out.println(ordered.getTtn());
+                    out.println(shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered).getCost() + "\n");
+                }
+            }
+        });
+    }
+
+    @Test
+    public void countRemoved() {
+        String str = "2022-11-01 00:00";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        LocalDateTime dateTime = LocalDateTime.parse(str, formatter);
+
+        List<Ordered> orderedList = orderRepository.findAllByStatusInAndCreatedDateGreaterThan(
+                Arrays.asList(Status.НЕ_ЗНАЙДЕНО, Status.ВИДАЛЕНО), dateTime);
+        out.println(orderedList.size() + " general amount");
     }
 }
