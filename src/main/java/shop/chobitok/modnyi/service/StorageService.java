@@ -66,7 +66,7 @@ public class StorageService {
         storageSpecification.setModelId(shoeId);
         storageSpecification.setSize(size);
         return storageRepository.findAll(storageSpecification,
-                of(0, 20, Sort.by(DESC, "createdDate"))).getContent();
+                of(0, 100, Sort.by(DESC, "createdDate"))).getContent();
     }
 
     public List<StorageRecord> getStorageRecords(Long orderedShoeId) {
