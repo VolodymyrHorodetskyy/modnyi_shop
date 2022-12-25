@@ -23,7 +23,7 @@ public class HistoryService {
     }
 
     public History addHistoryRecord(HistoryType type, String ttn, String record) {
-        return historyRepository.save(new History(type, record, ttn));
+        return historyRepository.save(new  History(type, record, ttn));
     }
 
     public List<History> getLast20(HistoryType type) {

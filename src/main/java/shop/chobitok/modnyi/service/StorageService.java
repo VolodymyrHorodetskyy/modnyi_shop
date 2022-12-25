@@ -61,17 +61,21 @@ public class StorageService {
         return false;
     }
 
-    public List<StorageRecord> getStorageRecords(Long shoeId, Integer size, Boolean available) {
+    public List<StorageRecord> getStorageRecords(Long shoeId, Integer size, String model,
+                                                 String color, Boolean available) {
         StorageSpecification storageSpecification = new StorageSpecification();
         storageSpecification.setModelId(shoeId);
         storageSpecification.setSize(size);
+        storageSpecification.setModelName(model);
+        storageSpecification.setColor(color);
         return storageRepository.findAll(storageSpecification,
-                of(0, 100, Sort.by(DESC, "createdDate"))).getContent();
+                of(0, 200, Sort.by(DESC, "available","createdDate"))).getContent();
     }
 
     public List<StorageRecord> getStorageRecords(Long orderedShoeId) {
         OrderedShoe orderedShoe = orderedShoeRepository.findById(orderedShoeId).orElseThrow(
                 () -> new ConflictException("Ordered shoe not found"));
-        return getStorageRecords(orderedShoe.getShoe().getId(), orderedShoe.getSize(), true);
+        return getStorageRecords(orderedShoe.getShoe().getId(), orderedShoe.getSize(),
+                null, null, true);
     }
 }

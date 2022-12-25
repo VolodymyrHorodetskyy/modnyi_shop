@@ -15,14 +15,16 @@ public class StorageSpecification implements Specification<StorageRecord> {
     private Long modelId;
     private Integer size;
     private Boolean available;
+    private String modelName;
+    private String color;
+    private Join<StorageRecord, Shoe> storageRecordShoeJoin = null;
 
     @Override
     public Predicate toPredicate(Root<StorageRecord> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicates = new ArrayList<>();
         if (!isEmpty(modelId)) {
-            Join<StorageRecord, Shoe> storageRecordShoeJoin = root.join("shoe");
             Predicate modelIdPredicate = criteriaBuilder.equal(
-                    storageRecordShoeJoin.get("id"), modelId);
+                    getStorageRecordShoeJoin(root).get("id"), modelId);
             predicates.add(modelIdPredicate);
         }
         if (!isEmpty(size)) {
@@ -39,7 +41,24 @@ public class StorageSpecification implements Specification<StorageRecord> {
             }
             predicates.add(availablePredicate);
         }
+        if (!isEmpty(modelName)) {
+            Predicate modelNamePredicate = criteriaBuilder.like(getStorageRecordShoeJoin(root).get("model"),
+                    "%" + modelName + "%");
+            predicates.add(modelNamePredicate);
+        }
+        if (!isEmpty(color)) {
+            Predicate colorPredicate = criteriaBuilder.like(getStorageRecordShoeJoin(root).get("color"),
+                    "%" + color + "%");
+            predicates.add(colorPredicate);
+        }
         return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
+    }
+
+    private Join getStorageRecordShoeJoin(Root<StorageRecord> root) {
+        if (storageRecordShoeJoin == null) {
+            storageRecordShoeJoin = root.join("shoe");
+        }
+        return storageRecordShoeJoin;
     }
 
     public void setModelId(Long modelId) {
@@ -52,5 +71,13 @@ public class StorageSpecification implements Specification<StorageRecord> {
 
     public void setAvailable(Boolean available) {
         this.available = available;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
     }
 }
