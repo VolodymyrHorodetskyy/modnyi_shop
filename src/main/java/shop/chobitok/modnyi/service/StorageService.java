@@ -68,6 +68,7 @@ public class StorageService {
         storageSpecification.setSize(size);
         storageSpecification.setModelName(model);
         storageSpecification.setColor(color);
+        storageSpecification.setAvailable(available);
         return storageRepository.findAll(storageSpecification,
                 of(0, 200, Sort.by(DESC, "available","createdDate"))).getContent();
     }
