@@ -15,4 +15,5 @@ public interface ShoeRepository extends JpaRepository<Shoe, Long> {
     Page<Shoe> findAll(Specification specification, Pageable pageable);
 
     List<Shoe> findByModelContaining(String model);
+    List<Shoe> findByCompanyId(Long companyId);
 }

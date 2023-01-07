@@ -22,10 +22,10 @@ import shop.chobitok.modnyi.specification.OrderedSpecification;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static java.lang.System.out;
@@ -442,7 +442,49 @@ public class ProdTest {
         LocalDateTime dateTime = LocalDateTime.parse(str, formatter);
 
         List<Ordered> orderedList = orderRepository.findAllByStatusInAndCreatedDateGreaterThan(
-                Arrays.asList(Status.НЕ_ЗНАЙДЕНО, Status.ВИДАЛЕНО), dateTime);
+                asList(Status.НЕ_ЗНАЙДЕНО, Status.ВИДАЛЕНО), dateTime);
         out.println(orderedList.size() + " general amount");
+    }
+
+    @Test
+    public void getAllCharivno() {
+   /*     shoeRepository.findByCompanyId(1177l).forEach(
+                shoe -> {
+                    out.println(shoe.getId()+" "+shoe.getModelAndColor());
+                }
+        );*/
+        AtomicReference<Double> price = new AtomicReference<>(0d);
+        orderedShoeRepository.findAllByShoeIdInAndUsedInCoincidenceFalse(asList(17949l,
+                17950l,
+                17951l,
+                17952l,
+               17955l, 17956l, 17957l, 17960l, 17966l, 17969l, 17970l
+                , 17971l
+                , 17976l
+        )).forEach(orderedShoe -> {
+            Ordered ordered = orderRepository.findByOrderedShoeId(orderedShoe.getId());
+            if (!checkIfOrderInStatuses(ordered, asList(
+                    Status.ВІДМОВА, Status.ВИДАЛЕНО, Status.НЕ_ЗНАЙДЕНО
+            ))) {
+                out.println(ordered.getTtn() + " " + orderedShoe.getShoe().getModelAndColor());
+                price.updateAndGet(v -> v + shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered).getCost());
+            }
+        });
+        out.println(price);
+    }
+
+    public boolean checkIfOrderInStatuses(Ordered ordered, List<Status> statuses) {
+        boolean returnValue = false;
+        if (ordered == null) {
+            returnValue = true;
+        } else {
+            for (Status status : statuses) {
+                if (status == ordered.getStatus()) {
+                    returnValue = true;
+                    break;
+                }
+            }
+        }
+        return returnValue;
     }
 }
