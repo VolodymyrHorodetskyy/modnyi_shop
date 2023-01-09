@@ -56,6 +56,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         httpSecurity.csrf().disable()
                 // dont authenticate this particular request
                 .authorizeRequests().antMatchers("/user/authenticate", "/register",
+                        "/helper/getAvailableFromStorage/{\\\\d+}",
                         "/AppOrder/catchOrder",
                         "/AppOrder/catchOrder2",
                         "/AppOrder/catchOrder3",
