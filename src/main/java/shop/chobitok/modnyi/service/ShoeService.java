@@ -125,6 +125,9 @@ public class ShoeService {
         if (orderedShoe == null) {
             throw new ConflictException("Взуття не знайдено");
         } else {
+            if (orderedShoe.isUsedInCoincidence()) {
+                throw new ConflictException("Не можливо видалити, використовується в співпадінні");
+            }
             ordered.getOrderedShoeList().remove(orderedShoe);
             ordered = orderRepository.save(ordered);
         }
