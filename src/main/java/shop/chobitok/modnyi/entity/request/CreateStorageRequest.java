@@ -6,6 +6,15 @@ public class CreateStorageRequest {
     private Integer size;
     private String comment;
 
+    public CreateStorageRequest() {
+    }
+
+    public CreateStorageRequest(Long shoeId, Integer size, String comment) {
+        this.shoeId = shoeId;
+        this.size = size;
+        this.comment = comment;
+    }
+
     public Integer getSize() {
         return size;
     }

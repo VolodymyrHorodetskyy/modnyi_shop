@@ -31,23 +31,31 @@ public class StorageController {
     }
 
     @GetMapping
-    public List<StorageRecord> storageRecords(@RequestParam(required = false) Long shoeId,
-                                              @RequestParam(required = false) Integer size,
-                                              @RequestParam(required = false) String modelAndColor) {
+    public Object storageRecords(@RequestParam(required = false) Long shoeId,
+                                 @RequestParam(required = false) Integer size,
+                                 @RequestParam(required = false) String modelAndColor,
+                                 @RequestParam(required = false) boolean groupByModel,
+                                 @RequestParam(required = false) Boolean available) {
         String model = null;
         String color = null;
-        if (!modelAndColor.equals("null") && !isEmpty(modelAndColor)) {
+        if (modelAndColor != null && !modelAndColor.equals("null") && !isEmpty(modelAndColor)) {
             String[] splited = modelAndColor.split("\\s+");
             model = splited[0];
             if (splited.length > 1) {
                 color = splited[1];
             }
         }
-        return storageService.getStorageRecords(shoeId, size, model, color, null);
+
+        return storageService.getStorageRecords(shoeId, size, model, color, available, groupByModel);
     }
 
     @GetMapping("/byOrderedShoeId")
     public List<StorageRecord> getStorageRecordsByOrderedShoeId(@RequestParam Long orderedShoeId) {
         return storageService.getStorageRecords(orderedShoeId);
+    }
+
+    @DeleteMapping
+    public StorageRecord makeUnavailable(@RequestParam Long id) {
+        return storageService.makeUnavailable(id);
     }
 }

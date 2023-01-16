@@ -9,6 +9,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.request.CreateCompanyRequest;
+import shop.chobitok.modnyi.entity.request.CreateStorageRequest;
 import shop.chobitok.modnyi.facebook.FacebookApi2;
 import shop.chobitok.modnyi.facebook.RestResponseDTO;
 import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
@@ -18,19 +19,24 @@ import shop.chobitok.modnyi.service.entity.NeedToBePayedResponse;
 import shop.chobitok.modnyi.specification.AppOrderSpecification;
 import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
+import shop.chobitok.modnyi.util.StringHelper;
 
 import javax.transaction.Transactional;
+import java.io.*;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static java.lang.System.out;
 import static java.time.LocalDateTime.now;
 import static java.util.Arrays.asList;
+import static shop.chobitok.modnyi.entity.Status.ОТРИМАНО;
 import static shop.chobitok.modnyi.entity.VariantType.Domain;
 
 @RunWith(SpringRunner.class)
@@ -202,8 +208,8 @@ public class ProdTest {
         pixel.setSendEvents(true);
         pixel.setAccName("soc ulyana pazhoba");
         pixel = pixelRepository.save(pixel);*/
-        Pixel pixel = pixelRepository.findById(27l).orElse(null);
-        sendTestEvent(pixel, "TEST91057", "https://mchobitok.org/");
+        Pixel pixel = pixelRepository.findById(28l).orElse(null);
+        sendTestEvent(pixel, "TEST11129", "https://mchobitok.org/");
     }
 
     @Autowired
@@ -241,7 +247,7 @@ public class ProdTest {
         OrderedSpecification orderedSpecification = new OrderedSpecification();
         orderedSpecification.setCompanyId(1177l);
         orderedSpecification.setStatuses(asList(Status.ДОСТАВЛЕНО,
-                Status.ОТРИМАНО, Status.ВІДПРАВЛЕНО, Status.ВІДМОВА));
+                ОТРИМАНО, Status.ВІДПРАВЛЕНО, Status.ВІДМОВА));
         List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
         for (Ordered ordered : orderedList) {
             out.println(ordered.getTtn() + "\n" + ordered.getPostComment() + "" +
@@ -458,13 +464,13 @@ public class ProdTest {
                 17950l,
                 17951l,
                 17952l,
-               17955l, 17956l, 17957l, 17960l, 17966l, 17969l, 17970l
+                17955l, 17956l, 17957l, 17960l, 17966l, 17969l, 17970l
                 , 17971l
                 , 17976l
         )).forEach(orderedShoe -> {
             Ordered ordered = orderRepository.findByOrderedShoeId(orderedShoe.getId());
             if (!checkIfOrderInStatuses(ordered, asList(
-                    Status.ВІДМОВА, Status.ВИДАЛЕНО, Status.НЕ_ЗНАЙДЕНО
+                    Status.ВИДАЛЕНО, Status.НЕ_ЗНАЙДЕНО
             ))) {
                 out.println(ordered.getTtn() + " " + orderedShoe.getShoe().getModelAndColor());
                 price.updateAndGet(v -> v + shoePriceService.getShoePrice(orderedShoe.getShoe(), ordered).getCost());
@@ -487,4 +493,199 @@ public class ProdTest {
         }
         return returnValue;
     }
-}
+
+    @Autowired
+    private StorageService storageService;
+
+    @Test
+    @Transactional
+    public void getCanceledLastModified() {
+        String str = "2022-12-26 00:00";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        LocalDateTime dateTime = LocalDateTime.parse(str, formatter);
+        canceledOrderReasonRepository.findByLastModifiedDateGreaterThanEqualAndStatus(dateTime,
+                ОТРИМАНО).forEach(canceledOrderReason -> {
+            Ordered ordered = canceledOrderReason.getOrdered();
+            String comment = "байка";
+            if (ordered.getPostComment().contains("Хут") ||
+                    ordered.getPostComment().contains("хут") ||
+                    ordered.getPostComment().contains("ХУТ") ||
+                    ordered.getPostComment().contains("Мех")) {
+                comment = "хутро";
+            }
+            String finalComment = comment;
+            out.println(ordered.getPostComment());
+            ordered.getOrderedShoeList().forEach(orderedShoe -> {
+                storageService.createStorageRecord(new CreateStorageRequest(orderedShoe.getShoe().getId(),
+                        orderedShoe.getSize(), finalComment));
+            });
+        });
+    }
+
+    @Autowired
+    private StorageRepository storageRepository;
+
+    @Test
+    public void getStorageRecords() {
+        //17970 - 260 шкіра, 17870 - 031 лак, 12227 - 192ч шкіра, 189 замш на беж п. - 17965
+        //5799 - 192 марсала, 17950 - 230 беж
+  /*      storageService.getStorageRecords(17950l, null, null, null, true)
+                .forEach(storageRecord -> {
+                    out.println(storageRecord.getShoe().getModelAndColor() + " " + storageRecord.getSize() + " " + storageRecord.getComment());
+                });*/
+
+    }
+
+    @Test
+    @Transactional
+    public void getOrderedShoesNotInStorage() {
+        String str = "2022-12-26 00:00";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        LocalDateTime dateTime = LocalDateTime.parse(str, formatter);
+        OrderedSpecification orderedSpecification = new OrderedSpecification();
+        orderedSpecification.setFrom(dateTime);
+        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
+        Set<Ordered> ordereds = new HashSet<>();
+        orderedList.forEach(ordered -> {
+            ordered.getOrderedShoeList().forEach(orderedShoe -> {
+                if (!orderedShoe.getShouldNotBePayed()) {
+                    ordereds.add(ordered);
+                }
+            });
+        });
+        ordereds.forEach(ordered -> out.println(ordered.getTtn()));
+    }
+
+    @Test
+    @Transactional
+    public void countFromFileDelivery() throws URISyntaxException {
+
+        //String fileName = "database.properties";
+        String fileName = "txt/delivery 2.txt";
+
+        System.out.println("getResourceAsStream : " + fileName);
+        InputStream is = getFileFromResourceAsStream(fileName);
+        //   printInputStream(is);
+
+        System.out.println("\ngetResource : " + fileName);
+        File file = getFileFromResource(fileName);
+        printFile(file);
+    }
+
+    private InputStream getFileFromResourceAsStream(String fileName) {
+
+        // The class loader that loaded the class
+        ClassLoader classLoader = getClass().getClassLoader();
+        InputStream inputStream = classLoader.getResourceAsStream(fileName);
+
+        // the stream holding the file content
+        if (inputStream == null) {
+            throw new IllegalArgumentException("file not found! " + fileName);
+        } else {
+            return inputStream;
+        }
+
+    }
+
+    /*
+        The resource URL is not working in the JAR
+        If we try to access a file that is inside a JAR,
+        It throws NoSuchFileException (linux), InvalidPathException (Windows)
+
+        Resource URL Sample: file:java-io.jar!/json/file1.json
+     */
+    private File getFileFromResource(String fileName) throws URISyntaxException {
+
+        ClassLoader classLoader = getClass().getClassLoader();
+        URL resource = classLoader.getResource(fileName);
+        if (resource == null) {
+            throw new IllegalArgumentException("file not found! " + fileName);
+        } else {
+
+            // failed if files have whitespaces or special characters
+            //return new File(resource.getFile());
+
+            return new File(resource.toURI());
+        }
+
+    }
+
+    // print input stream
+    private static void printInputStream(InputStream is) {
+
+        try (InputStreamReader streamReader =
+                     new InputStreamReader(is, StandardCharsets.UTF_8);
+             BufferedReader reader = new BufferedReader(streamReader)) {
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+    // print a file
+    private void printFile(File file) {
+        Set<String> ttnSet = new HashSet<>();
+        String desc = null;
+        List<String> lines;
+        Double generalSum = 0d;
+        Map<Double, Integer> map = new HashMap<>();
+        map.put(1150d, 0);
+        map.put(1250d, 0);
+        try {
+            lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+            boolean isTtnLine = true;
+            for (String line : lines) {
+                if (isTtnLine) {
+                    isTtnLine = false;
+                    String ttn = StringHelper.removeSpaces(line);
+                    boolean notDuplicate = ttnSet.add(ttn);
+                    if (notDuplicate) {
+                        out.println(ttn);
+                        Ordered ordered = orderRepository.findOneByAvailableTrueAndTtn(ttn);
+                        if (ordered != null) {
+                            StringBuilder stringBuilder = new StringBuilder();
+                            stringBuilder.append("опис з прогр : ");
+                            AtomicReference<Double> sum = new AtomicReference<>(0d);
+                            ordered.getOrderedShoeList().forEach(orderedShoe -> {
+                                if(orderedShoe.getShoe().getCompany().getId().equals(1177l)) {
+                                    stringBuilder.append(orderedShoe.getShoe().getModelAndColor())
+                                            .append(" ")
+                                            .append(orderedShoe.getSize());
+                                    Double cost = shoePriceService.getShoePrice(orderedShoe.getShoe(),
+                                            ordered).getCost();
+                                    Integer amount = map.get(cost);
+                                    ++amount;
+                                    map.put(cost, amount);
+                                    sum.updateAndGet(v -> v + cost);
+                                }});
+                            stringBuilder.append(" = ").append(sum.get());
+                            desc = stringBuilder.toString();
+                            generalSum += sum.get();
+                        } else {
+                            out.println("не знайдено : " + ttn);
+                            desc = null;
+                        }
+                    } else {
+                        out.println("дублікат : " + ttn);
+                        desc = null;
+                    }
+                } else {
+                    out.println(desc);
+                    out.println("опис = " + line);
+                    isTtnLine = true;
+                }
+            }
+            out.println("загальна сума = " + generalSum);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+} 

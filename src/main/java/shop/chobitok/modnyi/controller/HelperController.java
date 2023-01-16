@@ -1,7 +1,10 @@
 package shop.chobitok.modnyi.controller;
 
 import org.springframework.web.bind.annotation.*;
+import shop.chobitok.modnyi.entity.StorageRecord;
 import shop.chobitok.modnyi.service.StorageService;
+
+import java.util.List;
 
 @RestController
 @CrossOrigin
@@ -17,11 +20,10 @@ public class HelperController {
     @GetMapping("getAvailableFromStorage/{shoeId}")
     public String getAvailableSizesFromStorage(@PathVariable Long shoeId) {
         StringBuilder stringBuilder = new StringBuilder();
-        storageService.getStorageRecords(shoeId, null, null, null, true)
-                .forEach(storageRecord -> {
-                    stringBuilder.append(storageRecord.getShoe().getModelAndColor() +
-                            " " + storageRecord.getSize() + " " + storageRecord.getComment()+"\n");
-                });
+        List<StorageRecord> storageRecords = (List<StorageRecord>) storageService.getStorageRecords(shoeId, null, null, null, true, false);
+        storageRecords
+                .forEach(storageRecord -> stringBuilder.append(storageRecord.getShoe().getModelAndColor()).append(" ")
+                        .append(storageRecord.getSize()).append(" ").append(storageRecord.getComment()).append("\n"));
         return stringBuilder.toString();
     }
 }

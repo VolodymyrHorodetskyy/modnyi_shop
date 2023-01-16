@@ -12,7 +12,7 @@ import shop.chobitok.modnyi.repository.ShoeRepository;
 import shop.chobitok.modnyi.repository.StorageRepository;
 import shop.chobitok.modnyi.specification.StorageSpecification;
 
-import java.util.List;
+import java.util.*;
 
 import static org.springframework.data.domain.PageRequest.of;
 import static org.springframework.data.domain.Sort.Direction.DESC;
@@ -61,22 +61,89 @@ public class StorageService {
         return false;
     }
 
-    public List<StorageRecord> getStorageRecords(Long shoeId, Integer size, String model,
-                                                 String color, Boolean available) {
+    public Object getStorageRecords(Long shoeId, Integer size, String model,
+                                    String color, Boolean available, boolean groupByModel) {
         StorageSpecification storageSpecification = new StorageSpecification();
         storageSpecification.setModelId(shoeId);
         storageSpecification.setSize(size);
         storageSpecification.setModelName(model);
         storageSpecification.setColor(color);
-        storageSpecification.setAvailable(available);
-        return storageRepository.findAll(storageSpecification,
-                of(0, 200, Sort.by(DESC, "available","createdDate"))).getContent();
+        if (available != null && available) {
+            storageSpecification.setAvailable(available);
+        }
+        List<StorageRecord> storageRecords = storageRepository.findAll(storageSpecification,
+                of(0, 200, Sort.by(DESC, "available", "createdDate"))).getContent();
+        if (groupByModel) {
+            Map<String, List<Integer>> baykaModelAndSizes = new HashMap<>();
+            Map<String, List<Integer>> hutroModelAndSize = new HashMap<>();
+            for (StorageRecord storageRecord : storageRecords) {
+                if (storageRecord.getComment().toLowerCase().contains("хут")) {
+                    addToMap(hutroModelAndSize, storageRecord);
+                } else {
+                    addToMap(baykaModelAndSizes, storageRecord);
+                }
+            }
+            Map<String, String> modelAndSizes = formModelAndSizes(hutroModelAndSize, "хутро");
+            modelAndSizes.putAll(formModelAndSizes(baykaModelAndSizes, "байка"));
+            return modelAndSizes;
+        }
+        return storageRecords;
+    }
+
+    private Map<String, String> formModelAndSizes(Map<String, List<Integer>> map, String addition) {
+        Map<String, String> modelAndSizes = new HashMap<>();
+        for (Map.Entry<String, List<Integer>> entry : map.entrySet()) {
+            modelAndSizes.put(entry.getKey() + " " + addition, formSizes(entry.getValue()));
+        }
+        return modelAndSizes;
+    }
+
+    private String formSizes(List<Integer> sizes) {
+        Map<Integer, Integer> sizesMap = new TreeMap<>();
+        for (Integer size : sizes) {
+            addToMap(sizesMap, size);
+        }
+        StringBuilder result = new StringBuilder();
+        for (Map.Entry<Integer, Integer> entry : sizesMap.entrySet()) {
+            Integer value = entry.getValue();
+            result.append(entry.getKey());
+            if (value != 1) {
+                result.append(" - ").append(entry.getValue());
+            }
+            result.append(", ");
+        }
+        return result.toString();
+    }
+
+    private void addToMap(Map<Integer, Integer> map, Integer size) {
+        Integer amount = map.get(size);
+        if (amount == null) {
+            amount = 0;
+        }
+        ++amount;
+        map.put(size, amount);
+    }
+
+    private void addToMap(Map<String, List<Integer>> map, StorageRecord storageRecord) {
+        List<Integer> sizes = map.get(storageRecord.getShoe().getModelAndColor());
+        if (sizes == null) {
+            sizes = new ArrayList<>();
+        }
+        sizes.add(storageRecord.getSize());
+        map.put(storageRecord.getShoe().getModelAndColor(), sizes);
     }
 
     public List<StorageRecord> getStorageRecords(Long orderedShoeId) {
         OrderedShoe orderedShoe = orderedShoeRepository.findById(orderedShoeId).orElseThrow(
                 () -> new ConflictException("Ordered shoe not found"));
-        return getStorageRecords(orderedShoe.getShoe().getId(), orderedShoe.getSize(),
-                null, null, true);
+        return (List<StorageRecord>) getStorageRecords(orderedShoe.getShoe().getId(), orderedShoe.getSize(),
+                null, null, true, false);
+    }
+
+    public StorageRecord makeUnavailable(Long id) {
+        StorageRecord storageRecord = storageRepository.findById(id)
+                .orElseThrow(() -> new ConflictException("Запис не знайдено"));
+        storageRecord.setAvailable(false);
+        return storageRepository.save(storageRecord);
     }
 }
