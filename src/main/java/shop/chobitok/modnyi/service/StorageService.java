@@ -69,9 +69,8 @@ public class StorageService {
         storageSpecification.setSize(size);
         storageSpecification.setModelName(model);
         storageSpecification.setColor(color);
-        if (available != null && available) {
-            storageSpecification.setAvailable(available);
-        }
+        storageSpecification.setAvailable(true);
+
         List<StorageRecord> storageRecords = storageRepository.findAll(storageSpecification,
                 of(0, 200, Sort.by(DESC, "available", "createdDate"))).getContent();
         if (groupByModel) {
