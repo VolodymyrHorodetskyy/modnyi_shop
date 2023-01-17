@@ -6,6 +6,7 @@ import shop.chobitok.modnyi.entity.OrderedShoe;
 import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.entity.StorageRecord;
 import shop.chobitok.modnyi.entity.request.CreateStorageRequest;
+import shop.chobitok.modnyi.entity.response.ModelAndSizesResponse;
 import shop.chobitok.modnyi.exception.ConflictException;
 import shop.chobitok.modnyi.repository.OrderedShoeRepository;
 import shop.chobitok.modnyi.repository.ShoeRepository;
@@ -83,17 +84,18 @@ public class StorageService {
                     addToMap(baykaModelAndSizes, storageRecord);
                 }
             }
-            Map<String, String> modelAndSizes = formModelAndSizes(hutroModelAndSize, "хутро");
-            modelAndSizes.putAll(formModelAndSizes(baykaModelAndSizes, "байка"));
+            List<ModelAndSizesResponse> modelAndSizes = makeModelAndSizesResponse(hutroModelAndSize, "хутро");
+            modelAndSizes.addAll(makeModelAndSizesResponse(baykaModelAndSizes, "байка"));
             return modelAndSizes;
         }
         return storageRecords;
     }
 
-    private Map<String, String> formModelAndSizes(Map<String, List<Integer>> map, String addition) {
-        Map<String, String> modelAndSizes = new HashMap<>();
+    private List<ModelAndSizesResponse> makeModelAndSizesResponse(Map<String, List<Integer>> map, String addition) {
+        List<ModelAndSizesResponse> modelAndSizes = new ArrayList<>();
         for (Map.Entry<String, List<Integer>> entry : map.entrySet()) {
-            modelAndSizes.put(entry.getKey() + " " + addition, formSizes(entry.getValue()));
+            modelAndSizes.add(new ModelAndSizesResponse(entry.getKey() + " " + addition,
+                    formSizes(entry.getValue())));
         }
         return modelAndSizes;
     }

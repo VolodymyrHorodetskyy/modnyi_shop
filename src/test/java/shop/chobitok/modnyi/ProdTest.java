@@ -654,7 +654,7 @@ public class ProdTest {
                             stringBuilder.append("опис з прогр : ");
                             AtomicReference<Double> sum = new AtomicReference<>(0d);
                             ordered.getOrderedShoeList().forEach(orderedShoe -> {
-                                if(orderedShoe.getShoe().getCompany().getId().equals(1177l)) {
+                                if (orderedShoe.getShoe().getCompany().getId().equals(1177l)) {
                                     stringBuilder.append(orderedShoe.getShoe().getModelAndColor())
                                             .append(" ")
                                             .append(orderedShoe.getSize());
@@ -664,7 +664,8 @@ public class ProdTest {
                                     ++amount;
                                     map.put(cost, amount);
                                     sum.updateAndGet(v -> v + cost);
-                                }});
+                                }
+                            });
                             stringBuilder.append(" = ").append(sum.get());
                             desc = stringBuilder.toString();
                             generalSum += sum.get();
@@ -687,5 +688,16 @@ public class ProdTest {
             e.printStackTrace();
         }
 
+    }
+
+    @Test
+    public void setUnFor() {
+        List<StorageRecord> storageRecords = (List<StorageRecord>) storageService.getStorageRecords(null, null, null, null, true, false);
+        storageRecords.forEach(storageRecord -> {
+            if (storageRecord.getComment().toLowerCase().contains("хут")) {
+                storageRecord.setAvailable(false);
+            }
+        });
+        storageRepository.saveAll(storageRecords);
     }
 } 
