@@ -47,8 +47,9 @@ public class CanceledOrderReasonService {
     private final PayedOrderedService payedOrderedService;
     private final ImportService importService;
     private final OurTtnService ourTtnService;
+    private final HistoryService historyService;
 
-    public CanceledOrderReasonService(OrderRepository orderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, NovaPostaRepository postaRepository, MailService mailService, StatusChangeService statusChangeService, ShoePriceService shoePriceService, GoogleDocsService googleDocsService, PayedOrderedService payedOrderedService, ImportService importService, OurTtnService ourTtnService) {
+    public CanceledOrderReasonService(OrderRepository orderRepository, CanceledOrderReasonRepository canceledOrderReasonRepository, NovaPostaRepository postaRepository, MailService mailService, StatusChangeService statusChangeService, ShoePriceService shoePriceService, GoogleDocsService googleDocsService, PayedOrderedService payedOrderedService, ImportService importService, OurTtnService ourTtnService, HistoryService historyService) {
         this.orderRepository = orderRepository;
         this.canceledOrderReasonRepository = canceledOrderReasonRepository;
         this.postaRepository = postaRepository;
@@ -59,6 +60,7 @@ public class CanceledOrderReasonService {
         this.payedOrderedService = payedOrderedService;
         this.importService = importService;
         this.ourTtnService = ourTtnService;
+        this.historyService = historyService;
     }
 
     public CanceledOrderReason getCanceledOrderReasonByOrderedId(Long id) {
@@ -142,6 +144,7 @@ public class CanceledOrderReasonService {
         List<CanceledOrderReason> canceledOrderReasons = canceledOrderReasonRepository.findAll(new CanceledOrderReasonSpecification(now().minusMonths(1), true));
         List<CanceledOrderReason> updated = new ArrayList<>();
         for (CanceledOrderReason canceledOrderReason : canceledOrderReasons) {
+            //коли накладна повернення пуста
             if (isEmpty(canceledOrderReason.getReturnTtn()) && canceledOrderReason.getOrdered() != null
                     && !isEmpty(canceledOrderReason.getOrdered().getTtn()) && !canceledOrderReason.isManual()) {
                 Data returned = getReturnedEntity(canceledOrderReason.getOrdered().getTtn());
@@ -155,6 +158,7 @@ public class CanceledOrderReasonService {
                     }
                     updated.add(canceledOrderReason);
                 }
+                // коли накладна повернення є, обновити статус
             } else if (!isEmpty(canceledOrderReason.getReturnTtn()) && canceledOrderReason.getReturnTtn().length() > 6) {
                 TrackingEntity trackingReturned = postaRepository.getTracking(null, canceledOrderReason.getReturnTtn());
                 if (trackingReturned.getData().size() > 0) {
@@ -167,9 +171,20 @@ public class CanceledOrderReasonService {
                     }
                 }
                 updated.add(canceledOrderReason);
+                // зберегти отримане повернення
+                saveReceivedCanceled(canceledOrderReason);
             }
         }
         return canceledOrderReasonRepository.saveAll(updated);
+    }
+
+    private History saveReceivedCanceled(CanceledOrderReason canceledOrderReason) {
+        History history = null;
+        if (canceledOrderReason.getStatus() == Status.ОТРИМАНО) {
+            history = historyService.addHistoryRecord(HistoryType.CANCELED_RECEIVED, canceledOrderReason.getReturnTtn(),
+                    null);
+        }
+        return history;
     }
 
     public Data getReturnedEntity(String ttn) {
