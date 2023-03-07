@@ -75,4 +75,8 @@ public class OrderedShoe extends Audit {
     public void setUsedInCoincidence(boolean usedInCoincidence) {
         this.usedInCoincidence = usedInCoincidence;
     }
+
+    public Long getCompanyId(){
+        return shoe.getCompany().getId();
+    }
 }
