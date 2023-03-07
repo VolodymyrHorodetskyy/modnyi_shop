@@ -11,6 +11,7 @@ public class Company extends Audit {
     private String name;
     private Boolean useStorage;
     private Boolean allShouldBePayed;
+    private Boolean markOSShouldNotBePayedIfUsedInCoincidence;
 
     public Company(String name) {
         this.name = name;
@@ -41,5 +42,13 @@ public class Company extends Audit {
 
     public void setAllShouldBePayed(Boolean allShouldBePayed) {
         this.allShouldBePayed = allShouldBePayed;
+    }
+
+    public Boolean getMarkOSShouldNotBePayedIfUsedInCoincidence() {
+        return markOSShouldNotBePayedIfUsedInCoincidence;
+    }
+
+    public void setMarkOSShouldNotBePayedIfUsedInCoincidence(Boolean markOSShouldNotBePayedIfUsedInCoincidence) {
+        this.markOSShouldNotBePayedIfUsedInCoincidence = markOSShouldNotBePayedIfUsedInCoincidence;
     }
 }

@@ -2,10 +2,7 @@ package shop.chobitok.modnyi.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import shop.chobitok.modnyi.entity.Ordered;
-import shop.chobitok.modnyi.entity.OrderedShoe;
-import shop.chobitok.modnyi.entity.StorageCoincidence;
-import shop.chobitok.modnyi.entity.StorageRecord;
+import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.dto.StorageCoincidenceDto;
 import shop.chobitok.modnyi.entity.request.AddStorageCoincidenceRequest;
 import shop.chobitok.modnyi.exception.ConflictException;
@@ -22,12 +19,14 @@ public class StorageCoincidenceService {
     private final StorageCoincidenceRepository storageCoincidenceRepository;
     private final OrderedShoeService orderedShoeService;
     private final OrderRepository orderRepository;
+    private final CompanyService companyService;
 
-    public StorageCoincidenceService(StorageService storageService, StorageCoincidenceRepository storageCoincidenceRepository, OrderedShoeService orderedShoeService, OrderRepository orderRepository) {
+    public StorageCoincidenceService(StorageService storageService, StorageCoincidenceRepository storageCoincidenceRepository, OrderedShoeService orderedShoeService, OrderRepository orderRepository, CompanyService companyService) {
         this.storageService = storageService;
         this.storageCoincidenceRepository = storageCoincidenceRepository;
         this.orderedShoeService = orderedShoeService;
         this.orderRepository = orderRepository;
+        this.companyService = companyService;
     }
 
     @Transactional
@@ -84,7 +83,10 @@ public class StorageCoincidenceService {
     private void setUnavailable(OrderedShoe orderedShoe, StorageRecord storageRecord) {
         storageRecord.setAvailable(false);
         orderedShoe.setUsedInCoincidence(true);
-        orderedShoe.setShouldNotBePayed(true);
+        Company company = companyService.getCompany(orderedShoe.getCompanyId());
+        if (company.getMarkOSShouldNotBePayedIfUsedInCoincidence()) {
+            orderedShoe.setShouldNotBePayed(true);
+        }
     }
 
 
