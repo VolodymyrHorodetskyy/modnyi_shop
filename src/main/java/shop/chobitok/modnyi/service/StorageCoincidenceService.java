@@ -84,11 +84,11 @@ public class StorageCoincidenceService {
         storageRecord.setAvailable(false);
         orderedShoe.setUsedInCoincidence(true);
         Company company = companyService.getCompany(orderedShoe.getCompanyId());
-        if (company.getMarkOSShouldNotBePayedIfUsedInCoincidence()) {
+        if (company.getMarkOSShouldNotBePayedIfUsedInCoincidence() != null &&
+                company.getMarkOSShouldNotBePayedIfUsedInCoincidence()) {
             orderedShoe.setShouldNotBePayed(true);
         }
     }
-
 
     public List<StorageCoincidence> findNotResolvedStorageCoincidences(){
         return storageCoincidenceRepository.findAllByApprovedIsNull();
