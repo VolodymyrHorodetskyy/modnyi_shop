@@ -24,6 +24,8 @@ import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.novaposta.service.NovaPostaService;
 import shop.chobitok.modnyi.repository.*;
 import shop.chobitok.modnyi.service.*;
+import shop.chobitok.modnyi.service.horoshop.HoroshopService;
+import shop.chobitok.modnyi.service.horoshop.mapper.AppOrderHoroshopMapper;
 import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
 
@@ -271,11 +273,6 @@ public class DevTest {
 
     @Autowired
     private AppOrderService appOrderService;
-
-    @Test
-    public void shouldBeProcessedTest() {
-        appOrderService.getAllAppOrderAndDateTimeWhenShouldBeProcessed("2021-05-19 00:00");
-    }
 
     @Autowired
     private AppOrderProcessingRepository appOrderProcessingRepository;
@@ -553,12 +550,12 @@ public class DevTest {
     @Autowired
     private OrderedShoeRepository orderedShoeRepository;
 
-    @Test
+/*    @Test
     public void makeAllOrderedShoesPaid() {
         List<OrderedShoe> orderedShoeList = orderedShoeRepository.findAllByPayedFalse();
         orderedShoeList.forEach(orderedShoe -> orderedShoe.setPayed(true));
         orderedShoeRepository.saveAll(orderedShoeList);
-    }
+    }*/
 /*
     @Transactional
     @Test
@@ -598,11 +595,21 @@ public class DevTest {
             ShoePrice shoePrice = shoePriceService.setNewPrice(shoe, dateTime, 2099d, 1250d);
             if (shoePrice != null) {
                 out.println(shoePrice.getShoe().getModelAndColor() + " " + shoePrice.getCost() + " " + shoePrice.getPrice());
-            } else{
+            } else {
                 out.println(shoe.getModelAndColor() + " не змінено");
             }
         });
     }
 
+    @Autowired
+    private HoroshopService horoshopService;
+    @Autowired
+    private AppOrderHoroshopMapper appOrderHoroshopMapper;
 
+
+    @Test
+    public void horoshopTest() throws IOException {
+        List<AppOrder> appOrders = appOrderHoroshopMapper.convertToAppOrder(horoshopService.getOrderData(LocalDateTime.now().minusDays(5), null, null));
+        appOrderRepository.saveAll(appOrders);
+    }
 }

@@ -16,9 +16,12 @@ import shop.chobitok.modnyi.novaposta.repository.NovaPostaRepository;
 import shop.chobitok.modnyi.repository.*;
 import shop.chobitok.modnyi.service.*;
 import shop.chobitok.modnyi.service.entity.NeedToBePayedResponse;
+import shop.chobitok.modnyi.service.horoshop.HoroshopService;
+import shop.chobitok.modnyi.service.horoshop.mapper.AppOrderHoroshopMapper;
 import shop.chobitok.modnyi.specification.AppOrderSpecification;
 import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
+import shop.chobitok.modnyi.util.DateHelper;
 import shop.chobitok.modnyi.util.StringHelper;
 
 import javax.transaction.Transactional;
@@ -699,5 +702,16 @@ public class ProdTest {
             }
         });
         storageRepository.saveAll(storageRecords);
+    }
+
+    @Autowired
+    private HoroshopService horoshopService;
+    @Autowired
+    private AppOrderHoroshopMapper appOrderHoroshopMapper;
+
+    @Test
+    public void horoshopTest() throws IOException {
+        List<AppOrder> appOrders = appOrderHoroshopMapper.convertToAppOrder(horoshopService.getOrderData(DateHelper.makeDateBeginningOfDay(LocalDateTime.now()), null, null));
+        appOrderRepository.saveAll(appOrders);
     }
 } 
