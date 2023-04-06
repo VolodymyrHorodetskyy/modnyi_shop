@@ -24,6 +24,9 @@ public class AppOrder extends Audit {
     private boolean dontCall = false;
     @ElementCollection
     private List<String> products;
+    private Long horoshopOrderId;
+    private String horoshopProductsJson;
+    private String horoshopDeliveryDataJson;
     @Column
     private Double amount;
     @Column
@@ -300,5 +303,29 @@ public class AppOrder extends Audit {
 
     public void setDataParsed(boolean dataParsed) {
         this.dataParsed = dataParsed;
+    }
+
+    public String getHoroshopProductsJson() {
+        return horoshopProductsJson;
+    }
+
+    public void setHoroshopProductsJson(String horoshopProductsJson) {
+        this.horoshopProductsJson = horoshopProductsJson;
+    }
+
+    public String getHoroshopDeliveryDataJson() {
+        return horoshopDeliveryDataJson;
+    }
+
+    public void setHoroshopDeliveryDataJson(String horoshopDeliveryDataJson) {
+        this.horoshopDeliveryDataJson = horoshopDeliveryDataJson;
+    }
+
+    public Long getHoroshopOrderId() {
+        return horoshopOrderId;
+    }
+
+    public void setHoroshopOrderId(Long horoshopOrderId) {
+        this.horoshopOrderId = horoshopOrderId;
     }
 }

@@ -64,11 +64,6 @@ public class UserController {
         return userService.checkIfUserIsLogged(id);
     }
 
-    @GetMapping("getFirstItemShouldBeProcessed")
-    public Object getFirstItemShouldBeProcessed(@RequestParam Long userId) {
-        return userService.getFirstItemToProcessByUserId(userId);
-    }
-
     @GetMapping("getUserEfficiency")
     public StringResponse getUserEfficiency(@RequestParam(required = false) String from, @RequestParam Long userId) {
         return userEfficiencyService.showUserEfficiency(from, userId);

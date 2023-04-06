@@ -17,8 +17,6 @@ import shop.chobitok.modnyi.util.DateHelper;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
-import java.time.DayOfWeek;
-import java.time.LocalDateTime;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -35,8 +33,6 @@ import static org.apache.commons.lang3.StringUtils.remove;
 import static org.apache.commons.lang3.StringUtils.substringBetween;
 import static org.springframework.util.StringUtils.isEmpty;
 import static shop.chobitok.modnyi.entity.VariantType.Domain;
-import static shop.chobitok.modnyi.util.DateHelper.formDateTimeFromOrGetDefault;
-import static shop.chobitok.modnyi.util.DateHelper.makeDateBeginningOfDay;
 import static shop.chobitok.modnyi.util.StringHelper.splitPhonesStringBySemiColonAndValidate;
 
 @Service
@@ -79,6 +75,14 @@ public class AppOrderService {
         this.pixelService = pixelService;
         this.variantsService = variantsService;
         this.appOrderToPixelService = appOrderToPixelService;
+    }
+
+    public AppOrder getByHoroshopOrderId(Long horoshopOrderId){
+        return appOrderRepository.findByHoroshopOrderId(horoshopOrderId);
+    }
+
+    public List<AppOrder> saveAll(List<AppOrder> appOrders){
+        return appOrderRepository.saveAll(appOrders);
     }
 
     public AppOrder catchOrder(String s) {
@@ -258,101 +262,6 @@ public class AppOrderService {
         return simpleImmutableEntry;
     }
 
-    public AppOrder findFirstShouldBeProcessedAppOrderByUserId(Long userId) {
-        AppOrder appOrder = appOrderRepository.findFirstByStatusInAndPreviousStatusIsNullAndUserIdOrderByDateAppOrderShouldBeProcessedDesc(
-                singletonList(AppOrderStatus.Новий), userId);
-        if (appOrder == null) {
-            appOrder = appOrderRepository.findFirstByStatusInAndUserIdOrderByCreatedDateDesc(
-                    singletonList(AppOrderStatus.Новий), userId);
-        }
-        return appOrder;
-    }
-
-    public void assignAppOrderToUserAndSetShouldBeProcessedTime(AppOrder appOrder) {
-        AppOrder lastAppOrder = getLastAppOrder();
-        List<UserLoggedIn> usersLoggedIn = userLoggedInRepository.findAllByActiveTrueAndCreatedDateGreaterThanEqual(
-                DateHelper.formLocalDateTimeStartOfTheDay(now()));
-        User userToAssign = usersLoggedIn.stream().filter(userLoggedIn -> userLoggedIn.isActive() &&
-                        !userLoggedIn.getUser().getId().equals(lastAppOrder.getUser())).map(UserLoggedIn::getUser)
-                .findFirst().orElse(usersLoggedIn.size() > 0 ? usersLoggedIn.get(0).getUser() : null);
-        if (userToAssign != null) {
-            int endOfDayWorkingHour = getEndOfWorkingDayHour(now().getDayOfWeek());
-            int minutesAppOrderShouldBeProcessed =
-                    Integer.parseInt(paramsService.getParam("minutesAppOrderShouldBeProcessed").getGetting());
-            LocalDateTime nextShouldBeProcessedLocalDateTime = getNextShouldBeProcessedLocalDateTime(now(), endOfDayWorkingHour, minutesAppOrderShouldBeProcessed);
-            appOrder.setDateAppOrderShouldBeProcessed(nextShouldBeProcessedLocalDateTime);
-            appOrder.setUser(userToAssign);
-            appOrderRepository.save(appOrder);
-        }
-    }
-
-    public void setShouldBeProcessedAppOrderDateAndAssignToUser(List<User> users) {
-/*        if (users.size() > 0) {
-            int getUserIndex = 0;
-            List<AppOrder> appOrders = appOrderRepository.findByStatusInOrderByCreatedDateDesc(
-                    Arrays.asList(AppOrderStatus.Новий));
-            int endOfDayWorkingHour = getEndOfWorkingDayHour(now().getDayOfWeek());
-            int minutesAppOrderShouldBeProcessed =
-                    Integer.parseInt(paramsService.getParam("minutesAppOrderShouldBeProcessed").getGetting());
-            LocalDateTime shouldBeProcessedDate = findFirstAvailableLocalDateTimeForShouldBeProcessedByUserId(users.get(getUserIndex).getId(),
-                    endOfDayWorkingHour, minutesAppOrderShouldBeProcessed);
-            for (AppOrder appOrder : appOrders) {
-                appOrder.setUser(users.get(getUserIndex));
-                appOrder.setDateAppOrderShouldBeProcessed(shouldBeProcessedDate);
-                getUserIndex += 1;
-                if (getUserIndex + 1 > users.size()) {
-                    shouldBeProcessedDate = getNextShouldBeProcessedLocalDateTime(shouldBeProcessedDate,
-                            endOfDayWorkingHour,
-                            minutesAppOrderShouldBeProcessed);
-                    getUserIndex = 0;
-                }
-            }
-            appOrderRepository.saveAll(appOrders);
-        }*/
-        int endOfDayWorkingHour = getEndOfWorkingDayHour(now().getDayOfWeek());
-        int minutesAppOrderShouldBeProcessed =
-                Integer.parseInt(paramsService.getParam("minutesAppOrderShouldBeProcessed").getGetting());
-        List<AppOrder> appOrders = appOrderRepository.findByStatusInOrderByCreatedDateDesc(
-                singletonList(AppOrderStatus.Новий));
-        Map<User, LocalDateTime> userLocalDateTimeMap = new HashMap<>();
-        Iterator<AppOrder> appOrderIterator = appOrders.iterator();
-        while (appOrderIterator.hasNext()) {
-            for (User user : users) {
-                LocalDateTime lastDateTimeForUser = userLocalDateTimeMap.get(user);
-                if (lastDateTimeForUser == null) {
-                    lastDateTimeForUser = getNextShouldBeProcessedLocalDateTime(now(), endOfDayWorkingHour,
-                            minutesAppOrderShouldBeProcessed);
-                } else {
-                    lastDateTimeForUser = getNextShouldBeProcessedLocalDateTime(lastDateTimeForUser, endOfDayWorkingHour,
-                            minutesAppOrderShouldBeProcessed);
-                }
-                userLocalDateTimeMap.put(user, lastDateTimeForUser);
-                AppOrder appOrder = appOrderIterator.next();
-                if (appOrder.getPreviousStatus() == null) {
-                }
-            }
-        }
-    }
-
-    private LocalDateTime findFirstAvailableLocalDateTimeForShouldBeProcessedByUserId(Long userId,
-                                                                                      int endOfWorkingDay,
-                                                                                      int minutesAppOrderShouldBeProcessed) {
-        LocalDateTime availableShouldBeProcessedDateTime;
-        boolean firstShouldBeProcessedOnNow = Boolean.parseBoolean(paramsService.getParam("firstShouldBeProcessedDateOnNow").getGetting());
-        AppOrder lastShouldBeProcessedAppOrderByUser = appOrderRepository.findFirstByDateAppOrderShouldBeProcessedGreaterThanEqualAndUserId(makeDateBeginningOfDay(now()), userId);
-        if (lastShouldBeProcessedAppOrderByUser == null) {
-            if (firstShouldBeProcessedOnNow) {
-                availableShouldBeProcessedDateTime = now();
-            } else {
-                int startOfDayWorkingHour = getStartOfWorkingDayHour(now().getDayOfWeek());
-                availableShouldBeProcessedDateTime = now().withHour(startOfDayWorkingHour).withMinute(0).withSecond(0);
-            }
-        } else {
-            availableShouldBeProcessedDateTime = getNextShouldBeProcessedLocalDateTime(lastShouldBeProcessedAppOrderByUser.getDateAppOrderShouldBeProcessed(),
-                    endOfWorkingDay, minutesAppOrderShouldBeProcessed);
-        }
-        return availableShouldBeProcessedDateTime;
-    }
 
     public Map<AppOrderStatus, Set<AppOrder>> getAll(Long id, String phoneAndName, String comment, String fromForNotReady, String fromForReady
             , String userId) {
@@ -529,7 +438,6 @@ public class AppOrderService {
     }
 
     public AppOrder changeStatus(AppOrder appOrder, User user, AppOrderStatus newStatus, boolean remindTomorrow) {
-        // userEfficiencyService.determineEfficiency(appOrder, user);
         if (appOrder.getStatus() != newStatus) {
             appOrder.setPreviousStatus(appOrder.getStatus());
             AppOrderProcessing appOrderProcessing = new AppOrderProcessing(
@@ -547,91 +455,4 @@ public class AppOrderService {
         }
         return appOrder;
     }
-
-    public Map<AppOrder, LocalDateTime> getAllAppOrderAndDateTimeWhenShouldBeProcessed(String from) {
-        int minutesAppOrderShouldBeProcessed =
-                Integer.parseInt(paramsService.getParam("minutesAppOrderShouldBeProcessed").getGetting());
-        LocalDateTime fromLocalDateTime = formDateTimeFromOrGetDefault(from);
-        List<AppOrder> appOrders = appOrderRepository.findByCreatedDateGreaterThanEqualOrderByCreatedDateDesc(fromLocalDateTime);
-        Map<AppOrder, LocalDateTime> appOrderDateTimeMap = new LinkedHashMap<>();
-        LocalDateTime lastShouldBeProcessedDate = null;
-        for (AppOrder appOrder : appOrders) {
-            LocalDateTime appOrderCreatedDate = appOrder.getCreatedDate();
-            int startOfDayWorkingHour = getStartOfWorkingDayHour(appOrderCreatedDate.getDayOfWeek());
-            int endOfDayWorkingHour = getEndOfWorkingDayHour(appOrderCreatedDate.getDayOfWeek());
-            if (lastShouldBeProcessedDate == null) {
-                lastShouldBeProcessedDate = appOrderCreatedDate.withMinute(0)
-                        .withSecond(0)
-                        .withHour(startOfDayWorkingHour);
-            } else {
-                int newMinutes = lastShouldBeProcessedDate.getMinute() + minutesAppOrderShouldBeProcessed;
-                if (newMinutes >= 60) {
-                    int newHour = lastShouldBeProcessedDate.getHour() + 1;
-                    if (newHour > endOfDayWorkingHour) {
-                        lastShouldBeProcessedDate.withDayOfYear(lastShouldBeProcessedDate.getDayOfYear() + 1);
-                        lastShouldBeProcessedDate.withSecond(0).withMinute(0)
-                                .withHour(getStartOfWorkingDayHour(lastShouldBeProcessedDate.getDayOfWeek()));
-                    } else {
-                        lastShouldBeProcessedDate = lastShouldBeProcessedDate.withMinute(newMinutes - 60)
-                                .withHour(newHour);
-                    }
-                } else {
-                    lastShouldBeProcessedDate =
-                            lastShouldBeProcessedDate.withMinute(newMinutes);
-                }
-
-            }
-            if (lastShouldBeProcessedDate.getHour() <= endOfDayWorkingHour
-                    && lastShouldBeProcessedDate.getHour() >= startOfDayWorkingHour) {
-                appOrderDateTimeMap.put(appOrder, lastShouldBeProcessedDate);
-            }
-        }
-        return appOrderDateTimeMap;
-    }
-
-    public int getStartOfWorkingDayHour(DayOfWeek dayOfWeek) {
-        if (dayOfWeek == DayOfWeek.SATURDAY) {
-            return Integer.valueOf(paramsService.getParam("workingHoursSaturdayFrom").getGetting()).intValue();
-        } else if (dayOfWeek == DayOfWeek.SUNDAY) {
-            return Integer.valueOf(paramsService.getParam("workingHoursSundayFrom").getGetting()).intValue();
-        } else {
-            return Integer.valueOf(paramsService.getParam("workingHoursWeekDayFrom").getGetting()).intValue();
-        }
-    }
-
-    public int getEndOfWorkingDayHour(DayOfWeek dayOfWeek) {
-        if (dayOfWeek == DayOfWeek.SATURDAY) {
-            return Integer.valueOf(paramsService.getParam("workingHoursSaturdayTo").getGetting()).intValue();
-        } else if (dayOfWeek == DayOfWeek.SUNDAY) {
-            return Integer.valueOf(paramsService.getParam("workingHoursSundayTo").getGetting()).intValue();
-        } else {
-            return Integer.valueOf(paramsService.getParam("workingHoursWeekDayTo").getGetting()).intValue();
-        }
-    }
-
-    public LocalDateTime getNextShouldBeProcessedLocalDateTime(LocalDateTime lastShouldBeProcessedDate,
-                                                               int endOfDayWorkingHour,
-                                                               int minutesAppOrderShouldBeProcessed) {
-        int newMinutes = lastShouldBeProcessedDate.getMinute() + minutesAppOrderShouldBeProcessed;
-        if (newMinutes >= 60) {
-            int newHour = lastShouldBeProcessedDate.getHour() + 1;
-            if (newHour > endOfDayWorkingHour) {
-                lastShouldBeProcessedDate.withDayOfYear(lastShouldBeProcessedDate.getDayOfYear() + 1);
-                lastShouldBeProcessedDate.withSecond(0).withMinute(0)
-                        .withHour(getStartOfWorkingDayHour(lastShouldBeProcessedDate.getDayOfWeek()));
-            } else {
-                lastShouldBeProcessedDate = lastShouldBeProcessedDate.withMinute(newMinutes - 60)
-                        .withHour(newHour);
-            }
-        } else {
-            lastShouldBeProcessedDate =
-                    lastShouldBeProcessedDate.withMinute(newMinutes);
-        }
-        return lastShouldBeProcessedDate;
-    }
-
-    public AppOrder getLastAppOrder() {
-        return appOrderRepository.findFirstByOrderByCreatedDateDesc();
-    }
-
 }

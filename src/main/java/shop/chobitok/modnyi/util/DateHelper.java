@@ -54,10 +54,14 @@ public class DateHelper {
     }
 
     public static LocalDateTime makeDateBeginningOfDay(LocalDateTime localDateTime) {
+        if(localDateTime == null)
+            return null;
         return localDateTime.withHour(0).withMinute(0).withSecond(0);
     }
 
     public static LocalDateTime makeDateEndOfDay(LocalDateTime localDateTime) {
+        if(localDateTime == null)
+            return null;
         return localDateTime.withHour(23).withMinute(59).withSecond(59);
     }
 }

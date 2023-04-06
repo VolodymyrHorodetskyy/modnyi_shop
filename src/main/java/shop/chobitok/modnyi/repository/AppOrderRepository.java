@@ -5,7 +5,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import shop.chobitok.modnyi.entity.AppOrder;
 import shop.chobitok.modnyi.entity.AppOrderStatus;
-import shop.chobitok.modnyi.entity.Status;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -47,4 +46,6 @@ public interface AppOrderRepository extends JpaRepository<AppOrder, Long> {
     List<AppOrder> findByDataParsedFalse();
 
     List<AppOrder> findByCreatedDateGreaterThanEqualAndDomainIsNull(LocalDateTime dateTime);
+
+    AppOrder findByHoroshopOrderId(Long id);
 }
