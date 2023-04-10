@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.request.CreateCompanyRequest;
 import shop.chobitok.modnyi.entity.request.SaveAdsSpendsRequest;
@@ -28,6 +30,7 @@ import shop.chobitok.modnyi.service.horoshop.HoroshopService;
 import shop.chobitok.modnyi.service.horoshop.mapper.AppOrderHoroshopMapper;
 import shop.chobitok.modnyi.specification.CanceledOrderReasonSpecification;
 import shop.chobitok.modnyi.specification.OrderedSpecification;
+import shop.chobitok.modnyi.telegram.ChobitokLeadsBot;
 
 import javax.transaction.Transactional;
 import java.io.BufferedReader;
@@ -611,5 +614,25 @@ public class DevTest {
     public void horoshopTest() throws IOException {
         List<AppOrder> appOrders = appOrderHoroshopMapper.convertToAppOrder(horoshopService.getOrderData(LocalDateTime.now().minusDays(5), null, null));
         appOrderRepository.saveAll(appOrders);
+    }
+
+    @Autowired
+    private ChobitokLeadsBot chobitokLeadsBot;
+
+    @Test
+    public void testTelegram() throws JsonProcessingException {
+        AppOrder appOrder = appOrderRepository.findByHoroshopOrderId(115l);
+        String messageText = String.format("<b>Нове замовлення:</b>\n\n"
+                        + "<b>Ім'я:</b> %s\n"
+                        + "<b>Телефон:</b> <a href=\"tel:%s\">%s</a>\n"
+                        + "<b>Подзвонити:</b> %s\n"
+                        + "<b>Продукти:</b> %s\n"
+                        + "<b>Дані по доставці:</b> %s",
+                appOrder.getName(), appOrder.getPhone(), appOrder.getPhone(),
+                appOrder.isDontCall() ? "ні" : "так",
+                appOrder.getHoroshopProductsJson(), appOrder.getHoroshopDeliveryDataJson());
+
+        // String appOrderJson = new ObjectMapper().writeValueAsString(appOrder);
+        chobitokLeadsBot.sendMessage(messageText, ParseMode.HTML);
     }
 }

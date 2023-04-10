@@ -12,6 +12,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import shop.chobitok.modnyi.service.OrderService;
 import shop.chobitok.modnyi.telegram.ChobitokBot;
+import shop.chobitok.modnyi.telegram.ChobitokLeadsBot;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @SpringBootApplication
@@ -24,12 +25,15 @@ public class ModnyiApplication {
     @Autowired
     private OrderService orderService;
 
+
     public static void main(String[] args) {
         try {
             ConfigurableApplicationContext context = SpringApplication.run(ModnyiApplication.class, args);
             ChobitokBot chobitokBot = context.getBean(ChobitokBot.class);
+            ChobitokLeadsBot chobitokLeadsBot = context.getBean(ChobitokLeadsBot.class);
             TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
             telegramBotsApi.registerBot(chobitokBot);
+            telegramBotsApi.registerBot(chobitokLeadsBot);
             System.out.println("Bot started successfully!");
         } catch (TelegramApiException e) {
             e.printStackTrace();

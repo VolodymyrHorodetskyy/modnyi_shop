@@ -2,10 +2,12 @@ package shop.chobitok.modnyi.job;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import shop.chobitok.modnyi.entity.AppOrder;
 import shop.chobitok.modnyi.service.*;
 import shop.chobitok.modnyi.service.horoshop.HoroshopService;
 import shop.chobitok.modnyi.service.horoshop.mapper.AppOrderHoroshopMapper;
+import shop.chobitok.modnyi.telegram.ChobitokLeadsBot;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,8 +23,9 @@ public class CronJob {
     private final AppOrderService appOrderService;
     private final AppOrderHoroshopMapper appOrderHoroshopMapper;
     private final HoroshopService horoshopService;
+    private final ChobitokLeadsBot chobitokLeadsBot;
 
-    public CronJob(CheckerService checkerService, OrderService orderService, CanceledOrderReasonService canceledOrderReasonService, UserService userService, AppOrderToPixelService appOrderToPixelService, AppOrderService appOrderService, AppOrderHoroshopMapper appOrderHoroshopMapper, HoroshopService horoshopService) {
+    public CronJob(CheckerService checkerService, OrderService orderService, CanceledOrderReasonService canceledOrderReasonService, UserService userService, AppOrderToPixelService appOrderToPixelService, AppOrderService appOrderService, AppOrderHoroshopMapper appOrderHoroshopMapper, HoroshopService horoshopService, ChobitokLeadsBot chobitokLeadsBot) {
         this.checkerService = checkerService;
         this.orderService = orderService;
         this.canceledOrderReasonService = canceledOrderReasonService;
@@ -31,6 +34,7 @@ public class CronJob {
         this.appOrderService = appOrderService;
         this.appOrderHoroshopMapper = appOrderHoroshopMapper;
         this.horoshopService = horoshopService;
+        this.chobitokLeadsBot = chobitokLeadsBot;
     }
 
     @Scheduled(cron = "0 1 1 * * ?")
@@ -73,6 +77,19 @@ public class CronJob {
     public void scheduleTaskEveryTenMinutes() {
         List<AppOrder> appOrders = appOrderHoroshopMapper.convertToAppOrder(
                 horoshopService.getOrderData(LocalDateTime.now().minusHours(1), null, null));
+        appOrders.forEach(appOrder -> chobitokLeadsBot.sendMessage(mapToTelegramLead(appOrder), ParseMode.HTML));
         appOrderService.saveAll(appOrders);
+    }
+
+    private String mapToTelegramLead(AppOrder appOrder) {
+        return String.format("<b>Нове замовлення:</b>\n\n"
+                        + "<b>Ім'я:</b> %s\n"
+                        + "<b>Телефон:</b> <a href=\"tel:%s\">%s</a>\n"
+                        + "<b>Подзвонити:</b> %s\n"
+                        + "<b>Продукти:</b> %s\n"
+                        + "<b>Дані по доставці:</b> %s",
+                appOrder.getName(), appOrder.getPhone(), appOrder.getPhone(),
+                appOrder.isDontCall() ? "ні" : "так",
+                appOrder.getHoroshopProductsJson(), appOrder.getHoroshopDeliveryDataJson());
     }
 }
