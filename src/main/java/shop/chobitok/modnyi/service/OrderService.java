@@ -430,6 +430,7 @@ public class OrderService {
         //     googleDocsService.updateDeliveryFile(countNeedDeliveryFromDB(false).getResult());
     }
 
+    @Transactional
     public StringResponse countNeedDeliveryFromDB(boolean updateStatuses, Long companyId) {
         StringBuilder stringBuilder = new StringBuilder();
         OrderedSpecification orderedSpecification = new OrderedSpecification(Status.СТВОРЕНО, false);
@@ -446,7 +447,7 @@ public class OrderService {
     }
 
 
-    private String countNeedDelivery(List<Ordered> orderedList) {
+    public String countNeedDelivery(List<Ordered> orderedList) {
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("d.MM");
         StringBuilder result = new StringBuilder();
         Map<LocalDate, List<Ordered>> localDateOrderedMap = new TreeMap<>();
