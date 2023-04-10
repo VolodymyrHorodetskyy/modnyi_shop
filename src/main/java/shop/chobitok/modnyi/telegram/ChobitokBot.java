@@ -49,10 +49,10 @@ public class ChobitokBot extends TelegramLongPollingBot {
                     sendSubMenu(chatId);
                     break;
                 case "Чарівно":
-                    sendInfo(chatId, orderService.countNeedDeliveryFromDB(true, 1175l).getResult());
+                    sendInfo(chatId, orderService.countNeedDeliveryFromDB(true, 1177l).getResult());
                     break;
                 case "Модний чобіток":
-                    sendInfo(chatId, orderService.countNeedDeliveryFromDB(true, 1177l).getResult());
+                    sendInfo(chatId, orderService.countNeedDeliveryFromDB(true, 1175l).getResult());
                     break;
                 case "back":
                     sendMenu(chatId);
