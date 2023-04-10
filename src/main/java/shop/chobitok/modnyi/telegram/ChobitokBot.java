@@ -48,11 +48,14 @@ public class ChobitokBot extends TelegramLongPollingBot {
                 case "Відправки":
                     sendSubMenu(chatId);
                     break;
-                case "Модний чобіток":
+                case "Чарівно":
                     sendInfo(chatId, orderService.countNeedDeliveryFromDB(true, 1175l).getResult());
                     break;
-                case "Чарівно":
+                case "Модний чобіток":
                     sendInfo(chatId, orderService.countNeedDeliveryFromDB(true, 1177l).getResult());
+                    break;
+                case "back":
+                    sendMenu(chatId);
                     break;
             }
         }
@@ -107,6 +110,10 @@ public class ChobitokBot extends TelegramLongPollingBot {
         row1.add(InlineKeyboardButton.builder().text("Модний чобіток").callbackData("Модний чобіток").build());
         rows.add(row1);
 
+        List<InlineKeyboardButton> row2 = new ArrayList<>();
+        row2.add(InlineKeyboardButton.builder().text("Back").callbackData("back").build());
+        rows.add(row2);
+
         markup.setKeyboard(rows);
         return markup;
     }
@@ -115,11 +122,24 @@ public class ChobitokBot extends TelegramLongPollingBot {
         SendMessage message = new SendMessage();
         message.setChatId(chatId);
         message.setText(info);
+        message.setReplyMarkup(createBackKeyboard());
 
         try {
             execute(message);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+    }
+
+    private InlineKeyboardMarkup createBackKeyboard() {
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        List<InlineKeyboardButton> row1 = new ArrayList<>();
+        row1.add(InlineKeyboardButton.builder().text("Back").callbackData("back").build());
+        rows.add(row1);
+
+        markup.setKeyboard(rows);
+        return markup;
     }
 }
