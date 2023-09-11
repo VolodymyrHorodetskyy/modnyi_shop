@@ -159,6 +159,24 @@ public class ProdTest {
     private PasswordEncoder passwordEncoder;
 
     @Test
+    public void addUser() {
+        User user = new User();
+        user.setName("Вікторія");
+        user.setRoles(asList(Role.EMPLOYEE));
+        user.setPassword(passwordEncoder.encode("222444"));
+        userRepository.save(user);
+    }
+
+    @Test
+    public void changeUser() {
+        User user = userRepository.findById(6L).orElse(null);
+        user.setRoles(asList(Role.EMPLOYEE, Role.ADMIN));
+
+       // user.setPassword(passwordEncoder.encode("111333"));
+        userRepository.save(user);
+    }
+
+    @Test
     public void addRoles() {
         User user2 = userRepository.findById(2L).orElse(null);
         user2.setRoles(asList(Role.EMPLOYEE));

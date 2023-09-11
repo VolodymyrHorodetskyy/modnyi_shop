@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.facebook;
 
+import com.facebook.ads.sdk.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,7 @@ import static shop.chobitok.modnyi.facebook.helper.FBHelper.createFacebookPurcha
 @Service
 public class FacebookApi2 {
 
-    String url1 = "https://graph.facebook.com/v12.0/";
+    String url1 = "https://graph.facebook.com/v15.0/";
     String url2 = "/events?access_token=";
 
     public RestResponseDTO send(String testCode, AppOrder appOrder) {
@@ -91,5 +92,56 @@ public class FacebookApi2 {
                 pixelId +
                 url2 +
                 accessToken;
+    }
+
+    public String getCampaignInfo(
+            String startDate,
+            String endDate) {
+
+        String accessToken = "EABa5j4XJ44oBAJNGTZAW0pum4W4auC7e58BAci4dbPZBcb1g6kbvrNA0kNpaFwRYZBcCIsKfQy2ONezgAn5gJVbSpeQiuMScJ9c670HstQWZAutuh0eEMwGsZAompdXmIwHhDIvMBYWFFMhYz3FBDPtczMWFPbsHEfmMt2kvBY7ZAu0Ub1A3ZBiBjeJsFv1Ri0yHybtwDB9EiSWZCbmGZCOEOClG6fJAxaCcZD";
+        APIContext context = new APIContext(accessToken).enableDebug(true);
+
+        AdAccount account = new AdAccount("1343124976510448", context);
+        APINodeList<Campaign> campaigns = null;
+        try {
+            campaigns = account.getCampaigns()
+                    .requestAllFields()
+                    .execute();
+        } catch (APIException e) {
+            e.printStackTrace();
+        }
+
+        double totalSpend = 0.0;
+        for (Campaign campaign : campaigns) {
+            APINodeList<AdSet> adSets = null;
+            try {
+                adSets = campaign.getAdSets()
+                    //    .request()
+                        .execute();
+            } catch (APIException e) {
+                e.printStackTrace();
+            }
+
+            for (AdSet adSet : adSets) {
+                System.out.println("here");
+
+                /*
+                campaign.getAdSets().requestField("COST_CAP").execute().get(0).getInsights().execute()
+                AdSet.Statistics stats = adSet.getStats()
+                        .setTimeRange("{\"since\":\"" + startDate + "\",\"until\":\"" + endDate + "\"}")
+                        .requestAllFields()
+                        .execute();
+
+                double spend = stats.getSpend();
+                double costPerResult = stats.getCostPerResult();*/
+                // Do something with the spend and costPerResult values, such as adding them to a total.
+
+            }
+        }
+
+        // Return the total spend and cost per result as the response.
+    //    String response = String.format("Total spend: %.2f, Cost per result: %.2f", totalSpend, costPerResult);
+       // return ResponseEntity.ok(response);
+        return null;
     }
 }

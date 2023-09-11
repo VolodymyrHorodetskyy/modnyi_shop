@@ -2,6 +2,7 @@ package shop.chobitok.modnyi.service;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import shop.chobitok.modnyi.entity.Ordered;
 import shop.chobitok.modnyi.entity.Shoe;
 import shop.chobitok.modnyi.entity.ShoePrice;
@@ -68,5 +69,20 @@ public class ShoePriceService {
 
     public ShoePrice getActualShoePrice(Shoe shoe) {
         return shoePriceRepository.findTopByShoeId(shoe.getId(), Sort.by(Sort.Direction.DESC, "fromDate").and(Sort.by(Sort.Direction.DESC, "createdDate")));
+    }
+
+    @Transactional
+    public void updateShoePrices(List<Long> shoeIds, Double newPrice, Double newCost, LocalDateTime fromDate) {
+        for (Long shoeId : shoeIds) {
+            Shoe shoe = shoeRepository.findById(shoeId)
+                    .orElseThrow(() -> new IllegalArgumentException("Shoe with ID " + shoeId + " not found!"));
+
+            ShoePrice shoePrice = new ShoePrice();
+            shoePrice.setShoe(shoe);
+            shoePrice.setPrice(newPrice);
+            shoePrice.setCost(newCost);
+            shoePrice.setFromDate(fromDate);
+            shoePriceRepository.save(shoePrice);
+        }
     }
 }

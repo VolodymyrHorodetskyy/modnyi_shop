@@ -16,7 +16,6 @@ import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import shop.chobitok.modnyi.entity.*;
 import shop.chobitok.modnyi.entity.request.CreateCompanyRequest;
 import shop.chobitok.modnyi.entity.request.SaveAdsSpendsRequest;
-import shop.chobitok.modnyi.facebook.FacebookApi;
 import shop.chobitok.modnyi.facebook.FacebookApi2;
 import shop.chobitok.modnyi.google.docs.service.GoogleDocsService;
 import shop.chobitok.modnyi.novaposta.entity.Data;
@@ -279,9 +278,6 @@ public class DevTest {
 
     @Autowired
     private AppOrderProcessingRepository appOrderProcessingRepository;
-
-    @Autowired
-    private FacebookApi facebookApi;
 
     @Autowired
     private FacebookApi2 facebookApi2;

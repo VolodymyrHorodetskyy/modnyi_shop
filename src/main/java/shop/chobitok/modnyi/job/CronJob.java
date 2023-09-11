@@ -77,8 +77,10 @@ public class CronJob {
     public void scheduleTaskEveryTenMinutes() {
         List<AppOrder> appOrders = appOrderHoroshopMapper.convertToAppOrder(
                 horoshopService.getOrderData(LocalDateTime.now().minusHours(1), null, null));
-        appOrders.forEach(appOrder -> chobitokLeadsBot.sendMessage(mapToTelegramLead(appOrder), ParseMode.HTML));
-        appOrderService.saveAll(appOrders);
+        if (appOrders != null) {
+            appOrders.forEach(appOrder -> chobitokLeadsBot.sendMessage(mapToTelegramLead(appOrder), ParseMode.HTML));
+            appOrderService.saveAll(appOrders);
+        }
     }
 
     private String mapToTelegramLead(AppOrder appOrder) {
