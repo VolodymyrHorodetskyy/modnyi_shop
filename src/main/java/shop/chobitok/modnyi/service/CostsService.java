@@ -89,7 +89,7 @@ public class CostsService {
         return true;
     }
 
-    private List<DayCosts> getAdsSpendRecs(LocalDate fromLocalDate, LocalDate toLocalDate) {
+    public List<DayCosts> getAdsSpendRecs(LocalDate fromLocalDate, LocalDate toLocalDate) {
         //TODO: кастиль
         return dayCostsRepository
                 .findAllBySpendDateGreaterThanEqualAndSpendDateLessThanEqual(fromLocalDate,
@@ -114,6 +114,7 @@ public class CostsService {
         LocalDate fromLocalDate = formDate(from);
         LocalDate toLocalDate = formDate(to);
         List<DayCosts> daySpendRecList = getAdsSpendRecs(fromLocalDate, toLocalDate);
+
         FinanceStats financeStats = getFinanceStats(daySpendRecList, financeService.getEarnings(from, to));
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(findMissedDate(fromLocalDate, toLocalDate, daySpendRecList));
