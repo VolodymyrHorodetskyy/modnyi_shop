@@ -37,11 +37,14 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.lang.System.out;
 import static java.time.LocalDateTime.now;
 import static java.util.Arrays.asList;
+import static shop.chobitok.modnyi.entity.Status.ВІДМОВА;
 import static shop.chobitok.modnyi.entity.Status.ОТРИМАНО;
 import static shop.chobitok.modnyi.entity.VariantType.Domain;
 
@@ -172,7 +175,7 @@ public class ProdTest {
         User user = userRepository.findById(6L).orElse(null);
         user.setRoles(asList(Role.EMPLOYEE, Role.ADMIN));
 
-       // user.setPassword(passwordEncoder.encode("111333"));
+        // user.setPassword(passwordEncoder.encode("111333"));
         userRepository.save(user);
     }
 
@@ -718,9 +721,7 @@ public class ProdTest {
     public void setUnFor() {
         List<StorageRecord> storageRecords = (List<StorageRecord>) storageService.getStorageRecords(null, null, null, null, true, false);
         storageRecords.forEach(storageRecord -> {
-            if (storageRecord.getComment().toLowerCase().contains("хут")) {
-                storageRecord.setAvailable(false);
-            }
+            storageRecord.setAvailable(false);
         });
         storageRepository.saveAll(storageRecords);
     }
@@ -732,7 +733,7 @@ public class ProdTest {
 
     @Test
     public void horoshopTest() throws IOException {
-        List<AppOrder> appOrders = appOrderHoroshopMapper.convertToAppOrder(horoshopService.getOrderData(DateHelper.makeDateBeginningOfDay(LocalDateTime.now()), null, null));
+        List<AppOrder> appOrders = appOrderHoroshopMapper.convertToAppOrderFilteringExistingAppOrders(horoshopService.getOrderData(DateHelper.makeDateBeginningOfDay(LocalDateTime.now()), null, null));
         appOrderRepository.saveAll(appOrders);
     }
 
@@ -755,5 +756,78 @@ public class ProdTest {
 
         // String appOrderJson = new ObjectMapper().writeValueAsString(appOrder);
         chobitokLeadsBot.sendMessage(messageText, ParseMode.HTML);
+    }
+
+    @Test
+    public void addVariants() {
+        List<Variants> variants = new ArrayList<>();
+        variants.add(new Variants("туфлі", VariantType.ShoeType, 0));
+        variants.add(new Variants("кросівки", VariantType.ShoeType, 0));
+        variants.add(new Variants("кеди", VariantType.ShoeType, 0));
+        variants.add(new Variants("черевики", VariantType.ShoeType, 0));
+        variants.add(new Variants("черевики, кросівки", VariantType.ShoeType, 0));
+
+        variantsRepository.saveAll(variants);
+    }
+
+    @Test
+    public void getReturnings() {
+        OrderedSpecification orderedSpecification = new OrderedSpecification();
+        orderedSpecification.setCompanyId(1177l);
+        orderedSpecification.setStatuses(Arrays.asList(ВІДМОВА));
+        orderedSpecification.setFrom(LocalDateTime.now().minusMonths(3));
+        List<Ordered> orderedList = orderRepository.findAll(orderedSpecification);
+
+        orderedList.forEach(o -> {
+            out.println(o.getTtn());
+        });
+    }
+
+
+    @Test
+    public void recount() throws IOException {
+        InputStream is = getResourceAsStream("txt/incorrect_prices.txt");
+        List<String> numbers = extractNumbers(is);
+        //   System.out.println(numbers);
+        numbers.forEach(ttn -> {
+            Ordered ordered = orderRepository.findOneByAvailableTrueAndTtn(ttn);
+            for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
+                if (orderedShoe.getShoe().getCompany().getId().equals(1175l)) {
+                    orderedShoe.setPayed(false);
+                    orderedShoeRepository.saveAndFlush(orderedShoe);
+                }
+            }
+            orderRepository.saveAndFlush(ordered);
+        });
+    }
+
+    public static InputStream getResourceAsStream(String fileName) {
+        return ProdTest.class.getClassLoader().getResourceAsStream(fileName);
+    }
+
+    public static List<String> extractNumbers(InputStream is) throws IOException {
+        List<String> numbers = new ArrayList<>();
+        Pattern pattern = Pattern.compile("\\b\\d{14}\\b");
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                Matcher matcher = pattern.matcher(line);
+                while (matcher.find()) {
+                    numbers.add(matcher.group());
+                }
+            }
+        }
+        return numbers;
+    }
+
+    @Test
+    public void testHoroshop() {
+        horoshopService.getOrderData(LocalDateTime.now().minusHours(5), null, null);
+    }
+
+    @Test
+    public void shoePriceTest12() {
+        shoePriceService.getActualShoePrice(shoeRepository.findById(18211l).orElse(null));
     }
 } 

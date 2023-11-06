@@ -23,7 +23,7 @@ public class AppOrderHoroshopMapper {
         this.appOrderService = appOrderService;
     }
 
-    public List<AppOrder> convertToAppOrder(GetOrdersResponse getOrdersResponse) {
+    public List<AppOrder> convertToAppOrderFilteringExistingAppOrders(GetOrdersResponse getOrdersResponse) {
 
         if (getOrdersResponse == null || getOrdersResponse.getResponse() == null || getOrdersResponse.getResponse().getOrders() == null) {
             return null;

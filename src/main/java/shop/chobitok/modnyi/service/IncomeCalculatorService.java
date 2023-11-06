@@ -32,7 +32,6 @@ public class IncomeCalculatorService {
         double receivedIncome = 0.0;
         double receivedIncomeMinusCosts = 0.0;
         double potentialIncome = 0.0;
-        double potentialIncomeMinusCosts = 0.0;
 
         List<OrderDetail> orderDetailsListReceived = new ArrayList<>();
         List<OrderDetail> orderDetailsListPotential = new ArrayList<>();
@@ -62,11 +61,10 @@ public class IncomeCalculatorService {
             if (order.getStatus() == Status.ОТРИМАНО) {
                 receivedIncome += orderTotalPrice - orderShoesCost;
                 receivedIncomeMinusCosts = receivedIncome - totalCosts;
-                addToOrderDetailsList(order, orderDetailsListReceived, showOrderDetails);
+                addToOrderDetailsList(order, orderDetailsListReceived, orderTotalPrice, orderShoesCost, showOrderDetails);
             } else if (order.getStatus() == Status.СТВОРЕНО || order.getStatus() == Status.ВІДПРАВЛЕНО || order.getStatus() == Status.ДОСТАВЛЕНО) {
                 potentialIncome += (orderTotalPrice - orderShoesCost) * approvalPercentage / 100.0;
-                potentialIncomeMinusCosts = potentialIncome - totalCosts;
-                addToOrderDetailsList(order, orderDetailsListPotential, showOrderDetails);
+                addToOrderDetailsList(order, orderDetailsListPotential, orderTotalPrice, orderShoesCost, showOrderDetails);
             }
         }
 
@@ -74,17 +72,21 @@ public class IncomeCalculatorService {
             costsDetailsList.addAll(costsService.getAdsSpendRecs(from.toLocalDate(), to.toLocalDate()));
         }
 
-        return new IncomeReport(receivedIncome, receivedIncomeMinusCosts, potentialIncome, potentialIncomeMinusCosts, orderDetailsListReceived, orderDetailsListPotential, costsDetailsList, missingPrices);
+        double potentialIncomePlusReceivedIncomeMinusCosts = receivedIncome + potentialIncome - totalCosts;
+
+        return new IncomeReport(receivedIncome, receivedIncomeMinusCosts,
+                potentialIncome, potentialIncomePlusReceivedIncomeMinusCosts,
+                orderDetailsListReceived, orderDetailsListPotential,
+                costsDetailsList, missingPrices, approvalPercentage);
     }
 
-    private void addToOrderDetailsList(Ordered order, List<OrderDetail> orderDetailList, boolean showOrderDetails){
+    private void addToOrderDetailsList(Ordered order, List<OrderDetail> orderDetailList, double price, double cost, boolean showOrderDetails) {
         if (showOrderDetails) {
+            StringBuilder orderedShoesStringBuilder = new StringBuilder();
             for (OrderedShoe shoe : order.getOrderedShoeList()) {
-                ShoePrice shoePrice = shoePriceService.getShoePrice(shoe.getShoe(), order);
-                if (shoePrice != null) {
-                    orderDetailList.add(new OrderDetail(order.getTtn(), shoe.getShoe().getModel() + " " + shoe.getShoe().getColor(), shoePrice.getPrice(), shoePrice.getCost()));
-                }
+                orderedShoesStringBuilder.append(shoe.getShoe().getModelAndColor()).append("; ");
             }
+            orderDetailList.add(new OrderDetail(order.getTtn(), orderedShoesStringBuilder.toString(), price, cost));
         }
     }
 }

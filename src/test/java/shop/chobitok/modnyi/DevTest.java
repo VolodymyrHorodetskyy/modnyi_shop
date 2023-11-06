@@ -32,15 +32,15 @@ import shop.chobitok.modnyi.specification.OrderedSpecification;
 import shop.chobitok.modnyi.telegram.ChobitokLeadsBot;
 
 import javax.transaction.Transactional;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.lang.System.out;
@@ -355,7 +355,14 @@ public class DevTest {
 
     @Test
     public void addVariants() {
-        variantsRepository.save(new Variants("телефонія", VariantType.CostsType, 6));
+        List<Variants> variants = new ArrayList<>();
+        variants.add(new Variants("туфлі", VariantType.ShoeType, 0));
+        variants.add(new Variants("кросівки", VariantType.ShoeType, 0));
+        variants.add(new Variants("кеди", VariantType.ShoeType, 0));
+        variants.add(new Variants("черевики", VariantType.ShoeType, 0));
+        variants.add(new Variants("черевики, кросівки", VariantType.ShoeType, 0));
+
+        variantsRepository.saveAll(variants);
     }
 
     @Autowired
@@ -608,7 +615,7 @@ public class DevTest {
 
     @Test
     public void horoshopTest() throws IOException {
-        List<AppOrder> appOrders = appOrderHoroshopMapper.convertToAppOrder(horoshopService.getOrderData(LocalDateTime.now().minusDays(5), null, null));
+        List<AppOrder> appOrders = appOrderHoroshopMapper.convertToAppOrderFilteringExistingAppOrders(horoshopService.getOrderData(LocalDateTime.now().minusDays(5), null, null));
         appOrderRepository.saveAll(appOrders);
     }
 
@@ -630,5 +637,42 @@ public class DevTest {
 
         // String appOrderJson = new ObjectMapper().writeValueAsString(appOrder);
         chobitokLeadsBot.sendMessage(messageText, ParseMode.HTML);
+    }
+
+    @Test
+    public void recount() throws IOException {
+        InputStream is = getResourceAsStream("txt/incorrect_prices.txt");
+        List<String> numbers = extractNumbers(is);
+     //   System.out.println(numbers);
+        numbers.forEach(ttn -> {
+            Ordered ordered = orderRepository.findOneByAvailableTrueAndTtn(ttn);
+            for (OrderedShoe orderedShoe : ordered.getOrderedShoeList()) {
+                if (orderedShoe.getShoe().getCompany().getId().equals(1175l)) {
+                    orderedShoe.setPayed(false);
+                    orderedShoeRepository.saveAndFlush(orderedShoe);
+                }
+            }
+            orderRepository.saveAndFlush(ordered);
+        });
+    }
+
+    public static InputStream getResourceAsStream(String fileName) {
+        return ProdTest.class.getClassLoader().getResourceAsStream(fileName);
+    }
+
+    public static List<String> extractNumbers(InputStream is) throws IOException {
+        List<String> numbers = new ArrayList<>();
+        Pattern pattern = Pattern.compile("\\b\\d{14}\\b");
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                Matcher matcher = pattern.matcher(line);
+                while (matcher.find()) {
+                    numbers.add(matcher.group());
+                }
+            }
+        }
+        return numbers;
     }
 }

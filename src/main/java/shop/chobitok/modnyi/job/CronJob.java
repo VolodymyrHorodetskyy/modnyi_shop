@@ -75,7 +75,7 @@ public class CronJob {
 
     @Scheduled(fixedRate = 2 * 60 * 1000)
     public void scheduleTaskEveryTenMinutes() {
-        List<AppOrder> appOrders = appOrderHoroshopMapper.convertToAppOrder(
+        List<AppOrder> appOrders = appOrderHoroshopMapper.convertToAppOrderFilteringExistingAppOrders(
                 horoshopService.getOrderData(LocalDateTime.now().minusHours(1), null, null));
         if (appOrders != null) {
             appOrders.forEach(appOrder -> chobitokLeadsBot.sendMessage(mapToTelegramLead(appOrder), ParseMode.HTML));

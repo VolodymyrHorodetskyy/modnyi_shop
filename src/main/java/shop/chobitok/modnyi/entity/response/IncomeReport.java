@@ -10,22 +10,23 @@ public class IncomeReport {
     private double receivedIncome;
     private double receivedIncomeMinusCosts;
     private double potentialIncome;
-    private double potentialIncomeMinusCosts;
+    private double potentialIncomePlusReceivedIncomeMinusCosts;
     private List<OrderDetail> orderDetailsListReceived;
     private List<OrderDetail> orderDetailsListPotential;
     private List<DayCosts> costsDetailsList;
     private List<String> missingPrices = new ArrayList<>();
+    private int approvalPercentage;
 
-
-    public IncomeReport(double receivedIncome, double receivedIncomeMinusCosts, double potentialIncome, double potentialIncomeMinusCosts, List<OrderDetail> orderDetailsListReceived, List<OrderDetail> orderDetailsListPotential, List<DayCosts> costsDetailsList, List<String> missingPrices) {
+    public IncomeReport(double receivedIncome, double receivedIncomeMinusCosts, double potentialIncome, double potentialIncomePlusReceivedIncomeMinusCosts, List<OrderDetail> orderDetailsListReceived, List<OrderDetail> orderDetailsListPotential, List<DayCosts> costsDetailsList, List<String> missingPrices, int approvalPercentage) {
         this.receivedIncome = receivedIncome;
         this.receivedIncomeMinusCosts = receivedIncomeMinusCosts;
         this.potentialIncome = potentialIncome;
-        this.potentialIncomeMinusCosts = potentialIncomeMinusCosts;
+        this.potentialIncomePlusReceivedIncomeMinusCosts = potentialIncomePlusReceivedIncomeMinusCosts;
         this.orderDetailsListReceived = orderDetailsListReceived;
         this.orderDetailsListPotential = orderDetailsListPotential;
         this.costsDetailsList = costsDetailsList;
         this.missingPrices = missingPrices;
+        this.approvalPercentage = approvalPercentage;
     }
 
     public IncomeReport() {
@@ -55,13 +56,6 @@ public class IncomeReport {
         this.potentialIncome = potentialIncome;
     }
 
-    public double getPotentialIncomeMinusCosts() {
-        return potentialIncomeMinusCosts;
-    }
-
-    public void setPotentialIncomeMinusCosts(double potentialIncomeMinusCosts) {
-        this.potentialIncomeMinusCosts = potentialIncomeMinusCosts;
-    }
 
     public List<OrderDetail> getOrderDetailsListReceived() {
         return orderDetailsListReceived;
@@ -93,5 +87,21 @@ public class IncomeReport {
 
     public void setMissingPrices(List<String> missingPrices) {
         this.missingPrices = missingPrices;
+    }
+
+    public double getPotentialIncomePlusReceivedIncomeMinusCosts() {
+        return potentialIncomePlusReceivedIncomeMinusCosts;
+    }
+
+    public void setPotentialIncomePlusReceivedIncomeMinusCosts(double potentialIncomePlusReceivedIncomeMinusCosts) {
+        this.potentialIncomePlusReceivedIncomeMinusCosts = potentialIncomePlusReceivedIncomeMinusCosts;
+    }
+
+    public int getApprovalPercentage() {
+        return approvalPercentage;
+    }
+
+    public void setApprovalPercentage(int approvalPercentage) {
+        this.approvalPercentage = approvalPercentage;
     }
 }
