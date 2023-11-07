@@ -78,7 +78,9 @@ public class ImportService {
         } else if (isEmpty(ordered.getPostComment())) {
             result = "Не вдалось витягнути комент з НП апі";
         }
-        result += ", статус накландої = " + ordered.getStatus();
+        if (!isEmpty(result)) {
+            result += ", статус накландої = " + ordered.getStatus();
+        }
         return result;
     }
 }
