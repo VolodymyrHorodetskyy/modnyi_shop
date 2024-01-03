@@ -2,7 +2,6 @@ package shop.chobitok.modnyi.job;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import shop.chobitok.modnyi.entity.AppOrder;
 import shop.chobitok.modnyi.service.*;
 import shop.chobitok.modnyi.service.horoshop.HoroshopService;
@@ -10,7 +9,6 @@ import shop.chobitok.modnyi.service.horoshop.mapper.AppOrderHoroshopMapper;
 import shop.chobitok.modnyi.telegram.ChobitokLeadsBot;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 public class CronJob {
@@ -73,7 +71,7 @@ public class CronJob {
         checkerService.updateMonthlyReceivingPercentage();
     }
 
-    @Scheduled(fixedRate = 2 * 60 * 1000)
+/*    @Scheduled(fixedRate = 2 * 60 * 1000)
     public void scheduleTaskEveryTenMinutes() {
         List<AppOrder> appOrders = appOrderHoroshopMapper.convertToAppOrderFilteringExistingAppOrders(
                 horoshopService.getOrderData(LocalDateTime.now().minusHours(1), null, null));
@@ -81,7 +79,7 @@ public class CronJob {
             appOrders.forEach(appOrder -> chobitokLeadsBot.sendMessage(mapToTelegramLead(appOrder), ParseMode.HTML));
             appOrderService.saveAll(appOrders);
         }
-    }
+    }*/
 
     private String mapToTelegramLead(AppOrder appOrder) {
         return String.format("<b>Нове замовлення:</b>\n\n"

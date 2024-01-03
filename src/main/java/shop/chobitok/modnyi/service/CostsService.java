@@ -1,5 +1,8 @@
 package shop.chobitok.modnyi.service;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import shop.chobitok.modnyi.entity.Costs;
 import shop.chobitok.modnyi.entity.DayCosts;
@@ -14,6 +17,7 @@ import shop.chobitok.modnyi.service.entity.FinanceStats;
 
 import javax.transaction.Transactional;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +36,15 @@ public class CostsService {
         this.costsRepository = costsRepository;
         this.dayCostsRepository = dayCostsRepository;
         this.variantsService = variantsService;
+    }
+
+    public List<Costs> findByDateRangeAndSpendType(LocalDateTime start, LocalDateTime end, Variants spendType) {
+        Pageable pageable = PageRequest.of(0, 30, Sort.by("createdDate").descending());
+
+        if (spendType == null) {
+            return costsRepository.findByCreatedDateGreaterThanEqualAndCreatedDateLessThanEqual(start, end, pageable).getContent();
+        }
+        return costsRepository.findByCreatedDateGreaterThanEqualAndCreatedDateLessThanEqualAndSpendType(start, end, spendType, pageable).getContent();
     }
 
     public List<DayCosts> addOrEditRecord(SaveAdsSpendsRequest saveAdsSpendsRequest) {
