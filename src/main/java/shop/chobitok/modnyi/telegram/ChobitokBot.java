@@ -38,7 +38,7 @@ public class ChobitokBot extends TelegramLongPollingBot {
             String chatId = update.getMessage().getChatId().toString();
 
             if (messageText.equals("/start")) {
-                sendMenu(chatId);
+                sendMessage(chatId, "Choose an option:", createMenuKeyboard());
             }
         } else if (update.hasCallbackQuery()) {
             String callbackData = update.getCallbackQuery().getData();
@@ -46,47 +46,29 @@ public class ChobitokBot extends TelegramLongPollingBot {
 
             switch (callbackData) {
                 case "Відправки":
-                    sendSubMenu(chatId);
+                    sendMessage(chatId, "Choose an option:", createSubMenuKeyboard());
                     break;
                 case "Чарівно":
-                    sendInfo(chatId, orderService.countNeedDeliveryFromDB(true, 1177l).getResult());
+                    sendMessage(chatId, orderService.countNeedDeliveryFromDB(true, 1177l).getResult(), null);
                     break;
                 case "Модний чобіток":
-                    sendInfo(chatId, orderService.countNeedDeliveryFromDB(true, 1175l).getResult());
+                    sendMessage(chatId, orderService.countNeedDeliveryFromDB(true, 1175l).getResult(), null);
                     break;
                 case "back":
-                    sendMenu(chatId);
+                    sendMessage(chatId, "Choose an option:", createMenuKeyboard());
+                    break;
+                case "Фінанси":
+                    sendMessage(chatId, "Choose a finance option:", createFinanceMenuKeyboard());
+                    break;
+                case "Добавити витрату":
+                    sendMessage(chatId, "Functionality to add an expense will be implemented here.", null);
+                    break;
+                case "Усі витрати":
+                    sendMessage(chatId, "Functionality to view all expenses will be implemented here.", null);
                     break;
             }
         }
     }
-
-    private void sendSubMenu(String chatId) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-        message.setText("Choose an option:");
-        message.setReplyMarkup(createSubMenuKeyboard());
-
-        try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void sendMenu(String chatId) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-        message.setText("Choose an option:");
-        message.setReplyMarkup(createMenuKeyboard());
-
-        try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
-
 
     private InlineKeyboardMarkup createMenuKeyboard() {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
@@ -94,7 +76,7 @@ public class ChobitokBot extends TelegramLongPollingBot {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         List<InlineKeyboardButton> row1 = new ArrayList<>();
         row1.add(InlineKeyboardButton.builder().text("Відправки").callbackData("Відправки").build());
-        row1.add(InlineKeyboardButton.builder().text("Option 2").callbackData("option2").build());
+        row1.add(InlineKeyboardButton.builder().text("Фінанси").callbackData("Фінанси").build());
         rows.add(row1);
 
         markup.setKeyboard(rows);
@@ -118,19 +100,6 @@ public class ChobitokBot extends TelegramLongPollingBot {
         return markup;
     }
 
-    private void sendInfo(String chatId, String info) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-        message.setText(info);
-        message.setReplyMarkup(createBackKeyboard());
-
-        try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
-
     private InlineKeyboardMarkup createBackKeyboard() {
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
 
@@ -138,6 +107,37 @@ public class ChobitokBot extends TelegramLongPollingBot {
         List<InlineKeyboardButton> row1 = new ArrayList<>();
         row1.add(InlineKeyboardButton.builder().text("Back").callbackData("back").build());
         rows.add(row1);
+
+        markup.setKeyboard(rows);
+        return markup;
+    }
+
+    private void sendMessage(String chatId, String text, InlineKeyboardMarkup replyMarkup) {
+        SendMessage message = SendMessage.builder()
+                .chatId(chatId)
+                .text(text)
+                .replyMarkup(replyMarkup).build();
+
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            // Consider logging this exception with a logging framework or handling it accordingly
+            e.printStackTrace();
+        }
+    }
+
+    private InlineKeyboardMarkup createFinanceMenuKeyboard() {
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        List<InlineKeyboardButton> row1 = new ArrayList<>();
+        row1.add(InlineKeyboardButton.builder().text("Добавити витрату").callbackData("Добавити витрату").build());
+        row1.add(InlineKeyboardButton.builder().text("Усі витрати").callbackData("Усі витрати").build());
+        rows.add(row1);
+
+        List<InlineKeyboardButton> row2 = new ArrayList<>();
+        row2.add(InlineKeyboardButton.builder().text("Back").callbackData("back").build());
+        rows.add(row2);
 
         markup.setKeyboard(rows);
         return markup;
