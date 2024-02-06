@@ -7,46 +7,89 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import shop.chobitok.modnyi.entity.VariantType;
+import shop.chobitok.modnyi.entity.Variants;
+import shop.chobitok.modnyi.entity.request.SaveAdsSpendsRequest;
+import shop.chobitok.modnyi.service.CostsService;
 import shop.chobitok.modnyi.service.OrderService;
+import shop.chobitok.modnyi.service.VariantsService;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ChobitokBot extends TelegramLongPollingBot {
 
     private final OrderService orderService;
+    private final CostsService costsService;
+    private final VariantsService variantsService;
+    private final Map<String, SaveAdsSpendsRequest> inputCollector = new HashMap<>();
 
-    public ChobitokBot(OrderService orderService) {
+    public ChobitokBot(OrderService orderService, CostsService costsService, VariantsService variantsService) {
         this.orderService = orderService;
+        this.costsService = costsService;
+        this.variantsService = variantsService;
     }
 
     @Override
     public String getBotUsername() {
-        return "mchobitok_bot";
+        return "mchobitok_testing_bot";
     }
 
     @Override
     public String getBotToken() {
-        return "5877883629:AAENWWaRFn_Mn31OumRIENAHxh-Albajvy4";
+        return "6421822261:AAEtyjfrdkYPcNvBuGNHK6VvLRPz_beNSpI";
     }
 
     @Override
     public void onUpdateReceived(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
-            String messageText = update.getMessage().getText();
             String chatId = update.getMessage().getChatId().toString();
-
-            if (messageText.equals("/start")) {
-                sendMessage(chatId, "Choose an option:", createMenuKeyboard());
-            }
+            String messageText = update.getMessage().getText();
+            handleTextMessage(chatId, messageText);
         } else if (update.hasCallbackQuery()) {
-            String callbackData = update.getCallbackQuery().getData();
             String chatId = update.getCallbackQuery().getMessage().getChatId().toString();
+            String callbackData = update.getCallbackQuery().getData();
+            handleCallbackQuery(chatId, callbackData);
+        }
+    }
 
+    private void handleTextMessage(String chatId, String messageText) {
+        if (!inputCollector.containsKey(chatId)) {
+            switch (messageText) {
+                case "/start":
+                    sendMessage(chatId, "Choose an option:", createMenuKeyboard());
+                    break;
+                default:
+                    sendMessage(chatId, "Sorry, I didn't understand that command.", null);
+            }
+        } else {
+            SaveAdsSpendsRequest request = inputCollector.get(chatId);
+            processInput(chatId, messageText, request);
+        }
+    }
+
+    private void handleCallbackQuery(String chatId, String callbackData) {
+        if (callbackData.startsWith("SPEND_TYPE_")) {
+            String spendTypeIdStr = callbackData.replace("SPEND_TYPE_", "");
+            Long spendTypeId = Long.parseLong(spendTypeIdStr);
+            SaveAdsSpendsRequest request = inputCollector.get(chatId);
+            if (request != null) {
+                request.setSpendTypeId(spendTypeId);
+                sendMessage(chatId, "Please enter the description:", null);
+            }
+        } else {
             switch (callbackData) {
                 case "Відправки":
-                    sendMessage(chatId, "Choose an option:", createSubMenuKeyboard());
+                    sendMessage(chatId, "Chose a brand:", createSubMenuKeyboard());
+                    break;
+                case "Фінанси":
+                    sendMessage(chatId, "Choose a finance option:", createFinanceMenuKeyboard());
+                    break;
+                case "Добавити витрату":
+                    startCollectingInputs(chatId);
                     break;
                 case "Чарівно":
                     sendMessage(chatId, orderService.countNeedDeliveryFromDB(true, 1177l).getResult(), null);
@@ -57,16 +100,51 @@ public class ChobitokBot extends TelegramLongPollingBot {
                 case "back":
                     sendMessage(chatId, "Choose an option:", createMenuKeyboard());
                     break;
-                case "Фінанси":
-                    sendMessage(chatId, "Choose a finance option:", createFinanceMenuKeyboard());
-                    break;
-                case "Добавити витрату":
-                    sendMessage(chatId, "Functionality to add an expense will be implemented here.", null);
-                    break;
                 case "Усі витрати":
                     sendMessage(chatId, "Functionality to view all expenses will be implemented here.", null);
                     break;
+
             }
+        }
+    }
+
+    private void startCollectingInputs(String chatId) {
+        SaveAdsSpendsRequest request = new SaveAdsSpendsRequest();
+        inputCollector.put(chatId, request);
+        sendMessage(chatId, "Please enter the start date (YYYY-MM-DD):", null);
+    }
+
+    private void processInput(String chatId, String input, SaveAdsSpendsRequest request) {
+        // Simplified process for demonstration. Implement validation and more sophisticated state management in production.
+        if (request.getStart() == null) {
+            request.setStart(input);
+            sendMessage(chatId, "Please enter the end date (YYYY-MM-DD):", null);
+        } else if (request.getEnd() == null) {
+            request.setEnd(input);
+            sendMessage(chatId, "Please enter the spend amount:", null);
+        } else if (request.getSpends() == null) {
+            try {
+                Double spends = Double.parseDouble(input);
+                request.setSpends(spends);
+                sendSpendTypeSelection(chatId);
+            } catch (NumberFormatException e) {
+                sendMessage(chatId, "Invalid number. Please enter the spend amount again:", null);
+            }
+        } else if (request.getSpendTypeId() == null) {
+            try {
+                Long spendTypeId = Long.parseLong(input);
+                request.setSpendTypeId(spendTypeId);
+                //    sendMessage(chatId, "Please enter the description:", null);
+            } catch (NumberFormatException e) {
+                sendMessage(chatId, "Invalid ID. Please enter the spend type ID again:", null);
+            }
+        } else {
+            request.setDescription(input);
+            costsService.addOrEditRecord(inputCollector.get(chatId));
+            inputCollector.remove(chatId);
+
+            sendMessage(chatId, "Expense added successfully!", null);
+            sendMessage(chatId, "Choose a finance option:", createFinanceMenuKeyboard());
         }
     }
 
@@ -124,6 +202,23 @@ public class ChobitokBot extends TelegramLongPollingBot {
             // Consider logging this exception with a logging framework or handling it accordingly
             e.printStackTrace();
         }
+    }
+
+    private void sendSpendTypeSelection(String chatId) {
+        List<Variants> spendTypes = variantsService.getByType(VariantType.CostsType);
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        for (Variants variant : spendTypes) {
+            List<InlineKeyboardButton> row = new ArrayList<>();
+            row.add(InlineKeyboardButton.builder()
+                    .text(variant.getGetting())
+                    .callbackData("SPEND_TYPE_" + variant.getId()).build());
+            rows.add(row);
+        }
+
+        markup.setKeyboard(rows);
+        sendMessage(chatId, "Please select the spend type:", markup);
     }
 
     private InlineKeyboardMarkup createFinanceMenuKeyboard() {
