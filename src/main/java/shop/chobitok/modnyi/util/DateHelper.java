@@ -4,24 +4,44 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 public class DateHelper {
 
+    private final static String[] DATE_PATTERNS = {
+            "yyyy-MM-dd HH:mm",
+            "yyyy-MM-dd"
+    };
 
-    public static LocalDate formDate(String date) {
+    public static LocalDate formDate(String date) throws DateTimeParseException {
         if (!checkDateStringFromFrontEnd(date)) {
-            return null;
+            throw new DateTimeParseException("Date string does not meet front-end criteria", date, 0);
         }
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-        return LocalDate.parse(date, formatter);
+        for (String pattern : DATE_PATTERNS) {
+            try {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+                // Attempt to parse to LocalDateTime first to avoid losing time information, then convert to LocalDate.
+                return LocalDate.parse(date, formatter);
+            } catch (DateTimeParseException ignored) {
+                // Ignore the exception and try the next pattern
+            }
+        }
+        throw new DateTimeParseException("Failed to parse date string with known patterns", date, 0);
     }
 
-    public static LocalDateTime formDateTime(String date) {
+    public static LocalDateTime formDateTime(String date) throws DateTimeParseException {
         if (!checkDateStringFromFrontEnd(date)) {
-            return null;
+            throw new DateTimeParseException("Date string does not meet front-end criteria", date, 0);
         }
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-        return LocalDateTime.parse(date, formatter);
+        for (String pattern : DATE_PATTERNS) {
+            try {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+                return LocalDateTime.parse(date, formatter);
+            } catch (DateTimeParseException ignored) {
+                // Ignore the exception and try the next pattern
+            }
+        }
+        throw new DateTimeParseException("Failed to parse date string with known patterns", date, 0);
     }
 
     public static LocalDateTime formDateTimeFromOrGetDefault(String dateTimeFrom) {
@@ -54,13 +74,13 @@ public class DateHelper {
     }
 
     public static LocalDateTime makeDateBeginningOfDay(LocalDateTime localDateTime) {
-        if(localDateTime == null)
+        if (localDateTime == null)
             return null;
         return localDateTime.withHour(0).withMinute(0).withSecond(0);
     }
 
     public static LocalDateTime makeDateEndOfDay(LocalDateTime localDateTime) {
-        if(localDateTime == null)
+        if (localDateTime == null)
             return null;
         return localDateTime.withHour(23).withMinute(59).withSecond(59);
     }

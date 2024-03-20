@@ -9,6 +9,9 @@ import shop.chobitok.modnyi.service.IncomeCalculatorService;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import static shop.chobitok.modnyi.util.DateHelper.makeDateBeginningOfDay;
+import static shop.chobitok.modnyi.util.DateHelper.makeDateEndOfDay;
+
 @RestController
 @RequestMapping("/api/income")
 @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
@@ -25,8 +28,8 @@ public class IncomeController {
     public ResponseEntity<IncomeReport> calculateIncome(@RequestParam String from, @RequestParam String to,
                                                         @RequestParam(required = false) boolean showOrderDetails,
                                                         @RequestParam(required = false) boolean showCostsDetails) {
-        LocalDateTime fromDate = LocalDateTime.parse(from, DateTimeFormatter.ISO_DATE_TIME);
-        LocalDateTime toDate = LocalDateTime.parse(to, DateTimeFormatter.ISO_DATE_TIME);
+        LocalDateTime fromDate = makeDateBeginningOfDay(LocalDateTime.parse(from, DateTimeFormatter.ISO_DATE_TIME));
+        LocalDateTime toDate = makeDateEndOfDay(LocalDateTime.parse(to, DateTimeFormatter.ISO_DATE_TIME));
         IncomeReport report = incomeCalculatorService.calculateIncome(fromDate, toDate, showOrderDetails, showCostsDetails);
         return ResponseEntity.ok(report);
     }
