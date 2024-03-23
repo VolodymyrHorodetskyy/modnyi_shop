@@ -10,6 +10,7 @@ public class GetOrdersResponse {
     public String status;
     @JsonProperty("response")
     public OrdersResponse response;
+    public String site;
 
     public String getStatus() {
         return status;
@@ -25,5 +26,13 @@ public class GetOrdersResponse {
 
     public void setResponse(OrdersResponse response) {
         this.response = response;
+    }
+
+    public String getSite() {
+        return site;
+    }
+
+    public void setSite(String site) {
+        this.site = site;
     }
 }

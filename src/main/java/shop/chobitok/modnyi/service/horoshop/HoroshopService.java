@@ -1,7 +1,6 @@
 package shop.chobitok.modnyi.service.horoshop;
 
 import org.springframework.http.*;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import shop.chobitok.modnyi.service.horoshop.request.GetOrdersRequest;
 import shop.chobitok.modnyi.service.horoshop.response.AuthResponse;
@@ -15,18 +14,25 @@ import java.util.Objects;
 import static shop.chobitok.modnyi.util.DateHelper.makeDateBeginningOfDay;
 import static shop.chobitok.modnyi.util.DateHelper.makeDateEndOfDay;
 
-@Service
 public class HoroshopService {
 
-    private static final String AUTH_URL = "https://mchobitok.com/api/auth";
-    private static final String ORDERS_URL = "https://mchobitok.com/api/orders/get";
+    private String authUrl;
+    private String ordersUrl;
+    private final String login;
+    private final String password;
+    private final String site;
 
     private final RestTemplate restTemplate;
     private String token;
     private LocalDateTime tokenExpiration;
 
-    public HoroshopService(RestTemplate restTemplate) {
+    public HoroshopService(RestTemplate restTemplate, HoroshopConfig horoshopConfig) {
         this.restTemplate = restTemplate;
+        this.authUrl = horoshopConfig.getAuthUrl();
+        this.ordersUrl = horoshopConfig.getOrdersUrl();
+        this.login = horoshopConfig.getLogin();
+        this.password = horoshopConfig.getPassword();
+        this.site = horoshopConfig.getSite();
     }
 
     public String authenticate() {
@@ -34,10 +40,10 @@ public class HoroshopService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
-        String jsonBody = "{\"login\": \"volodymyr\", \"password\": \"Vova2023\"}";
+        String jsonBody = "{\"login\": \"" + login + "\", \"password\": \"" + password + "\"}";
         HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
 
-        ResponseEntity<AuthResponse> response = restTemplate.exchange(AUTH_URL, HttpMethod.POST, entity, AuthResponse.class);
+        ResponseEntity<AuthResponse> response = restTemplate.exchange(authUrl, HttpMethod.POST, entity, AuthResponse.class);
 
         if (response.getStatusCode() == HttpStatus.OK) {
             this.token = Objects.requireNonNull(response.getBody()).getResponse().getToken();
@@ -69,7 +75,9 @@ public class HoroshopService {
 
         HttpEntity entity = new HttpEntity<>(request, headers);
 
-        ResponseEntity<GetOrdersResponse> response = restTemplate.exchange(ORDERS_URL, HttpMethod.PUT, entity, GetOrdersResponse.class);
-        return response.getBody();
+        ResponseEntity<GetOrdersResponse> response = restTemplate.exchange(ordersUrl, HttpMethod.PUT, entity, GetOrdersResponse.class);
+        GetOrdersResponse body = response.getBody();
+        body.setSite(site);
+        return body;
     }
 }

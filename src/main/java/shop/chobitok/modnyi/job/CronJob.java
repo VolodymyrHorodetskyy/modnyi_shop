@@ -1,5 +1,6 @@
 package shop.chobitok.modnyi.job;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
@@ -7,10 +8,13 @@ import shop.chobitok.modnyi.entity.AppOrder;
 import shop.chobitok.modnyi.service.*;
 import shop.chobitok.modnyi.service.horoshop.HoroshopService;
 import shop.chobitok.modnyi.service.horoshop.mapper.AppOrderHoroshopMapper;
+import shop.chobitok.modnyi.service.horoshop.response.GetOrdersResponse;
 import shop.chobitok.modnyi.telegram.ChobitokLeadsBot;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
+import static java.util.concurrent.CompletableFuture.runAsync;
 
 @Service
 public class CronJob {
@@ -22,10 +26,12 @@ public class CronJob {
     private final AppOrderToPixelService appOrderToPixelService;
     private final AppOrderService appOrderService;
     private final AppOrderHoroshopMapper appOrderHoroshopMapper;
-    private final HoroshopService horoshopService;
+    private final HoroshopService mchobitokHoroshopService;
+    private final HoroshopService vilnaHoroshopService;
     private final ChobitokLeadsBot chobitokLeadsBot;
 
-    public CronJob(CheckerService checkerService, OrderService orderService, CanceledOrderReasonService canceledOrderReasonService, UserService userService, AppOrderToPixelService appOrderToPixelService, AppOrderService appOrderService, AppOrderHoroshopMapper appOrderHoroshopMapper, HoroshopService horoshopService, ChobitokLeadsBot chobitokLeadsBot) {
+    public CronJob(CheckerService checkerService, OrderService orderService, CanceledOrderReasonService canceledOrderReasonService, UserService userService, AppOrderToPixelService appOrderToPixelService, AppOrderService appOrderService,
+                   AppOrderHoroshopMapper appOrderHoroshopMapper, @Qualifier("mchobitok") HoroshopService mchobitokHoroshopService, @Qualifier("vilna") HoroshopService vilnaHoroshopService, ChobitokLeadsBot chobitokLeadsBot) {
         this.checkerService = checkerService;
         this.orderService = orderService;
         this.canceledOrderReasonService = canceledOrderReasonService;
@@ -33,8 +39,9 @@ public class CronJob {
         this.appOrderToPixelService = appOrderToPixelService;
         this.appOrderService = appOrderService;
         this.appOrderHoroshopMapper = appOrderHoroshopMapper;
-        this.horoshopService = horoshopService;
+        this.mchobitokHoroshopService = mchobitokHoroshopService;
         this.chobitokLeadsBot = chobitokLeadsBot;
+        this.vilnaHoroshopService = vilnaHoroshopService;
     }
 
     @Scheduled(cron = "0 1 1 * * ?")
@@ -75,8 +82,12 @@ public class CronJob {
 
     @Scheduled(fixedRate = 2 * 60 * 1000)
     public void scheduleTaskEveryTenMinutes() {
-        List<AppOrder> appOrders = appOrderHoroshopMapper.convertToAppOrderFilteringExistingAppOrders(
-                horoshopService.getOrderData(LocalDateTime.now().minusHours(1), null, null));
+        runAsync(() -> sendMessageToTelegram(mchobitokHoroshopService.getOrderData(LocalDateTime.now().minusHours(1), null, null)));
+        runAsync(() -> sendMessageToTelegram(vilnaHoroshopService.getOrderData(LocalDateTime.now().minusHours(1), null, null)));
+    }
+
+    private void sendMessageToTelegram(GetOrdersResponse getOrdersResponse) {
+        List<AppOrder> appOrders = appOrderHoroshopMapper.convertToAppOrderFilteringExistingAppOrders(getOrdersResponse);
         if (appOrders != null) {
             appOrders.forEach(appOrder -> chobitokLeadsBot.sendMessage(mapToTelegramLead(appOrder), ParseMode.HTML));
             appOrderService.saveAll(appOrders);
@@ -89,9 +100,11 @@ public class CronJob {
                         + "<b>Телефон:</b> <a href=\"tel:%s\">%s</a>\n"
                         + "<b>Подзвонити:</b> %s\n"
                         + "<b>Продукти:</b> %s\n"
-                        + "<b>Дані по доставці:</b> %s",
+                        + "<b>Дані по доставці:</b> %s"
+                        + "<b>Сайт:</b> %s",
                 appOrder.getName(), appOrder.getPhone(), appOrder.getPhone(),
                 appOrder.isDontCall() ? "ні" : "так",
-                appOrder.getHoroshopProductsJson(), appOrder.getHoroshopDeliveryDataJson());
+                appOrder.getHoroshopProductsJson(), appOrder.getHoroshopDeliveryDataJson(),
+                appOrder.getSite());
     }
 }

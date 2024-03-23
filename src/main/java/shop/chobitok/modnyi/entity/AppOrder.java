@@ -64,6 +64,7 @@ public class AppOrder extends Audit {
     private boolean dataValid;
 
     private boolean dataParsed;
+    private String site;
 
     public AppOrder() {
     }
@@ -327,5 +328,13 @@ public class AppOrder extends Audit {
 
     public void setHoroshopOrderId(Long horoshopOrderId) {
         this.horoshopOrderId = horoshopOrderId;
+    }
+
+    public String getSite() {
+        return site;
+    }
+
+    public void setSite(String site) {
+        this.site = site;
     }
 }

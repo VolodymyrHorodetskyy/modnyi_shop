@@ -35,12 +35,12 @@ public class ChobitokBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return "mchobitok_bot";
+        return "mchobitok_testing_bot";
     }
 
     @Override
     public String getBotToken() {
-        return "5877883629:AAENWWaRFn_Mn31OumRIENAHxh-Albajvy4";
+        return "6421822261:AAEtyjfrdkYPcNvBuGNHK6VvLRPz_beNSpI";
     }
 
     @Override
