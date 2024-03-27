@@ -58,12 +58,10 @@ public class ChobitokBot extends TelegramLongPollingBot {
 
     private void handleTextMessage(String chatId, String messageText) {
         if (!inputCollector.containsKey(chatId)) {
-            switch (messageText) {
-                case "/start":
-                    sendMessage(chatId, "Choose an option:", createMenuKeyboard());
-                    break;
-                default:
-                    sendMessage(chatId, "Sorry, I didn't understand that command.", null);
+            if ("/start".equals(messageText)) {
+                sendMessage(chatId, "Choose an option:", createMenuKeyboard());
+            } else {
+                sendMessage(chatId, "Sorry, I didn't understand that command.", null);
             }
         } else {
             SaveAdsSpendsRequest request = inputCollector.get(chatId);
@@ -92,10 +90,10 @@ public class ChobitokBot extends TelegramLongPollingBot {
                     startCollectingInputs(chatId);
                     break;
                 case "Чарівно":
-                    sendMessage(chatId, orderService.countNeedDeliveryFromDB(true, 1177l).getResult(), null);
+                    sendMessage(chatId, orderService.countNeedDeliveryFromDB(true, 1177l).getResult(),  createBackButtonMarkup());
                     break;
                 case "Модний чобіток":
-                    sendMessage(chatId, orderService.countNeedDeliveryFromDB(true, 1175l).getResult(), null);
+                    sendMessage(chatId, orderService.countNeedDeliveryFromDB(true, 1175l).getResult(),  createBackButtonMarkup());
                     break;
                 case "back":
                     sendMessage(chatId, "Choose an option:", createMenuKeyboard());
@@ -178,18 +176,6 @@ public class ChobitokBot extends TelegramLongPollingBot {
         return markup;
     }
 
-    private InlineKeyboardMarkup createBackKeyboard() {
-        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
-
-        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-        List<InlineKeyboardButton> row1 = new ArrayList<>();
-        row1.add(InlineKeyboardButton.builder().text("Back").callbackData("back").build());
-        rows.add(row1);
-
-        markup.setKeyboard(rows);
-        return markup;
-    }
-
     private void sendMessage(String chatId, String text, InlineKeyboardMarkup replyMarkup) {
         SendMessage message = SendMessage.builder()
                 .chatId(chatId)
@@ -199,7 +185,6 @@ public class ChobitokBot extends TelegramLongPollingBot {
         try {
             execute(message);
         } catch (TelegramApiException e) {
-            // Consider logging this exception with a logging framework or handling it accordingly
             e.printStackTrace();
         }
     }
@@ -234,6 +219,16 @@ public class ChobitokBot extends TelegramLongPollingBot {
         row2.add(InlineKeyboardButton.builder().text("Back").callbackData("back").build());
         rows.add(row2);
 
+        markup.setKeyboard(rows);
+        return markup;
+    }
+
+    private InlineKeyboardMarkup createBackButtonMarkup() {
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        List<InlineKeyboardButton> row = new ArrayList<>();
+        row.add(InlineKeyboardButton.builder().text("Back").callbackData("back").build());
+        rows.add(row);
         markup.setKeyboard(rows);
         return markup;
     }
