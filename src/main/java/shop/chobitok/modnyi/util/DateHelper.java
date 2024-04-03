@@ -31,7 +31,8 @@ public class DateHelper {
 
     public static LocalDateTime formDateTime(String date) throws DateTimeParseException {
         if (!checkDateStringFromFrontEnd(date)) {
-            throw new DateTimeParseException("Date string does not meet front-end criteria", date, 0);
+            throw new DateTimeParseException("Date string does not meet front-end criteria",
+                    date == null ? "date is null" : date, 0);
         }
         for (String pattern : DATE_PATTERNS) {
             try {
