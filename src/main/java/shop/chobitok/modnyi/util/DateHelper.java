@@ -6,6 +6,8 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
+import static org.springframework.util.StringUtils.isEmpty;
+
 public class DateHelper {
 
     private final static String[] DATE_PATTERNS = {
@@ -46,8 +48,10 @@ public class DateHelper {
     }
 
     public static LocalDateTime formDateTimeFromOrGetDefault(String dateTimeFrom) {
-        LocalDateTime localDateTime = formDateTime(dateTimeFrom);
-        if (localDateTime == null) {
+        LocalDateTime localDateTime;
+        if (!isEmpty(dateTimeFrom)) {
+            localDateTime = formDateTime(dateTimeFrom);
+        } else {
             localDateTime = LocalDateTime.now().minusDays(7);
         }
         return localDateTime.with(LocalTime.of(0, 0));
@@ -55,9 +59,11 @@ public class DateHelper {
 
 
     public static LocalDateTime formDateTimeToOrGetDefault(String dateTimeTo) {
-        LocalDateTime localDateTime = formDateTime(dateTimeTo);
-        if (localDateTime == null) {
-            localDateTime = LocalDateTime.now();
+        LocalDateTime localDateTime;
+        if (!isEmpty(dateTimeTo)) {
+            localDateTime = formDateTime(dateTimeTo);
+        } else {
+            localDateTime = LocalDateTime.now().minusDays(7);
         }
         localDateTime = localDateTime.with(LocalTime.of(23, 59));
         return localDateTime;
